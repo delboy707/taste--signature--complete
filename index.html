@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Taste Signature - Professional Sensory Analysis Platform</title>
+
+    <!-- Cache Control - Force fresh HTML/JS on every load -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="B2B sensory analysis platform for food and beverage companies. Map sensory experiences to emotional outcomes.">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Taste Signature">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon-192.png">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile-responsive.css">
+</head>
+<body>
+    <!-- Authentication Container -->
+    <div id="auth-container" class="auth-container">
+        <!-- Login Form -->
+        <div id="login-form" class="auth-card">
+            <div class="auth-header">
+                <h1>🎯 Taste Signature</h1>
+                <p class="auth-subtitle">Professional Sensory Analysis Platform</p>
+            </div>
+
+            <form id="form-login" class="auth-form">
+                <h2>Welcome Back</h2>
+
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required autocomplete="email" placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter your password">
+                </div>
+
+                <div id="login-message" class="auth-message"></div>
+
+                <button type="submit" class="btn-primary btn-auth">Log In</button>
+
+                <div class="auth-links">
+                    <a href="#" id="link-forgot-password">Forgot password?</a>
+                    <a href="#" id="link-show-signup">Create account</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="auth-card" style="display: none;">
+            <div class="auth-header">
+                <h1>🎯 Taste Signature</h1>
+                <p class="auth-subtitle">Professional Sensory Analysis Platform</p>
+            </div>
+
+            <form id="form-signup" class="auth-form">
+                <h2>Create Company Account</h2>
+                <p class="auth-description">Set up your company's sensory analysis workspace</p>
+
+                <!-- Company Information -->
+                <div class="form-section-header">Company Information</div>
+
+                <div class="form-group">
+                    <label for="signup-company-name">Company Name *</label>
+                    <input type="text" id="signup-company-name" required placeholder="e.g., Acme Foods Inc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-industry">Industry *</label>
+                    <select id="signup-industry" required>
+                        <option value="">Select industry...</option>
+                        <option value="chocolate">Chocolate & Confectionery</option>
+                        <option value="beverages">Beverages</option>
+                        <option value="snacks">Snacks & Savory</option>
+                        <option value="dairy">Dairy</option>
+                        <option value="bakery">Bakery & Cereals</option>
+                        <option value="alcohol">Alcoholic Beverages</option>
+                        <option value="functional">Functional Foods</option>
+                        <option value="flavors">Flavor Houses</option>
+                        <option value="ingredients">Ingredients Suppliers</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-company-size">Company Size *</label>
+                    <select id="signup-company-size" required>
+                        <option value="">Select size...</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-1000">201-1,000 employees</option>
+                        <option value="1000+">1,000+ employees</option>
+                    </select>
+                </div>
+
+                <!-- Account Administrator -->
+                <div class="form-section-header">Account Administrator</div>
+
+                <div class="form-group">
+                    <label for="signup-name">Full Name *</label>
+                    <input type="text" id="signup-name" required autocomplete="name" placeholder="John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-email">Email *</label>
+                    <input type="email" id="signup-email" required autocomplete="email" placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-password">Password *</label>
+                    <input type="password" id="signup-password" required autocomplete="new-password" placeholder="Create a strong password">
+                    <div id="password-requirements" class="password-requirements"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-password-confirm">Confirm Password *</label>
+                    <input type="password" id="signup-password-confirm" required autocomplete="new-password" placeholder="Re-enter your password">
+                </div>
+
+                <div id="signup-message" class="auth-message"></div>
+
+                <button type="submit" class="btn-primary btn-auth">Create Company Account</button>
+
+                <div class="auth-links">
+                    <a href="#" id="link-show-login">Already have an account? Log in</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div id="forgot-password-form" class="auth-card" style="display: none;">
+            <div class="auth-header">
+                <h1>🎯 Taste Signature</h1>
+                <p class="auth-subtitle">Reset Your Password</p>
+            </div>
+
+            <form id="form-forgot-password" class="auth-form">
+                <h2>Forgot Password</h2>
+                <p class="auth-description">Enter your email address and we'll send you a link to reset your password.</p>
+
+                <div class="form-group">
+                    <label for="forgot-email">Email</label>
+                    <input type="email" id="forgot-email" required autocomplete="email" placeholder="your@email.com">
+                </div>
+
+                <div id="forgot-message" class="auth-message"></div>
+
+                <button type="submit" class="btn-primary btn-auth">Send Reset Link</button>
+
+                <div class="auth-links">
+                    <a href="#" id="link-back-to-login">Back to login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (hidden until authenticated) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div id="app-container" class="dashboard" style="display: none;">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle navigation menu">
+            <span class="menu-icon">☰</span>
+            <span class="menu-text">MENU</span>
+        </button>
+
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobile-overlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <h1>Taste Signature</h1>
+                <p class="version">Professional Edition</p>
+            </div>
+            <nav class="sidebar-nav" aria-label="Primary navigation">
+                <a href="#" class="nav-item active" data-view="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-view="log-experience">
+                    <span class="nav-icon">➕</span>
+                    <span>Log Experience</span>
+                </a>
+                <a href="#" class="nav-item" data-view="shape-of-taste">
+                    <span class="nav-icon">📈</span>
+                    <span>Shape of Taste</span>
+                </a>
+                <a href="#" class="nav-item" data-view="emotional-map">
+                    <span class="nav-icon">💫</span>
+                    <span>Emotional Mapping</span>
+                </a>
+                <a href="#" class="nav-item" data-view="need-states">
+                    <span class="nav-icon">🎯</span>
+                    <span>Need States</span>
+                </a>
+                <a href="#" class="nav-item" data-view="comparison">
+                    <span class="nav-icon">⚖️</span>
+                    <span>Compare Products</span>
+                </a>
+                <a href="#" class="nav-item" data-view="portfolio">
+                    <span class="nav-icon">🎨</span>
+                    <span>Portfolio Map</span>
+                </a>
+                <a href="#" class="nav-item" data-view="insights">
+                    <span class="nav-icon">💡</span>
+                    <span>Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-view="ai-insights">
+                    <span class="nav-icon">🤖</span>
+                    <span>AI Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-view="consumer-panel">
+                    <span class="nav-icon">👥</span>
+                    <span>Consumer Panel</span>
+                </a>
+                <a href="#" class="nav-item" data-view="custom-lexicon">
+                    <span class="nav-icon">📚</span>
+                    <span>Custom Lexicon</span>
+                </a>
+                <a href="#" class="nav-item" data-view="industry-benchmarks">
+                    <span class="nav-icon">🏆</span>
+                    <span>Industry Benchmarks</span>
+                </a>
+                <a href="#" class="nav-item" data-view="export-reports">
+                    <span class="nav-icon">📊</span>
+                    <span>Export & Reports</span>
+                </a>
+                <a href="#" class="nav-item" data-view="batch-import">
+                    <span class="nav-icon">📤</span>
+                    <span>Batch Import</span>
+                </a>
+                <a href="#" class="nav-item" data-view="recipe-tracker">
+                    <span class="nav-icon">🧪</span>
+                    <span>Recipe Tracker</span>
+                </a>
+                <a href="#" class="nav-item" data-view="temporal-analysis">
+                    <span class="nav-icon">📈</span>
+                    <span>Temporal Analysis</span>
+                </a>
+                <a href="#" class="nav-item" data-view="photo-gallery">
+                    <span class="nav-icon">📸</span>
+                    <span>Photo Gallery</span>
+                </a>
+                <a href="#" class="nav-item" data-view="team-collaboration">
+                    <span class="nav-icon">👥</span>
+                    <span>Team</span>
+                </a>
+                <a href="#" class="nav-item" data-view="approvals">
+                    <span class="nav-icon">✅</span>
+                    <span>Approvals</span>
+                </a>
+                <a href="#" class="nav-item" data-view="history">
+                    <span class="nav-icon">📋</span>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-view="import">
+                    <span class="nav-icon">📥</span>
+                    <span>Import Data</span>
+                </a>
+            </nav>
+
+            <!-- User Profile Section -->
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <span id="user-avatar-letter">👤</span>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-display-name">User Name</div>
+                        <div class="user-email" id="user-display-email">user@email.com</div>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn-logout">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content" role="main">
+            <header class="top-bar" role="banner">
+                <div class="page-title">
+                    <h2 id="current-view-title">Dashboard Overview</h2>
+                </div>
+                <div class="top-bar-actions">
+                    <button id="help-button" class="btn-help" aria-label="Get help for current section" title="Get Help">
+                        ❓ Help
+                    </button>
+                    <button id="restart-tutorial" class="btn-secondary" aria-label="Restart tutorial">
+                        🎓 Tutorial
+                    </button>
+                    <button onclick="exportPortfolioReport()" class="btn-primary" title="Export Portfolio PDF Report">
+                        📄 Export PDF
+                    </button>
+                    <button onclick="exportToExcel()" class="btn-secondary" title="Export to Excel">
+                        📊 Export Excel
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area" role="region" aria-live="polite">
+                <!-- Overview View -->
+                <div id="view-overview" class="view active">
+                    <!-- Welcome Section (shows for new users with 0 experiences) -->
+                    <div id="welcome-section" class="card welcome-card" style="display: none;">
+                        <h2>👋 Welcome to Taste Signature!</h2>
+                        <p class="welcome-subtitle">Map taste experiences to emotional outcomes with professional sensory analysis tools.</p>
+
+                        <div class="welcome-grid">
+                            <div class="welcome-item">
+                                <div class="welcome-icon">📊</div>
+                                <h4>Data-Driven Insights</h4>
+                                <p>Quantify sensory attributes and emotional responses across 7 stages of tasting</p>
+                            </div>
+                            <div class="welcome-item">
+                                <div class="welcome-icon">💡</div>
+                                <h4>Strategic Analysis</h4>
+                                <p>Discover which sensory attributes drive specific emotions in your products</p>
+                            </div>
+                            <div class="welcome-item">
+                                <div class="welcome-icon">🤖</div>
+                                <h4>AI-Powered</h4>
+                                <p>Get strategic recommendations from Claude AI based on your taste data</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-actions">
+                            <button id="btn-start-tutorial" class="btn-primary btn-large">
+                                🎓 Start Interactive Tutorial
+                            </button>
+                            <button id="btn-load-sample" class="btn-secondary btn-large">
+                                📥 Load Sample Data
+                            </button>
+                            <button id="btn-skip-welcome" class="btn-secondary">
+                                Skip to Dashboard →
+                            </button>
+                        </div>
+
+                        <!-- Video Demo Section -->
+                        <div id="welcome-video-container"></div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <h3>Total Experiences</h3>
+                            <div class="stat-value" id="stat-total">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Products Analyzed</h3>
+                            <div class="stat-value" id="stat-products">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Average Satisfaction</h3>
+                            <div class="stat-value" id="stat-satisfaction">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Top Need State</h3>
+                            <div class="stat-value" id="stat-need-state">-</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2col">
+                        <div class="card">
+                            <h3>Recent Activity</h3>
+                            <div id="recent-activity"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Quick Insights</h3>
+                            <div id="quick-insights"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Experience View -->
+                <div id="view-log-experience" class="view">
+                    <div class="card">
+                        <div class="form-header">
+                            <h3>New Sensory Experience</h3>
+                            <div class="stage-progress">
+                                <div class="stage-indicator active" data-stage="1">
+                                    <div class="stage-number">1</div>
+                                    <div class="stage-name">Product Info</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="2">
+                                    <div class="stage-number">2</div>
+                                    <div class="stage-name">Appearance</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="3">
+                                    <div class="stage-number">3</div>
+                                    <div class="stage-name">Aroma</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="4">
+                                    <div class="stage-number">4</div>
+                                    <div class="stage-name">Front of Mouth</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="5">
+                                    <div class="stage-number">5</div>
+                                    <div class="stage-name">Mid/Rear Mouth</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="6">
+                                    <div class="stage-number">6</div>
+                                    <div class="stage-name">Aftertaste</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="7">
+                                    <div class="stage-number">7</div>
+                                    <div class="stage-name">Overall</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="taste-form">
+                            <!-- Stage 1: Product Information -->
+                            <div class="form-stage active" data-stage="1">
+                                <h4>Product Information</h4>
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="retest-selector">Re-testing an existing product?</label>
+                                    <select id="retest-selector" class="form-control">
+                                        <option value="">No - This is a new product</option>
+                                    </select>
+                                    <small style="color: var(--text-light); display: block; margin-top: 5px;">
+                                        Select if this is a follow-up test (reformulation, shelf-life, batch variation, etc.)
+                                    </small>
+                                </div>
+
+                                <!-- Before/After Reformulation Tracking -->
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="reformulation-status">Reformulation Tracking</label>
+                                    <select id="reformulation-status" class="form-control">
+                                        <option value="">Not a reformulation</option>
+                                        <option value="before">BEFORE Reformulation (Original)</option>
+                                        <option value="after">AFTER Reformulation (New Version)</option>
+                                    </select>
+                                    <small style="color: var(--text-light); display: block; margin-top: 5px;">
+                                        Tag products for before/after analysis and reformulation tracking
+                                    </small>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="item-name">Product Name:</label>
+                                        <input type="text" id="item-name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item-brand">Brand:</label>
+                                        <input type="text" id="item-brand">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="item-type">Category:</label>
+                                        <select id="item-type" required>
+                                            <option value="">Select...</option>
+                                            <option value="food">Food</option>
+                                            <option value="beverage">Beverage</option>
+                                            <option value="dessert">Dessert</option>
+                                            <option value="snack">Snack</option>
+                                            <option value="confectionery">Confectionery</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item-variant">Variant/Flavor:</label>
+                                        <input type="text" id="item-variant">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="item-occasion">Consumption Occasion:</label>
+                                        <select id="item-occasion">
+                                            <option value="">Select occasion (optional)...</option>
+                                            <option value="breakfast">Breakfast</option>
+                                            <option value="morning-snack">Morning Snack</option>
+                                            <option value="lunch">Lunch</option>
+                                            <option value="afternoon-snack">Afternoon Snack</option>
+                                            <option value="dinner">Dinner</option>
+                                            <option value="evening-snack">Evening Snack</option>
+                                            <option value="dessert">Dessert / Post-meal</option>
+                                            <option value="on-the-go">On-the-go / Commute</option>
+                                            <option value="social">Social Gathering</option>
+                                            <option value="relaxation">Relaxation / Me-time</option>
+                                            <option value="work">Work / Focus</option>
+                                            <option value="exercise">Exercise / Active</option>
+                                        </select>
+                                        <small style="color: var(--text-light); display: block; margin-top: 5px;">
+                                            Context helps analyze emotional responses by usage scenario
+                                        </small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item-temperature">Serving Temperature:</label>
+                                        <select id="item-temperature">
+                                            <option value="">Select...</option>
+                                            <option value="hot">Hot</option>
+                                            <option value="warm">Warm</option>
+                                            <option value="room-temp">Room Temperature</option>
+                                            <option value="chilled">Chilled</option>
+                                            <option value="frozen">Frozen</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 2: Appearance -->
+                            <div class="form-stage" data-stage="2">
+                                <h4>Stage 1: Appearance</h4>
+                                <p class="stage-description">Visual assessment before consumption</p>
+
+                                <h5 class="section-heading">Sensory Attributes</h5>
+                                <div class="slider-group">
+                                    <label for="appearance-visual-appeal">Visual Appeal: <span id="appearance-visual-appeal-val">5</span></label>
+                                    <input type="range" id="appearance-visual-appeal" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="appearance-color-intensity">Color Intensity: <span id="appearance-color-intensity-val">5</span></label>
+                                    <input type="range" id="appearance-color-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="appearance-overall-intensity">Overall Visual Intensity: <span id="appearance-overall-intensity-val">5</span></label>
+                                    <input type="range" id="appearance-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="appearance-anticipation">Anticipation: <span id="appearance-anticipation-val">5</span></label>
+                                        <input type="range" id="appearance-anticipation" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-desire">Desire: <span id="appearance-desire-val">5</span></label>
+                                        <input type="range" id="appearance-desire" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-excitement">Excitement: <span id="appearance-excitement-val">5</span></label>
+                                        <input type="range" id="appearance-excitement" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-happiness">Happiness: <span id="appearance-happiness-val">5</span></label>
+                                        <input type="range" id="appearance-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-curiosity">Curiosity: <span id="appearance-curiosity-val">5</span></label>
+                                        <input type="range" id="appearance-curiosity" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 3: Aroma -->
+                            <div class="form-stage" data-stage="3">
+                                <h4>Stage 2: Aroma</h4>
+                                <p class="stage-description">Olfactory experience</p>
+
+                                <h5 class="section-heading">Sensory Attributes</h5>
+                                <div class="slider-group">
+                                    <label for="aroma-intensity">Aroma Intensity: <span id="aroma-intensity-val">5</span></label>
+                                    <input type="range" id="aroma-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-sweetness">Sweet Notes: <span id="aroma-sweetness-val">5</span></label>
+                                    <input type="range" id="aroma-sweetness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-complexity">Complexity: <span id="aroma-complexity-val">5</span></label>
+                                    <input type="range" id="aroma-complexity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-overall-intensity">Overall Intensity: <span id="aroma-overall-intensity-val">5</span></label>
+                                    <input type="range" id="aroma-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="aroma-pleasure">Pleasure: <span id="aroma-pleasure-val">5</span></label>
+                                        <input type="range" id="aroma-pleasure" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-comfort">Comfort: <span id="aroma-comfort-val">5</span></label>
+                                        <input type="range" id="aroma-comfort" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-nostalgia">Nostalgia: <span id="aroma-nostalgia-val">5</span></label>
+                                        <input type="range" id="aroma-nostalgia" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-happiness">Happiness: <span id="aroma-happiness-val">5</span></label>
+                                        <input type="range" id="aroma-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-energy">Energy: <span id="aroma-energy-val">5</span></label>
+                                        <input type="range" id="aroma-energy" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-relaxation">Relaxation: <span id="aroma-relaxation-val">5</span></label>
+                                        <input type="range" id="aroma-relaxation" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 4: Front of Mouth -->
+                            <div class="form-stage" data-stage="4">
+                                <h4>Stage 3: Front of Mouth</h4>
+                                <p class="stage-description">Initial taste and texture</p>
+                                <div class="slider-group">
+                                    <label for="front-sweetness">Sweetness: <span id="front-sweetness-val">5</span></label>
+                                    <input type="range" id="front-sweetness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-sourness">Sourness: <span id="front-sourness-val">5</span></label>
+                                    <input type="range" id="front-sourness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-saltiness">Saltiness: <span id="front-saltiness-val">5</span></label>
+                                    <input type="range" id="front-saltiness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-texture">Texture Impact: <span id="front-texture-val">5</span></label>
+                                    <input type="range" id="front-texture" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-overall-intensity">Overall Intensity: <span id="front-overall-intensity-val">5</span></label>
+                                    <input type="range" id="front-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="front-excitement">Excitement: <span id="front-excitement-val">5</span></label>
+                                        <input type="range" id="front-excitement" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="front-satisfaction">Satisfaction: <span id="front-satisfaction-val">5</span></label>
+                                        <input type="range" id="front-satisfaction" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="front-happiness">Happiness: <span id="front-happiness-val">5</span></label>
+                                        <input type="range" id="front-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="front-pleasure">Pleasure: <span id="front-pleasure-val">5</span></label>
+                                        <input type="range" id="front-pleasure" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 5: Mid/Rear Mouth -->
+                            <div class="form-stage" data-stage="5">
+                                <h4>Stage 4: Mid/Rear Mouth</h4>
+                                <p class="stage-description">Developed flavors and mouthfeel</p>
+                                <div class="slider-group">
+                                    <label for="mid-bitterness">Bitterness: <span id="mid-bitterness-val">5</span></label>
+                                    <input type="range" id="mid-bitterness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-umami">Umami: <span id="mid-umami-val">5</span></label>
+                                    <input type="range" id="mid-umami" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-richness">Richness: <span id="mid-richness-val">5</span></label>
+                                    <input type="range" id="mid-richness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-creaminess">Creaminess: <span id="mid-creaminess-val">5</span></label>
+                                    <input type="range" id="mid-creaminess" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-overall-intensity">Overall Intensity: <span id="mid-overall-intensity-val">5</span></label>
+                                    <input type="range" id="mid-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="mid-indulgence">Indulgence: <span id="mid-indulgence-val">5</span></label>
+                                        <input type="range" id="mid-indulgence" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="mid-comfort">Comfort: <span id="mid-comfort-val">5</span></label>
+                                        <input type="range" id="mid-comfort" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="mid-satisfaction">Satisfaction: <span id="mid-satisfaction-val">5</span></label>
+                                        <input type="range" id="mid-satisfaction" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="mid-pleasure">Pleasure: <span id="mid-pleasure-val">5</span></label>
+                                        <input type="range" id="mid-pleasure" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 6: Aftertaste -->
+                            <div class="form-stage" data-stage="6">
+                                <h4>Stage 5: Aftertaste</h4>
+                                <p class="stage-description">Post-consumption experience</p>
+                                <div class="slider-group">
+                                    <label for="after-duration">Duration: <span id="after-duration-val">5</span></label>
+                                    <input type="range" id="after-duration" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-pleasantness">Pleasantness: <span id="after-pleasantness-val">5</span></label>
+                                    <input type="range" id="after-pleasantness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-cleanness">Palate Cleanness: <span id="after-cleanness-val">5</span></label>
+                                    <input type="range" id="after-cleanness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-overall-intensity">Overall Intensity: <span id="after-overall-intensity-val">5</span></label>
+                                    <input type="range" id="after-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="after-satisfaction">Satisfaction: <span id="after-satisfaction-val">5</span></label>
+                                        <input type="range" id="after-satisfaction" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="after-completeness">Completeness: <span id="after-completeness-val">5</span></label>
+                                        <input type="range" id="after-completeness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="after-happiness">Happiness: <span id="after-happiness-val">5</span></label>
+                                        <input type="range" id="after-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 7: Overall Assessment -->
+                            <div class="form-stage" data-stage="7">
+                                <h4>Overall Assessment</h4>
+
+                                <div class="form-group">
+                                    <label>Need State (select primary):</label>
+                                    <button type="button" id="btn-need-state-helper" class="btn-secondary" style="margin-bottom: 15px; margin-left: 20px; display: block;">
+                                        ❓ Not sure? Use Need State Helper
+                                    </button>
+                                    <div class="need-state-options">
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="reward" required>
+                                            <div class="radio-card-content">
+                                                <strong>Reward</strong>
+                                                <p>Treat yourself, indulgence</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="escape">
+                                            <div class="radio-card-content">
+                                                <strong>Escape</strong>
+                                                <p>Break from routine, relaxation</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="rejuvenation">
+                                            <div class="radio-card-content">
+                                                <strong>Rejuvenation</strong>
+                                                <p>Energy boost, refreshment</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="sociability">
+                                            <div class="radio-card-content">
+                                                <strong>Sociability</strong>
+                                                <p>Sharing, social connection</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Emotional Triggers (0-10):</label>
+                                    <div class="slider-group">
+                                        <label for="trigger-moreishness">Moreishness: <span id="trigger-moreishness-val">5</span></label>
+                                        <input type="range" id="trigger-moreishness" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Desire to continue eating/drinking</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-refreshment">Refreshment: <span id="trigger-refreshment-val">5</span></label>
+                                        <input type="range" id="trigger-refreshment" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Revitalizing, cleansing quality</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-melt">The Melt: <span id="trigger-melt-val">5</span></label>
+                                        <input type="range" id="trigger-melt" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Smooth, dissolving sensation</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-crunch">Texture/Crunch: <span id="trigger-crunch-val">5</span></label>
+                                        <input type="range" id="trigger-crunch" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Satisfying textural experience</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="notes">Additional Notes:</label>
+                                    <textarea id="notes" rows="4"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-navigation">
+                                <button type="button" id="btn-prev-stage" class="btn-secondary" style="display:none;">Previous</button>
+                                <button type="button" id="btn-next-stage" class="btn-primary">Next Stage</button>
+                                <button type="submit" id="btn-submit" class="btn-primary" style="display:none;">Complete Assessment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Shape of Taste View -->
+                <div id="view-shape-of-taste" class="view">
+                    <div class="card">
+                        <h3>Shape of Taste - Journey Visualization</h3>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="shape-product-select">Select Product:</label>
+                            <select id="shape-product-select" class="form-control">
+                                <option value="">Choose a product...</option>
+                            </select>
+                        </div>
+                        <canvas id="shape-chart"></canvas>
+                    </div>
+                    <div class="card">
+                        <h3>Emotional Journey</h3>
+                        <canvas id="emotional-journey-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Emotional Mapping View -->
+                <div id="view-emotional-map" class="view">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0;">Emotional Mapping & Analysis</h3>
+                            <button id="btn-start-tour" class="btn-secondary" style="padding: 8px 16px;">
+                                <span style="font-size: 1.1rem; margin-right: 5px;">💡</span> Guide Me
+                            </button>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="emotional-product-select">Select Product:</label>
+                            <select id="emotional-product-select" class="form-control">
+                                <option value="">Choose a product...</option>
+                            </select>
+                        </div>
+                        <div class="help-tooltip" data-step="1">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">This chart shows how each emotion evolves across the consumption journey. Look for peaks to identify emotional high points.</span>
+                        </div>
+                        <canvas id="emotional-map-chart"></canvas>
+                    </div>
+
+                    <div class="grid-2col">
+                        <div class="card">
+                            <div style="position: relative;">
+                                <h3>Shape of Emotion</h3>
+                                <div class="help-tooltip" data-step="2">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">The emotional arc shows whether emotions build, sustain, or fade. High finish = lasting positive impact.</span>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">Emotional intensity across consumption journey</p>
+                            <canvas id="shape-emotion-chart"></canvas>
+                        </div>
+                        <div class="card">
+                            <div style="position: relative;">
+                                <h3>Emotional Profile</h3>
+                                <div class="help-tooltip" data-step="3">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Shows the product's dominant emotional characteristics. Use this for brand positioning and marketing messaging.</span>
+                                </div>
+                            </div>
+                            <canvas id="emotional-profile-radar"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="position: relative;">
+                            <h3>Sensory-to-Emotional Correlation Matrix</h3>
+                            <div class="help-tooltip" data-step="4">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">THE KEY INSIGHT: This shows which sensory attributes trigger which emotions. Green = strong relationship. Use this to optimize formulation.</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">
+                            Shows which sensory attributes drive which emotional outcomes
+                        </p>
+                        <div id="correlation-heatmap"></div>
+                        <div id="correlation-insights" class="insights-panel"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Emotional Drivers Analysis</h3>
+                        <div id="emotional-drivers-insights"></div>
+                    </div>
+                </div>
+
+                <!-- Need States View -->
+                <div id="view-need-states" class="view">
+                    <div class="card">
+                        <h3>Need State Distribution</h3>
+                        <canvas id="need-state-chart"></canvas>
+                    </div>
+                    <div class="grid-2col">
+                        <div class="card">
+                            <h3>Emotional Triggers Analysis</h3>
+                            <canvas id="triggers-chart"></canvas>
+                        </div>
+                        <div class="card">
+                            <h3>Trigger Insights</h3>
+                            <div id="trigger-insights"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison View -->
+                <div id="view-comparison" class="view">
+                    <div class="card">
+                        <h3>Product Comparison Tool</h3>
+                        <div class="comparison-selector">
+                            <div class="form-group">
+                                <label>Select Products to Compare (up to 4):</label>
+                                <div id="comparison-product-list"></div>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="btn-run-comparison" class="btn-primary">Run Comparison</button>
+                                <button id="btn-ai-compare" class="btn-secondary" style="display:none;">
+                                    🤖 Get AI Strategic Insights
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="comparison-results" style="display:none;">
+                        <!-- AI Insights Section -->
+                        <div id="ai-comparison-insights" style="display:none;" class="card">
+                            <h3>🤖 AI Strategic Insights</h3>
+                            <div id="ai-comparison-content" class="ai-response-box"></div>
+                        </div>
+
+                        <!-- Quick Summary Cards -->
+                        <div id="comparison-summary-cards" class="comparison-summary-cards"></div>
+
+                        <!-- Detailed Attribute Matrix -->
+                        <div class="card">
+                            <h3>📋 Detailed Sensory Attribute Comparison</h3>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">
+                                Color intensity indicates attribute strength. Differences >1.5 points are highlighted as significant.
+                            </p>
+                            <div id="comparison-attribute-matrix" class="comparison-matrix"></div>
+                        </div>
+
+                        <!-- Emotional Radar Overlay -->
+                        <div class="card">
+                            <h3>💫 Emotional Profile Comparison</h3>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">
+                                All key emotions overlaid for direct comparison. Larger shapes indicate stronger emotional impact.
+                            </p>
+                            <canvas id="comparison-emotion-radar"></canvas>
+                        </div>
+
+                        <div class="card">
+                            <h3>Shape of Taste Comparison</h3>
+                            <canvas id="comparison-shape-chart"></canvas>
+                        </div>
+                        <!-- Emotional Heatmap -->
+                        <div class="card">
+                            <h3>🔥 Emotional Intensity Heatmap</h3>
+                            <p style="color: var(--text-light); margin-bottom: 15px;">
+                                Visual intensity map showing which products excel in specific emotions. Darker blue = stronger emotion.
+                            </p>
+                            <div id="comparison-emotion-heatmap" class="emotion-heatmap"></div>
+                        </div>
+
+                        <div class="grid-2col">
+                            <div class="card">
+                                <h3>Need State Comparison</h3>
+                                <div id="comparison-need-state"></div>
+                            </div>
+                            <div class="card">
+                                <h3>Emotional Triggers</h3>
+                                <canvas id="comparison-triggers-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Map View -->
+                <div id="view-portfolio" class="view">
+                    <div class="card">
+                        <h3>Portfolio Emotional Clustering</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">
+                            Products positioned by emotional similarity. Clusters reveal white space opportunities and portfolio overlaps.
+                        </p>
+                        <div id="cluster-controls" style="margin-bottom: 20px;">
+                            <label style="margin-right: 15px;">
+                                <strong>X-Axis:</strong>
+                                <select id="cluster-x-axis" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;">
+                                    <option value="indulgence">Indulgence</option>
+                                    <option value="refreshment">Refreshment</option>
+                                    <option value="comfort">Comfort</option>
+                                    <option value="excitement">Excitement</option>
+                                </select>
+                            </label>
+                            <label>
+                                <strong>Y-Axis:</strong>
+                                <select id="cluster-y-axis" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;">
+                                    <option value="excitement">Excitement</option>
+                                    <option value="indulgence">Indulgence</option>
+                                    <option value="refreshment">Refreshment</option>
+                                    <option value="comfort">Comfort</option>
+                                </select>
+                            </label>
+                        </div>
+                        <canvas id="portfolio-cluster-chart"></canvas>
+                    </div>
+
+                    <div class="grid-2col">
+                        <div class="card">
+                            <h3>Emotional White Space Analysis</h3>
+                            <div id="white-space-analysis"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Portfolio Diversity Score</h3>
+                            <div id="diversity-score"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Cluster Insights</h3>
+                        <div id="cluster-insights"></div>
+                    </div>
+                </div>
+
+                <!-- Insights View -->
+                <div id="view-insights" class="view">
+                    <div class="card">
+                        <h3>Professional Insights & Analysis</h3>
+                        <div id="insights-container"></div>
+                    </div>
+                </div>
+
+                <!-- AI Chat Assistant View -->
+                <div id="view-ai-insights" class="view">
+                    <div class="chat-container">
+                        <!-- Chat Header -->
+                        <div class="chat-header">
+                            <div class="chat-header-info">
+                                <h3>🤖 AI Chat Assistant</h3>
+                                <p class="chat-subtitle">Your expert sensory scientist powered by Claude</p>
+                                <div id="ai-usage-indicator" class="ai-usage-indicator" style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                                    <span id="usage-text">Loading usage...</span>
+                                </div>
+                            </div>
+                            <div class="chat-header-actions">
+                                <button id="btn-export-chat" class="btn-secondary btn-sm" title="Export conversation">
+                                    📥 Export
+                                </button>
+                                <button id="btn-clear-chat" class="btn-secondary btn-sm" title="Clear history">
+                                    🗑️ Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages Area -->
+                        <div id="chat-messages" class="chat-messages">
+                            <!-- Welcome Message -->
+                            <div class="chat-message assistant-message">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    <div class="message-text">
+                                        <p><strong>Hello! I'm your AI Sensory Scientist.</strong></p>
+                                        <p>I can help you analyze your products, suggest improvements, identify opportunities, and answer questions about sensory-emotional mapping.</p>
+                                        <p>💡 <em>Try asking me something or use the quick shortcuts below!</em></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suggested Questions -->
+                        <div id="suggested-questions" class="suggested-questions">
+                            <div class="suggestions-label">💬 Suggested questions:</div>
+                            <div id="suggestions-container" class="suggestions-container">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Analysis Shortcuts -->
+                        <div class="quick-analysis-bar">
+                            <button class="quick-btn" data-analysis="portfolio-summary" title="Get portfolio overview">
+                                📊 Portfolio Summary
+                            </button>
+                            <button class="quick-btn" data-analysis="innovation-ideas" title="Innovation opportunities">
+                                💡 Innovation Ideas
+                            </button>
+                            <button class="quick-btn" data-analysis="reformulation-priorities" title="Which products to reformulate">
+                                🔄 Reformulation Priorities
+                            </button>
+                            <button class="quick-btn" data-analysis="emotional-white-space" title="Emotional gaps">
+                                🎯 Emotional Gaps
+                            </button>
+                            <button class="quick-btn" data-analysis="top-performers" title="Best products analysis">
+                                ⭐ Top Performers
+                            </button>
+                        </div>
+
+                        <!-- Chat Input Area -->
+                        <div class="chat-input-area">
+                            <textarea
+                                id="chat-input"
+                                class="chat-input"
+                                rows="2"
+                                placeholder="Ask me anything about your products, emotions, or sensory profiles..."
+                            ></textarea>
+                            <button id="btn-send-chat" class="btn-send-chat" title="Send message (or press Enter)">
+                                <span class="send-icon">📤</span>
+                                Send
+                            </button>
+                        </div>
+
+                        <!-- Typing Indicator -->
+                        <div id="chat-typing" class="chat-typing" style="display: none;">
+                            <div class="typing-indicator">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="typing-text">Claude is thinking...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consumer Panel View -->
+                <div id="view-consumer-panel" class="view">
+                    <div id="consumer-panel-container"></div>
+                </div>
+
+                <!-- Custom Lexicon View -->
+                <div id="view-custom-lexicon" class="view">
+                    <div id="lexicon-container"></div>
+                </div>
+
+                <!-- Industry Benchmarks View -->
+                <div id="view-industry-benchmarks" class="view">
+                    <div id="benchmarks-container"></div>
+                </div>
+
+                <!-- Export & Reports View -->
+                <div id="view-export-reports" class="view">
+                    <div id="export-reports-container"></div>
+                </div>
+
+                <!-- Batch Import View -->
+                <div id="view-batch-import" class="view">
+                    <div id="batch-import-container"></div>
+                </div>
+
+                <!-- Recipe Tracker View -->
+                <div id="view-recipe-tracker" class="view">
+                    <div id="recipe-tracker-container"></div>
+                </div>
+
+                <!-- Temporal Analysis View -->
+                <div id="view-temporal-analysis" class="view">
+                    <div id="temporal-analysis-container"></div>
+                </div>
+
+                <!-- Photo Gallery View -->
+                <div id="view-photo-gallery" class="view">
+                    <div id="photo-gallery-container"></div>
+                </div>
+
+                <!-- Team Collaboration View -->
+                <div id="view-team-collaboration" class="view">
+                    <div id="team-collaboration-container"></div>
+                </div>
+
+                <!-- Approvals View -->
+                <div id="view-approvals" class="view">
+                    <div id="approvals-container"></div>
+                </div>
+
+                <!-- History View -->
+                <div id="view-history" class="view">
+                    <div class="card">
+                        <div class="history-controls">
+                            <button id="clear-data" class="btn-danger">Clear All Data</button>
+                        </div>
+                        <div id="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- Import Data View -->
+                <div id="view-import" class="view">
+                    <div class="card">
+                        <h3>Import Flavor Concepts & Data</h3>
+                        <p style="color: var(--text-light); margin-bottom: 25px;">
+                            Upload Excel (.xlsx) CSV, or JSON files containing flavor concepts. Data will be automatically mapped to the Taste Signature framework.
+                        </p>
+
+                        <div class="import-section">
+                            <div class="file-upload-area" id="file-upload-area">
+                                <div class="upload-icon">📁</div>
+                                <h4>Drag & Drop Files Here</h4>
+                                <p>or click to browse</p>
+                                <input type="file" id="file-input" accept=".csv,.json,.xlsx" multiple style="display: none;">
+                                <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+                                    Choose Files
+                                </button>
+                            </div>
+
+                            <div class="import-format-guide">
+                                <h4>Supported Formats</h4>
+                                <ul>
+                                    <li><strong>CSV:</strong> Comma-separated values with headers</li>
+                                    <li><strong>JSON:</strong> Array of flavor concept objects</li>
+                                    <li><strong>Excel (.xlsx):</strong> TasteAI flavor concepts format</li>
+                                </ul>
+
+                                <h4 style="margin-top: 20px;">Expected Columns</h4>
+                                <ul>
+                                    <li>Concept_ID or ID</li>
+                                    <li>Flavor_Name or Name</li>
+                                    <li>Primary_Ingredients or Ingredients</li>
+                                    <li>Taste_Profile</li>
+                                    <li>Emotional_Resonance</li>
+                                    <li>Target_Product_Category or Category</li>
+                                    <li>Market_Trend_Alignment (optional)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="import-preview" style="display: none; margin-top: 30px;">
+                            <h4>Import Preview</h4>
+                            <div id="import-preview-content"></div>
+                            <div style="margin-top: 20px;">
+                                <button id="btn-confirm-import" class="btn-primary">Import <span id="import-count">0</span> Items</button>
+                                <button id="btn-cancel-import" class="btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="import-status" style="margin-top: 20px;"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Quick Import: Sample Flavor Concepts</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">
+                            Load the included TasteAI flavor concepts to see the framework in action.
+                        </p>
+                        <button id="btn-load-sample-data" class="btn-primary">Load 15 Sample Concepts</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- SheetJS for Excel Import/Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <!-- jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.1/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="firestore-data.js"></script>
+    <script src="config.js"></script>
+    <script src="user-tiers.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="video-player.js"></script>
+    <script src="camera-integration.js"></script>
+    <script src="push-notifications.js"></script>
+    <script src="claude-api.js"></script>
+    <script src="data-importer.js"></script>
+    <script src="excel-import.js"></script>
+    <script src="pdf-export.js"></script>
+    <script src="export-controller.js"></script>
+    <script src="ai-chat.js"></script>
+    <script src="chat-ui.js"></script>
+    <script src="tutorial.js"></script>
+    <script src="need-state-questionnaire.js"></script>
+    <script src="statistics.js"></script>
+    <script src="advanced-analytics.js"></script>
+    <script src="consumer-panel.js"></script>
+    <script src="consumer-panel-ui.js"></script>
+    <script src="custom-lexicon.js"></script>
+    <script src="custom-lexicon-ui.js"></script>
+    <script src="industry-benchmarks.js"></script>
+    <script src="industry-benchmarks-ui.js"></script>
+    <script src="export-reporting.js"></script>
+    <script src="export-reporting-ui.js"></script>
+    <script src="batch-import.js"></script>
+    <script src="batch-import-ui.js"></script>
+    <script src="recipe-tracker.js"></script>
+    <script src="recipe-tracker-ui.js"></script>
+    <script src="temporal-analysis.js"></script>
+    <script src="temporal-analysis-ui.js"></script>
+    <script src="photo-manager.js"></script>
+    <script src="photo-manager-ui.js"></script>
+    <script src="team-collaboration.js"></script>
+    <script src="team-collaboration-ui.js"></script>
+    <script src="comments.js"></script>
+    <script src="comments-ui.js"></script>
+    <script src="approval-workflow.js"></script>
+    <script src="approval-workflow-ui.js"></script>
+    <script src="activity-feed-ui.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Initialize Authentication & PWA -->
+    <script>
+        // EMERGENCY CACHE CLEAR - Run FIRST before anything else
+        (async function emergencyCacheClear() {
+            try {
+                // Clear ALL browser caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    if (cacheNames.length > 0) {
+                        console.log('🔥 EMERGENCY: Clearing all caches...', cacheNames);
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                        console.log('✅ All caches cleared! Fresh start.');
+                    }
+                }
+            } catch (e) {
+                console.error('Cache clear error:', e);
+            }
+        })();
+
+        // Create auth manager instance
+        const authManager = new AuthManager();
+
+        // Initialize auth when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Wait for Firebase SDK to be fully loaded
+                if (typeof firebase === 'undefined') {
+                    console.error('❌ Firebase SDK not loaded');
+                    showAuthMessage('login-message',
+                        'Unable to load authentication system. Please refresh the page or clear your browser cache.',
+                        'error');
+                    return;
+                }
+
+                // Check if authManager exists
+                if (!window.authManager) {
+                    console.error('❌ AuthManager not initialized');
+                    showAuthMessage('login-message',
+                        'Authentication system not available. Please refresh the page.',
+                        'error');
+                    return;
+                }
+
+                const initialized = await window.authManager.initialize();
+
+                if (!initialized) {
+                    showAuthMessage('login-message',
+                        'Authentication initialization failed. Please refresh the page.',
+                        'error');
+                    return;
+                }
+
+                initAuthUI();
+                initLogoutButton();
+                registerServiceWorker();
+
+                // Initialize video player on welcome section
+                if (window.tasteVideoPlayer) {
+                    window.tasteVideoPlayer.renderOnPage('welcome-video-container', '📹 Getting Started with Taste Signature');
+                }
+
+                // Show notification prompt after 5 seconds (if not already decided)
+                setTimeout(() => {
+                    if (window.showNotificationPrompt) {
+                        showNotificationPrompt();
+                    }
+                }, 5000);
+
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                showAuthMessage('login-message',
+                    'Failed to initialize app. Please refresh the page or clear your browser cache.',
+                    'error');
+            }
+        });
+
+        // Register Service Worker for PWA functionality
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    // Register service worker with versioning for PWA functionality
+                    console.log('🔄 Registering Service Worker for PWA...');
+
+                    // First, unregister any old workers to ensure clean state
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        console.log('🗑️ Cleared old service worker');
+                    }
+
+                    // Register new service worker with timestamp to force fresh download
+                    const timestamp = new Date().getTime();
+                    const registration = await navigator.serviceWorker.register(`/service-worker.js?v=${timestamp}`, {
+                        scope: '/',
+                        updateViaCache: 'none' // Never cache the service worker file
+                    });
+                    console.log('✅ Service Worker registered successfully:', registration.scope);
+
+                    // Check for updates - AUTO RELOAD on new version
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('🔄 New version detected, preparing to update...');
+
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('✅ New version ready! Auto-reloading in 2 seconds...');
+
+                                // Show a brief notification
+                                const notification = document.createElement('div');
+                                notification.style.cssText = `
+                                    position: fixed;
+                                    top: 20px;
+                                    right: 20px;
+                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                    color: white;
+                                    padding: 15px 25px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                                    z-index: 10000;
+                                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                                    animation: slideIn 0.3s ease-out;
+                                `;
+                                notification.textContent = '🎉 New version available! Updating...';
+                                document.body.appendChild(notification);
+
+                                // Auto-reload after 2 seconds
+                                setTimeout(() => {
+                                    window.location.reload(true); // Force reload from server
+                                }, 2000);
+                            }
+                        });
+                    });
+
+                    // Check for updates every 60 seconds
+                    setInterval(() => {
+                        registration.update().then(() => {
+                            console.log('🔍 Checked for service worker updates');
+                        }).catch(err => {
+                            console.error('Update check failed:', err);
+                        });
+                    }, 60000); // Check every 60 seconds
+
+                    // Check for updates on page visibility change
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) {
+                            registration.update();
+                        }
+                    });
+
+                    // Show install prompt for PWA
+                    let deferredPrompt;
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        console.log('📱 PWA install prompt available');
+
+                        // Show custom install button (optional - could add to UI later)
+                        // Could show a banner: "Install Taste Signature app for better experience"
+                    });
+
+                    window.addEventListener('appinstalled', () => {
+                        console.log('✅ PWA installed successfully!');
+                        deferredPrompt = null;
+                    });
+
+                } catch (error) {
+                    console.error('❌ Service Worker operation failed:', error);
+                }
+            } else {
+                console.log('⚠️ Service Workers not supported in this browser');
+            }
+        }
+
+        function initLogoutButton() {
+            const logoutBtn = document.getElementById('btn-logout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to logout?')) {
+                        await window.authManager.logout();
+                    }
+                });
+            }
+        }
+
+        function initAuthUI() {
+            // Login form
+            document.getElementById('form-login').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                const result = await window.authManager.login(email, password);
+                showAuthMessage('login-message', result.message || result.warning, result.success ? 'success' : 'error');
+
+                if (result.warning) {
+                    showResendVerification('login-message');
+                }
+            });
+
+            // Signup form
+            document.getElementById('form-signup').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const companyName = document.getElementById('signup-company-name').value;
+                const industry = document.getElementById('signup-industry').value;
+                const companySize = document.getElementById('signup-company-size').value;
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirmPassword = document.getElementById('signup-password-confirm').value;
+
+                if (password !== confirmPassword) {
+                    showAuthMessage('signup-message', 'Passwords do not match', 'error');
+                    return;
+                }
+
+                const companyData = {
+                    companyName: companyName,
+                    industry: industry,
+                    companySize: companySize
+                };
+
+                const result = await window.authManager.signup(email, password, name, companyData);
+                showAuthMessage('signup-message', result.message, result.success ? 'success' : 'error');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        showLoginForm();
+                    }, 3000);
+                }
+            });
+
+            // Forgot password form
+            document.getElementById('form-forgot-password').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('forgot-email').value;
+
+                const result = await window.authManager.resetPassword(email);
+                showAuthMessage('forgot-message', result.message, result.success ? 'success' : 'error');
+
+                if (result.success) {
+                    setTimeout(() => {
+                        showLoginForm();
+                    }, 3000);
+                }
+            });
+
+            // Password requirements live validation
+            document.getElementById('signup-password').addEventListener('input', (e) => {
+                window.authManager.updatePasswordRequirements(e.target.value, 'password-requirements');
+            });
+
+            // Form navigation links
+            document.getElementById('link-show-signup').addEventListener('click', (e) => {
+                e.preventDefault();
+                showSignupForm();
+            });
+
+            document.getElementById('link-show-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoginForm();
+            });
+
+            document.getElementById('link-back-to-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoginForm();
+            });
+
+            document.getElementById('link-forgot-password').addEventListener('click', (e) => {
+                e.preventDefault();
+                showForgotPasswordForm();
+            });
+        }
+
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('forgot-password-form').style.display = 'none';
+            clearAuthMessages();
+        }
+
+        function showSignupForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'block';
+            document.getElementById('forgot-password-form').style.display = 'none';
+            clearAuthMessages();
+        }
+
+        function showForgotPasswordForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('forgot-password-form').style.display = 'block';
+            clearAuthMessages();
+        }
+
+        function showAuthMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `auth-message ${type}`;
+            element.style.display = 'block';
+        }
+
+        function clearAuthMessages() {
+            document.querySelectorAll('.auth-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+        }
+
+        function showResendVerification(elementId) {
+            const element = document.getElementById(elementId);
+            const resendLink = document.createElement('a');
+            resendLink.href = '#';
+            resendLink.textContent = 'Resend verification email';
+            resendLink.style.display = 'block';
+            resendLink.style.marginTop = '10px';
+            resendLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const result = await window.authManager.resendVerification();
+                showAuthMessage(elementId, result.message, result.success ? 'success' : 'error');
+            });
+            element.appendChild(resendLink);
+        }
+    </script>
+
+    <!-- Need State Helper Modal -->
+    <div id="need-state-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>🎯 Need State Helper</h2>
+                <button class="modal-close" onclick="closeNeedStateHelper()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--text-light);">
+                    Answer these questions to help identify the primary Need State for this product.
+                </p>
+
+                <!-- Progress Bar -->
+                <div class="questionnaire-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="questionnaire-progress"></div>
+                    </div>
+                    <div class="progress-text">Question <span id="current-question">1</span> of <span id="total-questions">5</span></div>
+                </div>
+
+                <!-- Questions -->
+                <div id="questionnaire-questions"></div>
+
+                <!-- Navigation -->
+                <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                    <button type="button" id="btn-prev-question" class="btn-secondary" style="display: none;">
+                        ← Previous
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" id="btn-next-question" class="btn-primary">
+                        Next →
+                    </button>
+                    <button type="button" id="btn-see-results" class="btn-primary" style="display: none;">
+                        See Results
+                    </button>
+                </div>
+
+                <!-- Results -->
+                <div id="questionnaire-results" style="display: none; margin-top: 30px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">📊 Your Recommended Need State:</h3>
+                    <div id="recommended-need-state"></div>
+                    <button type="button" class="btn-primary" style="margin-top: 20px;" onclick="applyRecommendedNeedState()">
+                        Apply This Need State
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html> 
