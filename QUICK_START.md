@@ -57,25 +57,25 @@ Add these **11 variables**:
 
 ```
 VITE_ANTHROPIC_API_KEY
-Value: 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
+Value: YOUR_ANTHROPIC_API_KEY_HERE
 
 VITE_FIREBASE_API_KEY
-Value: AIzaSyCER_1dyyms2zzyrhlyHdSpz4TI-N36sIQ
+Value: YOUR_FIREBASE_API_KEY_HERE
 
 VITE_FIREBASE_AUTH_DOMAIN
-Value: taste-signature-ai-app.firebaseapp.com
+Value: your-project-id.firebaseapp.com
 
 VITE_FIREBASE_PROJECT_ID
-Value: taste-signature-ai-app
+Value: your-project-id
 
 VITE_FIREBASE_STORAGE_BUCKET
-Value: taste-signature-ai-app.firebasestorage.app
+Value: your-project-id.firebasestorage.app
 
 VITE_FIREBASE_MESSAGING_SENDER_ID
-Value: 821061381389
+Value: YOUR_SENDER_ID
 
 VITE_FIREBASE_APP_ID
-Value: 1:821061381389:web:d7e04fd6685c76c8645444
+Value: YOUR_APP_ID
 
 VITE_CLAUDE_MODEL
 Value: claude-sonnet-4-20250514

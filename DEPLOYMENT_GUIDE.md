@@ -68,14 +68,14 @@ git push -u origin main
    Click **"Environment Variables"** and add these:
 
    ```
-   VITE_ANTHROPIC_API_KEY = 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
+   VITE_ANTHROPIC_API_KEY = YOUR_ANTHROPIC_API_KEY_HERE
 
-   VITE_FIREBASE_API_KEY = AIzaSyCER_1dyyms2zzyrhlyHdSpz4TI-N36sIQ
-   VITE_FIREBASE_AUTH_DOMAIN = taste-signature-ai-app.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID = taste-signature-ai-app
-   VITE_FIREBASE_STORAGE_BUCKET = taste-signature-ai-app.firebasestorage.app
-   VITE_FIREBASE_MESSAGING_SENDER_ID = 821061381389
-   VITE_FIREBASE_APP_ID = 1:821061381389:web:d7e04fd6685c76c8645444
+   VITE_FIREBASE_API_KEY = YOUR_FIREBASE_API_KEY_HERE
+   VITE_FIREBASE_AUTH_DOMAIN = your-project-id.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID = your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET = your-project-id.firebasestorage.app
+   VITE_FIREBASE_MESSAGING_SENDER_ID = YOUR_SENDER_ID
+   VITE_FIREBASE_APP_ID = YOUR_APP_ID
 
    VITE_CLAUDE_MODEL = claude-sonnet-4-20250514
    VITE_CLAUDE_MAX_TOKENS = 4096
