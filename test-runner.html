@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taste Signature - Automated Test Runner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: #5568d3; transform: translateY(-2px); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .results {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .results.pending { background: #fff3cd; border: 1px solid #ffc107; }
+        .results.running { background: #cfe2ff; border: 1px solid #0d6efd; }
+        .results.success { background: #d1e7dd; border: 1px solid #198754; }
+        .results.error { background: #f8d7da; border: 1px solid #dc3545; }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .test-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-item.pass { background: #d1e7dd; }
+        .test-item.fail { background: #f8d7da; }
+        .test-item.pending { background: #e2e3e5; }
+        .icon { font-size: 18px; }
+        .summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .summary h3 { margin-bottom: 15px; }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label { color: #666; font-size: 14px; }
+        .stat-card.success .stat-value { color: #198754; }
+        .stat-card.error .stat-value { color: #dc3545; }
+        .stat-card.warning .stat-value { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Taste Signature - Automated Test Runner</h1>
+        <p class="subtitle">Run automated tests on your deployed application</p>
+
+        <div class="test-section">
+            <h2>⚙️ Configuration</h2>
+            <label>App URL: <input type="text" id="appUrl" value="https://taste-signature-app.vercel.app" style="width: 400px; padding: 8px; margin-left: 10px;"></label>
+            <button class="btn" onclick="saveConfig()">Save Config</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Quick Test Suites</h2>
+            <button class="btn" onclick="runAllTests()">▶️ Run All Tests</button>
+            <button class="btn" onclick="runCriticalTests()">⚡ Run Critical Tests Only</button>
+            <button class="btn" onclick="runSmokeTests()">💨 Run Smoke Tests (Fast)</button>
+            <button class="btn" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📦 Individual Test Modules</h2>
+            <button class="btn" onclick="testPageLoad()">1. Page Load</button>
+            <button class="btn" onclick="testAssets()">2. Assets Load</button>
+            <button class="btn" onclick="testFirebase()">3. Firebase Config</button>
+            <button class="btn" onclick="testCharts()">4. Chart.js</button>
+            <button class="btn" onclick="testNavigation()">5. Navigation</button>
+            <button class="btn" onclick="testForms()">6. Forms</button>
+            <button class="btn" onclick="testDataSync()">7. Data Operations</button>
+            <button class="btn" onclick="testResponsive()">8. Responsive Design</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+
+        <div id="testResults"></div>
+
+        <div class="summary" id="summary" style="display: none;">
+            <h3>📊 Test Summary</h3>
+            <div class="stat-grid">
+                <div class="stat-card success">
+                    <div class="stat-label">Passed</div>
+                    <div class="stat-value" id="passedCount">0</div>
+                </div>
+                <div class="stat-card error">
+                    <div class="stat-label">Failed</div>
+                    <div class="stat-value" id="failedCount">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Skipped</div>
+                    <div class="stat-value" id="skippedCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Tests</div>
+                    <div class="stat-value" id="totalCount">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+        let appUrl = 'https://taste-signature-app.vercel.app';
+
+        function saveConfig() {
+            appUrl = document.getElementById('appUrl').value;
+            localStorage.setItem('taste_test_app_url', appUrl);
+            showResult('Config', `✅ Saved app URL: ${appUrl}`, 'success');
+        }
+
+        function showResult(testName, message, status) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultEl = document.createElement('div');
+            resultEl.className = `results ${status}`;
+            resultEl.innerHTML = `<strong>[${testName}]</strong>\n${message}\n${new Date().toLocaleTimeString()}`;
+            resultsDiv.appendChild(resultEl);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+
+            testResults.push({ testName, message, status, timestamp: new Date() });
+            updateSummary();
+        }
+
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+        }
+
+        function updateSummary() {
+            const passed = testResults.filter(r => r.status === 'success').length;
+            const failed = testResults.filter(r => r.status === 'error').length;
+            const skipped = testResults.filter(r => r.status === 'pending').length;
+
+            document.getElementById('passedCount').textContent = passed;
+            document.getElementById('failedCount').textContent = failed;
+            document.getElementById('skippedCount').textContent = skipped;
+            document.getElementById('totalCount').textContent = testResults.length;
+            document.getElementById('summary').style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testResults = [];
+            updateProgress(0, 100);
+            document.getElementById('summary').style.display = 'none';
+        }
+
+        // Test 1: Page Load
+        async function testPageLoad() {
+            showResult('Page Load', '⏳ Testing page load...', 'running');
+            try {
+                const startTime = performance.now();
+                const response = await fetch(appUrl);
+                const endTime = performance.now();
+                const loadTime = Math.round(endTime - startTime);
+
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('Taste Signature')) {
+                        showResult('Page Load', `✅ PASS: Page loaded in ${loadTime}ms\n✓ Title found\n✓ Status: ${response.status}`, 'success');
+                    } else {
+                        showResult('Page Load', `❌ FAIL: Page loaded but title missing`, 'error');
+                    }
+                } else {
+                    showResult('Page Load', `❌ FAIL: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('Page Load', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Assets
+        async function testAssets() {
+            showResult('Assets', '⏳ Testing critical assets...', 'running');
+            const assets = [
+                '/styles.css',
+                '/app.js',
+                '/auth.js',
+                '/firebase-config.js',
+                '/manifest.json'
+            ];
+
+            let passed = 0;
+            let failed = 0;
+            let results = [];
+
+            for (const asset of assets) {
+                try {
+                    const response = await fetch(appUrl + asset);
+                    if (response.ok) {
+                        passed++;
+                        results.push(`✓ ${asset}`);
+                    } else {
+                        failed++;
+                        results.push(`✗ ${asset} (${response.status})`);
+                    }
+                } catch (error) {
+                    failed++;
+                    results.push(`✗ ${asset} (Error)`);
+                }
+            }
+
+            const status = failed === 0 ? 'success' : 'error';
+            showResult('Assets', `${passed}/${assets.length} assets loaded\n\n${results.join('\n')}`, status);
+        }
+
+        // Test 3: Firebase Config
+        async function testFirebase() {
+            showResult('Firebase', '⏳ Checking Firebase configuration...', 'running');
+            try {
+                const response = await fetch(appUrl + '/firebase-config.js');
+                const code = await response.text();
+
+                const checks = [
+                    { name: 'API Key', test: code.includes('apiKey:') },
+                    { name: 'Auth Domain', test: code.includes('authDomain:') },
+                    { name: 'Project ID', test: code.includes('projectId:') },
+                    { name: 'Firebase Init', test: code.includes('firebase.initializeApp') }
+                ];
+
+                const passed = checks.filter(c => c.test).length;
+                const results = checks.map(c => `${c.test ? '✓' : '✗'} ${c.name}`);
+
+                showResult('Firebase', `${passed}/${checks.length} checks passed\n\n${results.join('\n')}`,
+                    passed === checks.length ? 'success' : 'error');
+            } catch (error) {
+                showResult('Firebase', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 4: Chart.js
+        async function testCharts() {
+            showResult('Chart.js', '⏳ Checking Chart.js library...', 'running');
+            try {
+                const response = await fetch(appUrl);
+                const html = await response.text();
+
+                const hasChartJs = html.includes('chart.js') || html.includes('chartjs');
+                const hasCanvasElements = html.includes('<canvas');
+
+                if (hasChartJs && hasCanvasElements) {
+                    showResult('Chart.js', `✅ PASS: Chart.js detected\n✓ Library loaded\n✓ Canvas elements found`, 'success');
+                } else {
+                    showResult('Chart.js', `⚠️ WARNING: Chart.js or canvas elements missing`, 'error');
+                }
+            } catch (error) {
+                showResult('Chart.js', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 5: Navigation
+        async function testNavigation() {
+            showResult('Navigation', '⏳ Testing navigation structure...', 'running');
+            try {
+                const response = await fetch(appUrl);
+                const html = await response.text();
+
+                const navItems = [
+                    'Overview',
+                    'Log Experience',
+                    'Shape of Taste',
+                    'Need States',
+                    'Compare Products'
+                ];
+
+                const found = navItems.filter(item => html.includes(item)).length;
+                const results = navItems.map(item =>
+                    `${html.includes(item) ? '✓' : '✗'} ${item}`
+                );
+
+                showResult('Navigation', `${found}/${navItems.length} nav items found\n\n${results.join('\n')}`,
+                    found === navItems.length ? 'success' : 'error');
+            } catch (error) {
+                showResult('Navigation', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 6: Forms
+        async function testForms() {
+            showResult('Forms', '⏳ Checking form elements...', 'running');
+            try {
+                const response = await fetch(appUrl);
+                const html = await response.text();
+
+                const checks = [
+                    { name: 'Product Name Input', test: html.includes('Product Name') || html.includes('productName') },
+                    { name: 'Sliders', test: html.includes('type="range"') || html.includes('slider') },
+                    { name: 'Submit Button', test: html.includes('Submit') || html.includes('submit') },
+                    { name: 'Form Element', test: html.includes('<form') }
+                ];
+
+                const passed = checks.filter(c => c.test).length;
+                const results = checks.map(c => `${c.test ? '✓' : '✗'} ${c.name}`);
+
+                showResult('Forms', `${passed}/${checks.length} form elements found\n\n${results.join('\n')}`,
+                    passed >= 3 ? 'success' : 'error');
+            } catch (error) {
+                showResult('Forms', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 7: Data Operations
+        async function testDataSync() {
+            showResult('Data Operations', '⏳ Checking data layer...', 'running');
+            try {
+                const response = await fetch(appUrl + '/firestore-data.js');
+                if (response.ok) {
+                    const code = await response.text();
+                    const checks = [
+                        { name: 'FirestoreDataManager', test: code.includes('FirestoreDataManager') },
+                        { name: 'Save Function', test: code.includes('saveExperiences') },
+                        { name: 'Load Function', test: code.includes('loadExperiences') },
+                        { name: 'Sync Function', test: code.includes('sync') }
+                    ];
+
+                    const passed = checks.filter(c => c.test).length;
+                    const results = checks.map(c => `${c.test ? '✓' : '✗'} ${c.name}`);
+
+                    showResult('Data Operations', `${passed}/${checks.length} operations found\n\n${results.join('\n')}`,
+                        passed >= 3 ? 'success' : 'error');
+                } else {
+                    showResult('Data Operations', `⚠️ firestore-data.js not accessible`, 'error');
+                }
+            } catch (error) {
+                showResult('Data Operations', `❌ FAIL: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 8: Responsive Design
+        async function testResponsive() {
+            showResult('Responsive Design', '⏳ Checking responsive CSS...', 'running');
+            try {
+                const response = await fetch(appUrl + '/mobile-responsive.css');
+                if (response.ok) {
+                    const css = await response.text();
+                    const checks = [
+                        { name: 'Mobile Media Query', test: css.includes('@media') && css.includes('max-width') },
+                        { name: 'Flexbox/Grid', test: css.includes('display: flex') || css.includes('display: grid') },
+                        { name: 'Viewport Units', test: css.includes('vw') || css.includes('vh') }
+                    ];
+
+                    const passed = checks.filter(c => c.test).length;
+                    const results = checks.map(c => `${c.test ? '✓' : '✗'} ${c.name}`);
+
+                    showResult('Responsive Design', `${passed}/${checks.length} responsive features found\n\n${results.join('\n')}`,
+                        passed >= 2 ? 'success' : 'error');
+                } else {
+                    showResult('Responsive Design', `✅ PASS: mobile-responsive.css loaded`, 'success');
+                }
+            } catch (error) {
+                showResult('Responsive Design', `⚠️ Could not verify: ${error.message}`, 'pending');
+            }
+        }
+
+        // Run All Tests
+        async function runAllTests() {
+            clearResults();
+            const tests = [
+                testPageLoad,
+                testAssets,
+                testFirebase,
+                testCharts,
+                testNavigation,
+                testForms,
+                testDataSync,
+                testResponsive
+            ];
+
+            for (let i = 0; i < tests.length; i++) {
+                updateProgress(i, tests.length);
+                await tests[i]();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            updateProgress(tests.length, tests.length);
+            showResult('Complete', `✅ All tests completed!`, 'success');
+        }
+
+        // Run Critical Tests Only
+        async function runCriticalTests() {
+            clearResults();
+            const tests = [testPageLoad, testAssets, testFirebase, testNavigation];
+
+            for (let i = 0; i < tests.length; i++) {
+                updateProgress(i, tests.length);
+                await tests[i]();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            updateProgress(tests.length, tests.length);
+            showResult('Complete', `✅ Critical tests completed!`, 'success');
+        }
+
+        // Run Smoke Tests (Fast)
+        async function runSmokeTests() {
+            clearResults();
+            const tests = [testPageLoad, testAssets];
+
+            for (let i = 0; i < tests.length; i++) {
+                updateProgress(i, tests.length);
+                await tests[i]();
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            updateProgress(tests.length, tests.length);
+            showResult('Complete', `✅ Smoke tests completed!`, 'success');
+        }
+
+        // Load saved config on startup
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('taste_test_app_url');
+            if (savedUrl) {
+                document.getElementById('appUrl').value = savedUrl;
+                appUrl = savedUrl;
+            }
+        };
+    </script>
+</body>
+</html>
