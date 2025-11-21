@@ -439,6 +439,18 @@
                             <!-- Stage 1: Product Information -->
                             <div class="form-stage active" data-stage="1">
                                 <h4>Product Information</h4>
+
+                                <!-- Expert Templates Button -->
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 10px; margin-bottom: 25px; text-align: center;">
+                                    <button type="button" class="btn-primary" onclick="window.templatesManager.showTemplateSelector()"
+                                            style="background: white; color: #667eea; font-weight: bold; padding: 12px 30px; border: none; width: 100%;">
+                                        🎓 Use Expert Template
+                                    </button>
+                                    <p style="color: white; margin: 10px 0 0 0; font-size: 13px; opacity: 0.9;">
+                                        Get guided sensory evaluation with 30 years of professional expertise
+                                    </p>
+                                </div>
+
                                 <div class="form-group" style="margin-bottom: 20px;">
                                     <label for="retest-selector">Re-testing an existing product?</label>
                                     <select id="retest-selector" class="form-control">
@@ -1330,6 +1342,7 @@
     <script src="approval-workflow-ui.js"></script>
     <script src="activity-feed-ui.js"></script>
     <script src="demo-mode.js"></script>
+    <script src="templates-manager.js"></script>
     <script src="app.js"></script>
 
     <!-- Initialize Authentication & PWA -->

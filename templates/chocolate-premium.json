@@ -1,0 +1,89 @@
+{
+  "templateName": "Premium Dark Chocolate",
+  "category": "Chocolate",
+  "description": "Professional sensory template for premium dark chocolate (60-85% cacao) with expert guidance on key attributes",
+  "expertNotes": "Focus on cacao origin character, roast development, and mouthfeel evolution. Premium dark chocolate should show complexity without harsh bitterness.",
+  "guidedAttributes": {
+    "appearance": {
+      "prompt": "Observe the chocolate's visual appeal and quality indicators",
+      "keyAttributes": [
+        "Color intensity (medium brown to near-black)",
+        "Surface finish (glossy indicates proper tempering)",
+        "Snap quality (clean break = good temper)",
+        "Texture (smooth or textured surface)",
+        "Any bloom or fat separation"
+      ],
+      "expertTips": "A glossy surface and clean snap are hallmarks of well-tempered premium chocolate. Dull appearance or soft texture may indicate storage issues."
+    },
+    "aroma": {
+      "prompt": "Evaluate aromatic complexity and intensity",
+      "keyAttributes": [
+        "Cacao intensity (primary note)",
+        "Roast character (light, medium, dark)",
+        "Fruity notes (berry, citrus, tropical)",
+        "Nutty/earthy tones",
+        "Any off-notes or staleness"
+      ],
+      "expertTips": "Premium dark chocolate should have complex aroma layers. Single-origin chocolates often show distinctive fruity or floral notes based on terroir."
+    },
+    "frontMouth": {
+      "prompt": "Assess initial taste impact and texture",
+      "keyAttributes": [
+        "Initial bitterness level (balanced or harsh)",
+        "Melt quality (smooth, fast, creamy)",
+        "Texture perception (smooth, grainy, waxy)",
+        "Cacao flavor intensity",
+        "Any astringency or dryness"
+      ],
+      "expertTips": "Well-conched chocolate melts smoothly without grittiness. Initial bitterness should be balanced, not aggressive. Slow, creamy melt indicates high-quality ingredients."
+    },
+    "midRearMouth": {
+      "prompt": "Track flavor development and mouthfeel evolution",
+      "keyAttributes": [
+        "Flavor complexity emerging (fruit, spice, floral)",
+        "Sweetness balance with bitterness",
+        "Body/viscosity (thin, coating, heavy)",
+        "Astringency development",
+        "Textural changes as it melts"
+      ],
+      "expertTips": "This is where premium chocolate shows its quality. Look for flavor development beyond simple sweetness - dried fruit, wine notes, spice complexity."
+    },
+    "aftertaste": {
+      "prompt": "Evaluate finish length and quality",
+      "keyAttributes": [
+        "Length of finish (short, medium, long)",
+        "Dominant notes in finish (cacao, fruit, bitter)",
+        "Clean vs. lingering bitterness",
+        "Any off-notes or unpleasant aftertaste",
+        "Mouthfeel coating"
+      ],
+      "expertTips": "Premium dark chocolate should have a long, clean finish. Harsh or metallic aftertaste indicates poor quality or over-roasting. 30+ second finish is typical of high-quality chocolate."
+    },
+    "emotionalResponse": {
+      "prompt": "Capture the emotional experience and consumption behavior",
+      "keyAttributes": [
+        "Sophistication and refinement perception",
+        "Indulgence vs. everyday treat feeling",
+        "Satisfaction level after consumption",
+        "Desire for another piece (moreishness)",
+        "Occasion appropriateness"
+      ],
+      "expertTips": "Premium chocolate often evokes slower, more mindful consumption. High moreishness with sophisticated positioning is the ideal combination."
+    }
+  },
+  "commonNeedStates": [
+    "Self-reward",
+    "Indulgent treat",
+    "Sophisticated pleasure",
+    "Mindful indulgence"
+  ],
+  "typicalEmotionalTriggers": [
+    "Sophistication",
+    "Quality",
+    "Indulgence",
+    "Craftsmanship",
+    "Authenticity"
+  ],
+  "benchmarkInsights": "Premium dark chocolate typically scores 7-9/10 on moreishness when well-balanced. Over-bitter products (8+ bitterness) often score below 6/10 on repeat appeal.",
+  "categoryTrends": "Growing consumer interest in single-origin, high-percentage, and 'bean-to-bar' stories. Flavor complexity increasingly valued over simple sweetness."
+}

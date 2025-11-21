@@ -1,0 +1,90 @@
+{
+  "templateName": "Specialty Coffee (Espresso/Filter)",
+  "category": "Coffee",
+  "description": "Professional sensory template for specialty-grade coffee evaluation with SCA-aligned methodology",
+  "expertNotes": "Focus on origin characteristics, roast development, and brew method impact. Specialty coffee should score 80+ on SCA scale with distinct terroir expression.",
+  "guidedAttributes": {
+    "appearance": {
+      "prompt": "Evaluate visual cues of coffee quality",
+      "keyAttributes": [
+        "Bean roast level (light, medium, dark)",
+        "Brewed liquid color and clarity",
+        "Crema quality and persistence (espresso)",
+        "Visual uniformity",
+        "Any defects visible"
+      ],
+      "expertTips": "Light-to-medium roasts preserve origin character. Good crema (espresso) should be golden-brown with fine bubbles, not dark and coarse."
+    },
+    "aroma": {
+      "prompt": "Assess aromatic complexity and intensity (dry grounds + brewed)",
+      "keyAttributes": [
+        "Fragrance intensity (dry grounds)",
+        "Aromatic complexity (floral, fruity, nutty, chocolate)",
+        "Roast character (clean, caramelized, smoky)",
+        "Acidity indicators (bright, citrus, wine-like)",
+        "Any defects or off-notes"
+      ],
+      "expertTips": "Specialty coffee should show clear origin character. Ethiopian coffees often show floral/berry notes, while Latin American coffees lean toward chocolate/nuts."
+    },
+    "frontMouth": {
+      "prompt": "Evaluate initial taste impact and acidity",
+      "keyAttributes": [
+        "Acidity level and type (bright, citric, malic, soft)",
+        "Initial flavor impressions",
+        "Body perception (light, medium, full)",
+        "Temperature impact on taste",
+        "Balance of sweet/acid/bitter"
+      ],
+      "expertTips": "Acidity should be bright and pleasant, not sour or aggressive. Well-extracted coffee shows immediate complexity without harsh bitterness."
+    },
+    "midRearMouth": {
+      "prompt": "Track flavor development and body perception",
+      "keyAttributes": [
+        "Flavor notes emerging (fruit, chocolate, caramel, nuts)",
+        "Sweetness perception (natural coffee sweetness)",
+        "Body viscosity and texture",
+        "Balance evolution",
+        "Cooling reveals different notes"
+      ],
+      "expertTips": "This phase reveals coffee quality. Look for sweetness (natural sugars), complexity, and balance. Body should match origin expectations (e.g., Sumatra = full body)."
+    },
+    "aftertaste": {
+      "prompt": "Evaluate finish length, quality, and cleanliness",
+      "keyAttributes": [
+        "Finish length (short to very long)",
+        "Finish flavor character (sweet, fruity, cocoa, bitter)",
+        "Clean vs. lingering notes",
+        "Any astringency or dryness",
+        "Aftertaste pleasantness"
+      ],
+      "expertTips": "Specialty coffee should have a long, sweet, clean finish. Bitter or astringent aftertaste indicates over-extraction or poor quality. 20-30 second finish is typical of high-scoring coffee."
+    },
+    "emotionalResponse": {
+      "prompt": "Capture the consumption experience and emotional connection",
+      "keyAttributes": [
+        "Energy and alertness perception",
+        "Ritual and mindfulness aspects",
+        "Comfort vs. sophistication feeling",
+        "Occasion appropriateness",
+        "Repeat consumption desire"
+      ],
+      "expertTips": "Specialty coffee often becomes a daily ritual. Balance functional benefits (caffeine) with sensory pleasure for highest engagement."
+    }
+  },
+  "commonNeedStates": [
+    "Daily ritual",
+    "Energy boost",
+    "Sophisticated pleasure",
+    "Social connection",
+    "Morning motivation"
+  ],
+  "typicalEmotionalTriggers": [
+    "Energy",
+    "Focus",
+    "Sophistication",
+    "Craftsmanship",
+    "Origin story"
+  ],
+  "benchmarkInsights": "Specialty coffee (80+ SCA score) typically shows 8-9/10 repeat consumption. Balanced acidity (6-7/10) correlates with higher consumer acceptance than high acidity (8-9/10).",
+  "categoryTrends": "Growing interest in light roasts, single-origin traceability, and natural/experimental processing. Consumer education on acidity vs. sourness is key."
+}
