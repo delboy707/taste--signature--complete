@@ -586,6 +586,14 @@ async function initializeFirestore(user) {
 }
 
 async function loadData() {
+    // Check if demo mode is active
+    if (window.demoMode && window.demoMode.isDemoActive()) {
+        console.log('🎭 Demo mode active - loading sample data');
+        experiences = window.demoMode.getDemoExperiences();
+        updateDashboard();
+        return;
+    }
+
     if (isCloudSyncEnabled && firestoreManager) {
         // Load from Firestore
         await loadDataFromCloud();
@@ -597,6 +605,15 @@ async function loadData() {
         }
     }
 }
+
+// Helper function to load demo data (called from button click)
+window.loadDemoExperiences = function() {
+    if (window.demoMode) {
+        experiences = window.demoMode.getDemoExperiences();
+        updateDashboard();
+        console.log('✅ Loaded', experiences.length, 'demo experiences');
+    }
+};
 
 async function loadDataFromCloud() {
     try {
@@ -630,6 +647,12 @@ async function loadDataFromCloud() {
 }
 
 async function saveData() {
+    // Don't save in demo mode
+    if (window.demoMode && window.demoMode.isDemoActive()) {
+        console.log('🎭 Demo mode - data not saved');
+        return;
+    }
+
     if (isCloudSyncEnabled && firestoreManager) {
         // Save to Firestore
         try {

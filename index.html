@@ -58,6 +58,15 @@
 
                 <button type="submit" class="btn-primary btn-auth">Log In</button>
 
+                <div style="text-align: center; margin: 20px 0;">
+                    <button type="button" id="btn-try-demo" class="btn-secondary btn-auth" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                        🎭 Try Demo Mode
+                    </button>
+                    <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">
+                        Explore the platform with sample data - no signup required
+                    </p>
+                </div>
+
                 <div class="auth-links">
                     <a href="#" id="link-forgot-password">Forgot password?</a>
                     <a href="#" id="link-show-signup">Create account</a>
@@ -1320,6 +1329,7 @@
     <script src="approval-workflow.js"></script>
     <script src="approval-workflow-ui.js"></script>
     <script src="activity-feed-ui.js"></script>
+    <script src="demo-mode.js"></script>
     <script src="app.js"></script>
 
     <!-- Initialize Authentication & PWA -->
@@ -1592,6 +1602,32 @@
             document.getElementById('link-forgot-password').addEventListener('click', (e) => {
                 e.preventDefault();
                 showForgotPasswordForm();
+            });
+
+            // Demo Mode button
+            document.getElementById('btn-try-demo').addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    // Activate demo mode
+                    window.demoMode.activateDemoMode();
+
+                    // Hide auth container and show main app
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+
+                    // Load demo experiences into the app
+                    if (typeof window.loadDemoExperiences === 'function') {
+                        window.loadDemoExperiences();
+                    } else if (typeof window.loadExperiencesFromStorage === 'function') {
+                        // Fallback: reload the page to let app pick up demo data
+                        location.reload();
+                    }
+
+                    console.log('✅ Demo mode activated - showing sample data');
+                } catch (error) {
+                    console.error('❌ Demo mode error:', error);
+                    showAuthMessage('login-message', 'Unable to start demo mode. Please try again.', 'error');
+                }
             });
         }
 
