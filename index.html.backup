@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taste Signature - Professional Sensory Analysis Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Taste Signature</h1>
+                <p class="version">Professional Edition</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-view="log-experience">
+                    <span class="nav-icon">➕</span>
+                    <span>Log Experience</span>
+                </a>
+                <a href="#" class="nav-item" data-view="shape-of-taste">
+                    <span class="nav-icon">📈</span>
+                    <span>Shape of Taste</span>
+                </a>
+                <a href="#" class="nav-item" data-view="need-states">
+                    <span class="nav-icon">🎯</span>
+                    <span>Need States</span>
+                </a>
+                <a href="#" class="nav-item" data-view="comparison">
+                    <span class="nav-icon">⚖️</span>
+                    <span>Compare Products</span>
+                </a>
+                <a href="#" class="nav-item" data-view="insights">
+                    <span class="nav-icon">💡</span>
+                    <span>Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-view="history">
+                    <span class="nav-icon">📋</span>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-view="import">
+                    <span class="nav-icon">📥</span>
+                    <span>Import Data</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2 id="current-view-title">Dashboard Overview</h2>
+                </div>
+                <div class="top-bar-actions">
+                    <button id="export-data" class="btn-secondary">Export Data</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Overview View -->
+                <div id="view-overview" class="view active">
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <h3>Total Experiences</h3>
+                            <div class="stat-value" id="stat-total">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Products Analyzed</h3>
+                            <div class="stat-value" id="stat-products">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Average Satisfaction</h3>
+                            <div class="stat-value" id="stat-satisfaction">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Top Need State</h3>
+                            <div class="stat-value" id="stat-need-state">-</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2col">
+                        <div class="card">
+                            <h3>Recent Activity</h3>
+                            <div id="recent-activity"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Quick Insights</h3>
+                            <div id="quick-insights"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Experience View -->
+                <div id="view-log-experience" class="view">
+                    <div class="card">
+                        <div class="form-header">
+                            <h3>New Sensory Experience</h3>
+                            <div class="stage-progress">
+                                <div class="stage-indicator active" data-stage="1">
+                                    <div class="stage-number">1</div>
+                                    <div class="stage-name">Product Info</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="2">
+                                    <div class="stage-number">2</div>
+                                    <div class="stage-name">Appearance</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="3">
+                                    <div class="stage-number">3</div>
+                                    <div class="stage-name">Aroma</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="4">
+                                    <div class="stage-number">4</div>
+                                    <div class="stage-name">Front of Mouth</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="5">
+                                    <div class="stage-number">5</div>
+                                    <div class="stage-name">Mid/Rear Mouth</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="6">
+                                    <div class="stage-number">6</div>
+                                    <div class="stage-name">Aftertaste</div>
+                                </div>
+                                <div class="stage-indicator" data-stage="7">
+                                    <div class="stage-number">7</div>
+                                    <div class="stage-name">Overall</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="taste-form">
+                            <!-- Stage 1: Product Information -->
+                            <div class="form-stage active" data-stage="1">
+                                <h4>Product Information</h4>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="item-name">Product Name:</label>
+                                        <input type="text" id="item-name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item-brand">Brand:</label>
+                                        <input type="text" id="item-brand">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="item-type">Category:</label>
+                                        <select id="item-type" required>
+                                            <option value="">Select...</option>
+                                            <option value="food">Food</option>
+                                            <option value="beverage">Beverage</option>
+                                            <option value="dessert">Dessert</option>
+                                            <option value="snack">Snack</option>
+                                            <option value="confectionery">Confectionery</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item-variant">Variant/Flavor:</label>
+                                        <input type="text" id="item-variant">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 2: Appearance -->
+                            <div class="form-stage" data-stage="2">
+                                <h4>Stage 1: Appearance</h4>
+                                <p class="stage-description">Visual assessment before consumption</p>
+
+                                <h5 class="section-heading">Sensory Attributes</h5>
+                                <div class="slider-group">
+                                    <label for="appearance-visual-appeal">Visual Appeal: <span id="appearance-visual-appeal-val">5</span></label>
+                                    <input type="range" id="appearance-visual-appeal" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="appearance-color-intensity">Color Intensity: <span id="appearance-color-intensity-val">5</span></label>
+                                    <input type="range" id="appearance-color-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="appearance-overall-intensity">Overall Visual Intensity: <span id="appearance-overall-intensity-val">5</span></label>
+                                    <input type="range" id="appearance-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="appearance-anticipation">Anticipation: <span id="appearance-anticipation-val">5</span></label>
+                                        <input type="range" id="appearance-anticipation" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-desire">Desire: <span id="appearance-desire-val">5</span></label>
+                                        <input type="range" id="appearance-desire" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-excitement">Excitement: <span id="appearance-excitement-val">5</span></label>
+                                        <input type="range" id="appearance-excitement" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-happiness">Happiness: <span id="appearance-happiness-val">5</span></label>
+                                        <input type="range" id="appearance-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="appearance-curiosity">Curiosity: <span id="appearance-curiosity-val">5</span></label>
+                                        <input type="range" id="appearance-curiosity" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 3: Aroma -->
+                            <div class="form-stage" data-stage="3">
+                                <h4>Stage 2: Aroma</h4>
+                                <p class="stage-description">Olfactory experience</p>
+
+                                <h5 class="section-heading">Sensory Attributes</h5>
+                                <div class="slider-group">
+                                    <label for="aroma-intensity">Aroma Intensity: <span id="aroma-intensity-val">5</span></label>
+                                    <input type="range" id="aroma-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-sweetness">Sweet Notes: <span id="aroma-sweetness-val">5</span></label>
+                                    <input type="range" id="aroma-sweetness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-complexity">Complexity: <span id="aroma-complexity-val">5</span></label>
+                                    <input type="range" id="aroma-complexity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="aroma-overall-intensity">Overall Intensity: <span id="aroma-overall-intensity-val">5</span></label>
+                                    <input type="range" id="aroma-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+
+                                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                                <div class="emotion-grid">
+                                    <div class="slider-group">
+                                        <label for="aroma-pleasure">Pleasure: <span id="aroma-pleasure-val">5</span></label>
+                                        <input type="range" id="aroma-pleasure" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-comfort">Comfort: <span id="aroma-comfort-val">5</span></label>
+                                        <input type="range" id="aroma-comfort" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-nostalgia">Nostalgia: <span id="aroma-nostalgia-val">5</span></label>
+                                        <input type="range" id="aroma-nostalgia" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-happiness">Happiness: <span id="aroma-happiness-val">5</span></label>
+                                        <input type="range" id="aroma-happiness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-energy">Energy: <span id="aroma-energy-val">5</span></label>
+                                        <input type="range" id="aroma-energy" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="aroma-relaxation">Relaxation: <span id="aroma-relaxation-val">5</span></label>
+                                        <input type="range" id="aroma-relaxation" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 4: Front of Mouth -->
+                            <div class="form-stage" data-stage="4">
+                                <h4>Stage 3: Front of Mouth</h4>
+                                <p class="stage-description">Initial taste and texture</p>
+                                <div class="slider-group">
+                                    <label for="front-sweetness">Sweetness: <span id="front-sweetness-val">5</span></label>
+                                    <input type="range" id="front-sweetness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-sourness">Sourness: <span id="front-sourness-val">5</span></label>
+                                    <input type="range" id="front-sourness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-saltiness">Saltiness: <span id="front-saltiness-val">5</span></label>
+                                    <input type="range" id="front-saltiness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-texture">Texture Impact: <span id="front-texture-val">5</span></label>
+                                    <input type="range" id="front-texture" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="front-overall-intensity">Overall Intensity: <span id="front-overall-intensity-val">5</span></label>
+                                    <input type="range" id="front-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>Emotional Response:</label>
+                                    <div class="slider-group">
+                                        <label for="front-excitement">Excitement: <span id="front-excitement-val">5</span></label>
+                                        <input type="range" id="front-excitement" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="front-satisfaction">Satisfaction: <span id="front-satisfaction-val">5</span></label>
+                                        <input type="range" id="front-satisfaction" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 5: Mid/Rear Mouth -->
+                            <div class="form-stage" data-stage="5">
+                                <h4>Stage 4: Mid/Rear Mouth</h4>
+                                <p class="stage-description">Developed flavors and mouthfeel</p>
+                                <div class="slider-group">
+                                    <label for="mid-bitterness">Bitterness: <span id="mid-bitterness-val">5</span></label>
+                                    <input type="range" id="mid-bitterness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-umami">Umami: <span id="mid-umami-val">5</span></label>
+                                    <input type="range" id="mid-umami" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-richness">Richness: <span id="mid-richness-val">5</span></label>
+                                    <input type="range" id="mid-richness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-creaminess">Creaminess: <span id="mid-creaminess-val">5</span></label>
+                                    <input type="range" id="mid-creaminess" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="mid-overall-intensity">Overall Intensity: <span id="mid-overall-intensity-val">5</span></label>
+                                    <input type="range" id="mid-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>Emotional Response:</label>
+                                    <div class="slider-group">
+                                        <label for="mid-indulgence">Indulgence: <span id="mid-indulgence-val">5</span></label>
+                                        <input type="range" id="mid-indulgence" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="mid-comfort">Comfort: <span id="mid-comfort-val">5</span></label>
+                                        <input type="range" id="mid-comfort" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 6: Aftertaste -->
+                            <div class="form-stage" data-stage="6">
+                                <h4>Stage 5: Aftertaste</h4>
+                                <p class="stage-description">Post-consumption experience</p>
+                                <div class="slider-group">
+                                    <label for="after-duration">Duration: <span id="after-duration-val">5</span></label>
+                                    <input type="range" id="after-duration" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-pleasantness">Pleasantness: <span id="after-pleasantness-val">5</span></label>
+                                    <input type="range" id="after-pleasantness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-cleanness">Palate Cleanness: <span id="after-cleanness-val">5</span></label>
+                                    <input type="range" id="after-cleanness" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="slider-group">
+                                    <label for="after-overall-intensity">Overall Intensity: <span id="after-overall-intensity-val">5</span></label>
+                                    <input type="range" id="after-overall-intensity" class="stage-slider" min="0" max="10" value="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>Emotional Response:</label>
+                                    <div class="slider-group">
+                                        <label for="after-satisfaction">Satisfaction: <span id="after-satisfaction-val">5</span></label>
+                                        <input type="range" id="after-satisfaction" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="after-completeness">Completeness: <span id="after-completeness-val">5</span></label>
+                                        <input type="range" id="after-completeness" class="stage-slider" min="0" max="10" value="5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stage 7: Overall Assessment -->
+                            <div class="form-stage" data-stage="7">
+                                <h4>Overall Assessment</h4>
+
+                                <div class="form-group">
+                                    <label>Need State (select primary):</label>
+                                    <div class="need-state-options">
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="reward" required>
+                                            <div class="radio-card-content">
+                                                <strong>Reward</strong>
+                                                <p>Treat yourself, indulgence</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="escape">
+                                            <div class="radio-card-content">
+                                                <strong>Escape</strong>
+                                                <p>Break from routine, relaxation</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="rejuvenation">
+                                            <div class="radio-card-content">
+                                                <strong>Rejuvenation</strong>
+                                                <p>Energy boost, refreshment</p>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card">
+                                            <input type="radio" name="need-state" value="sociability">
+                                            <div class="radio-card-content">
+                                                <strong>Sociability</strong>
+                                                <p>Sharing, social connection</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Emotional Triggers (0-10):</label>
+                                    <div class="slider-group">
+                                        <label for="trigger-moreishness">Moreishness: <span id="trigger-moreishness-val">5</span></label>
+                                        <input type="range" id="trigger-moreishness" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Desire to continue eating/drinking</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-refreshment">Refreshment: <span id="trigger-refreshment-val">5</span></label>
+                                        <input type="range" id="trigger-refreshment" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Revitalizing, cleansing quality</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-melt">The Melt: <span id="trigger-melt-val">5</span></label>
+                                        <input type="range" id="trigger-melt" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Smooth, dissolving sensation</small>
+                                    </div>
+                                    <div class="slider-group">
+                                        <label for="trigger-crunch">Texture/Crunch: <span id="trigger-crunch-val">5</span></label>
+                                        <input type="range" id="trigger-crunch" class="stage-slider" min="0" max="10" value="5">
+                                        <small>Satisfying textural experience</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="notes">Additional Notes:</label>
+                                    <textarea id="notes" rows="4"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-navigation">
+                                <button type="button" id="btn-prev-stage" class="btn-secondary" style="display:none;">Previous</button>
+                                <button type="button" id="btn-next-stage" class="btn-primary">Next Stage</button>
+                                <button type="submit" id="btn-submit" class="btn-primary" style="display:none;">Complete Assessment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Shape of Taste View -->
+                <div id="view-shape-of-taste" class="view">
+                    <div class="card">
+                        <h3>Shape of Taste - Journey Visualization</h3>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="shape-product-select">Select Product:</label>
+                            <select id="shape-product-select" class="form-control">
+                                <option value="">Choose a product...</option>
+                            </select>
+                        </div>
+                        <canvas id="shape-chart"></canvas>
+                    </div>
+                    <div class="card">
+                        <h3>Emotional Journey</h3>
+                        <canvas id="emotional-journey-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Need States View -->
+                <div id="view-need-states" class="view">
+                    <div class="card">
+                        <h3>Need State Distribution</h3>
+                        <canvas id="need-state-chart"></canvas>
+                    </div>
+                    <div class="grid-2col">
+                        <div class="card">
+                            <h3>Emotional Triggers Analysis</h3>
+                            <canvas id="triggers-chart"></canvas>
+                        </div>
+                        <div class="card">
+                            <h3>Trigger Insights</h3>
+                            <div id="trigger-insights"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison View -->
+                <div id="view-comparison" class="view">
+                    <div class="card">
+                        <h3>Product Comparison Tool</h3>
+                        <div class="comparison-selector">
+                            <div class="form-group">
+                                <label>Select Products to Compare (up to 4):</label>
+                                <div id="comparison-product-list"></div>
+                            </div>
+                            <button id="btn-run-comparison" class="btn-primary">Run Comparison</button>
+                        </div>
+                    </div>
+                    <div id="comparison-results" style="display:none;">
+                        <div class="card">
+                            <h3>Shape of Taste Comparison</h3>
+                            <canvas id="comparison-shape-chart"></canvas>
+                        </div>
+                        <div class="grid-2col">
+                            <div class="card">
+                                <h3>Need State Comparison</h3>
+                                <div id="comparison-need-state"></div>
+                            </div>
+                            <div class="card">
+                                <h3>Emotional Triggers</h3>
+                                <canvas id="comparison-triggers-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights View -->
+                <div id="view-insights" class="view">
+                    <div class="card">
+                        <h3>Professional Insights & Analysis</h3>
+                        <div id="insights-container"></div>
+                    </div>
+                </div>
+
+                <!-- History View -->
+                <div id="view-history" class="view">
+                    <div class="card">
+                        <div class="history-controls">
+                            <button id="clear-data" class="btn-danger">Clear All Data</button>
+                        </div>
+                        <div id="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- Import Data View -->
+                <div id="view-import" class="view">
+                    <div class="card">
+                        <h3>Import Flavor Concepts & Data</h3>
+                        <p style="color: var(--text-light); margin-bottom: 25px;">
+                            Upload Excel (.xlsx) CSV, or JSON files containing flavor concepts. Data will be automatically mapped to the Taste Signature framework.
+                        </p>
+
+                        <div class="import-section">
+                            <div class="file-upload-area" id="file-upload-area">
+                                <div class="upload-icon">📁</div>
+                                <h4>Drag & Drop Files Here</h4>
+                                <p>or click to browse</p>
+                                <input type="file" id="file-input" accept=".csv,.json,.xlsx" multiple style="display: none;">
+                                <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+                                    Choose Files
+                                </button>
+                            </div>
+
+                            <div class="import-format-guide">
+                                <h4>Supported Formats</h4>
+                                <ul>
+                                    <li><strong>CSV:</strong> Comma-separated values with headers</li>
+                                    <li><strong>JSON:</strong> Array of flavor concept objects</li>
+                                    <li><strong>Excel (.xlsx):</strong> TasteAI flavor concepts format</li>
+                                </ul>
+
+                                <h4 style="margin-top: 20px;">Expected Columns</h4>
+                                <ul>
+                                    <li>Concept_ID or ID</li>
+                                    <li>Flavor_Name or Name</li>
+                                    <li>Primary_Ingredients or Ingredients</li>
+                                    <li>Taste_Profile</li>
+                                    <li>Emotional_Resonance</li>
+                                    <li>Target_Product_Category or Category</li>
+                                    <li>Market_Trend_Alignment (optional)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="import-preview" style="display: none; margin-top: 30px;">
+                            <h4>Import Preview</h4>
+                            <div id="import-preview-content"></div>
+                            <div style="margin-top: 20px;">
+                                <button id="btn-confirm-import" class="btn-primary">Import <span id="import-count">0</span> Items</button>
+                                <button id="btn-cancel-import" class="btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="import-status" style="margin-top: 20px;"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Quick Import: Sample Flavor Concepts</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">
+                            Load the included TasteAI flavor concepts to see the framework in action.
+                        </p>
+                        <button id="btn-load-sample-data" class="btn-primary">Load 15 Sample Concepts</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="data-importer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
