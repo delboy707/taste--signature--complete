@@ -1,0 +1,137 @@
+[
+  {
+    "Concept_ID": "1",
+    "Flavor_Name": "Mango Chili Lime Burst",
+    "Primary_Ingredients": "Mango, Chili, Lime",
+    "Taste_Profile": "Sweet, spicy, citrus",
+    "Emotional_Resonance": "Excitement, Adventure",
+    "Target_Product_Category": "Snack",
+    "Market_Trend_Alignment": "Spicy tropical snacks trending"
+  },
+  {
+    "Concept_ID": "2",
+    "Flavor_Name": "Gingered Peach Blossom",
+    "Primary_Ingredients": "Peach, Ginger, Floral Notes",
+    "Taste_Profile": "Sweet, spicy, floral",
+    "Emotional_Resonance": "Comfort, Joy",
+    "Target_Product_Category": "Beverage",
+    "Market_Trend_Alignment": "Botanical infusions rising"
+  },
+  {
+    "Concept_ID": "3",
+    "Flavor_Name": "Vanilla Chai Almond",
+    "Primary_Ingredients": "Vanilla, Chai, Almond",
+    "Taste_Profile": "Creamy, spicy, nutty",
+    "Emotional_Resonance": "Warmth, Nostalgia",
+    "Target_Product_Category": "Snack",
+    "Market_Trend_Alignment": "Premium nutty snacks popular"
+  },
+  {
+    "Concept_ID": "4",
+    "Flavor_Name": "Blueberry Lavender Dream",
+    "Primary_Ingredients": "Blueberry, Lavender, Cream",
+    "Taste_Profile": "Fruity, floral, creamy",
+    "Emotional_Resonance": "Relaxation, Indulgence",
+    "Target_Product_Category": "Confectionery",
+    "Market_Trend_Alignment": "Floral and fruity desserts gaining popularity"
+  },
+  {
+    "Concept_ID": "5",
+    "Flavor_Name": "Smoked Paprika Honey",
+    "Primary_Ingredients": "Paprika, Honey, Smoked Notes",
+    "Taste_Profile": "Smoky, sweet, spicy",
+    "Emotional_Resonance": "Curiosity, Comfort",
+    "Target_Product_Category": "Snack",
+    "Market_Trend_Alignment": "Smoked savory-sweet combinations popular"
+  },
+  {
+    "Concept_ID": "6",
+    "Flavor_Name": "Matcha Coconut Bliss",
+    "Primary_Ingredients": "Matcha, Coconut, Vanilla",
+    "Taste_Profile": "Earthy, creamy, sweet",
+    "Emotional_Resonance": "Calm, Indulgence",
+    "Target_Product_Category": "Beverage",
+    "Market_Trend_Alignment": "Growing matcha and coconut trends"
+  },
+  {
+    "Concept_ID": "7",
+    "Flavor_Name": "Lemon Basil Sorbet",
+    "Primary_Ingredients": "Lemon, Basil, Sugar Syrup",
+    "Taste_Profile": "Citrusy, herbal, refreshing",
+    "Emotional_Resonance": "Refreshing, Energizing",
+    "Target_Product_Category": "Dessert",
+    "Market_Trend_Alignment": "Herbal-refreshing desserts trending"
+  },
+  {
+    "Concept_ID": "8",
+    "Flavor_Name": "Dark Chocolate Orange Zest",
+    "Primary_Ingredients": "Dark Chocolate, Orange Peel",
+    "Taste_Profile": "Rich, citrusy, bitter-sweet",
+    "Emotional_Resonance": "Comfort, Luxury",
+    "Target_Product_Category": "Confectionery",
+    "Market_Trend_Alignment": "Dark chocolate indulgence increasing"
+  },
+  {
+    "Concept_ID": "9",
+    "Flavor_Name": "Apple Cinnamon Maple Crunch",
+    "Primary_Ingredients": "Apple, Cinnamon, Maple Syrup",
+    "Taste_Profile": "Sweet, spicy, crunchy",
+    "Emotional_Resonance": "Comfort, Nostalgia",
+    "Target_Product_Category": "Cereal Snack",
+    "Market_Trend_Alignment": "Breakfast-inspired snacks rising"
+  },
+  {
+    "Concept_ID": "10",
+    "Flavor_Name": "Yuzu Raspberry Spark",
+    "Primary_Ingredients": "Yuzu, Raspberry, Sparkling Essence",
+    "Taste_Profile": "Citrusy, tart, sparkling",
+    "Emotional_Resonance": "Excitement, Freshness",
+    "Target_Product_Category": "Beverage",
+    "Market_Trend_Alignment": "Citrus-flavored sparkling beverages popular"
+  },
+  {
+    "Concept_ID": "11",
+    "Flavor_Name": "Rosemary Caramel Apple",
+    "Primary_Ingredients": "Rosemary, Caramel, Apple",
+    "Taste_Profile": "Herbal, sweet, fruity",
+    "Emotional_Resonance": "Comfort, Warmth",
+    "Target_Product_Category": "Dessert",
+    "Market_Trend_Alignment": "Savory-herbal sweet snacks emerging"
+  },
+  {
+    "Concept_ID": "12",
+    "Flavor_Name": "Espresso Hazelnut Praline",
+    "Primary_Ingredients": "Espresso, Hazelnut, Chocolate",
+    "Taste_Profile": "Rich, nutty, robust",
+    "Emotional_Resonance": "Comfort, Energy",
+    "Target_Product_Category": "Snack",
+    "Market_Trend_Alignment": "Coffee-flavored indulgence rising"
+  },
+  {
+    "Concept_ID": "13",
+    "Flavor_Name": "Watermelon Mint Refresh",
+    "Primary_Ingredients": "Watermelon, Mint, Lime",
+    "Taste_Profile": "Refreshing, sweet, herbal",
+    "Emotional_Resonance": "Freshness, Energizing",
+    "Target_Product_Category": "Beverage",
+    "Market_Trend_Alignment": "Mint-infused beverages popular"
+  },
+  {
+    "Concept_ID": "14",
+    "Flavor_Name": "Cucumber Melon Cooler",
+    "Primary_Ingredients": "Cucumber, Melon, Lemon",
+    "Taste_Profile": "Cooling, refreshing, citrus",
+    "Emotional_Resonance": "Cooling, Refreshing",
+    "Target_Product_Category": "Beverage",
+    "Market_Trend_Alignment": "Light and hydrating beverages trending"
+  },
+  {
+    "Concept_ID": "15",
+    "Flavor_Name": "Passionfruit Hibiscus Tango",
+    "Primary_Ingredients": "Passionfruit, Hibiscus, Citrus",
+    "Taste_Profile": "Tangy, floral, tropical",
+    "Emotional_Resonance": "Adventure, Excitement",
+    "Target_Product_Category": "Confectionery",
+    "Market_Trend_Alignment": "Tropical floral combinations trending"
+  }
+]

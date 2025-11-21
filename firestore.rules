@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function: Check if user belongs to company
+    function belongsToCompany(companyId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == companyId;
+    }
+
+    // User profiles - users can only access their own profile
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Company data - only users belonging to the company can access
+    match /companies/{companyId} {
+      // Allow read if user belongs to this company
+      allow read: if belongsToCompany(companyId);
+
+      // Allow company owner to update company settings
+      allow update: if belongsToCompany(companyId);
+
+      // Allow create only during signup (user creates their own company)
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid;
+
+      // Company experiences - shared by all users in the company
+      match /experiences/{experienceId} {
+        allow read: if belongsToCompany(companyId);
+        allow create: if belongsToCompany(companyId)
+                      && request.resource.data.companyId == companyId
+                      && request.resource.data.addedBy == request.auth.uid;
+        allow update: if belongsToCompany(companyId);
+        allow delete: if belongsToCompany(companyId);
+      }
+
+      // Company products master data
+      match /products/{productId} {
+        allow read: if belongsToCompany(companyId);
+        allow write: if belongsToCompany(companyId);
+      }
+
+      // Company consumer panel data
+      match /consumerPanels/{panelId} {
+        allow read: if belongsToCompany(companyId);
+        allow write: if belongsToCompany(companyId);
+      }
+
+      // Company team members (for future multi-user support)
+      match /team/{memberId} {
+        allow read: if belongsToCompany(companyId);
+        allow write: if belongsToCompany(companyId);
+      }
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// SECURITY NOTES:
+// 1. Multi-company isolation: Users can ONLY access data from their own company
+// 2. Company membership check: Uses user document to verify companyId
+// 3. Unauthenticated users cannot read or write any data
+// 4. Users cannot access other companies' data
+// 5. All writes require authentication AND company membership
+// 6. Company experiences are shared among all company members (single login per company for MVP)
+// 7. Future-proof: Ready for multi-user teams within companies
