@@ -1,0 +1,96 @@
+{
+  "templateName": "Craft IPA (India Pale Ale)",
+  "category": "Beer",
+  "description": "Professional sensory template for IPA-style craft beers with focus on hop character and balance",
+  "expertNotes": "IPAs are defined by hop-forward character balanced by malt backbone. West Coast = bitter/resinous; New England = juicy/hazy. Evaluate hop quality, freshness, and balance.",
+  "guidedAttributes": {
+    "appearance": {
+      "prompt": "Assess visual characteristics and presentation",
+      "keyAttributes": [
+        "Color (pale gold to deep amber)",
+        "Clarity (crystal clear vs. hazy/turbid)",
+        "Head formation and retention",
+        "Carbonation level (bubble size and activity)",
+        "Any sedimentation"
+      ],
+      "expertTips": "West Coast IPAs are typically clear with white head. New England/Hazy IPAs should be turbid with persistent head. Golden color suggests fresh hops; brown tones may indicate oxidation."
+    },
+    "aroma": {
+      "prompt": "Evaluate hop aromatic character and intensity",
+      "keyAttributes": [
+        "Hop intensity (high is typical for IPA)",
+        "Hop character (citrus, pine, tropical, floral, dank)",
+        "Malt presence (biscuit, caramel, bread)",
+        "Alcohol warmth",
+        "Any off-notes (oxidation, DMS, diacetyl)"
+      ],
+      "expertTips": "IPA aroma should be dominated by fresh hops. Citrus and tropical fruit aromas indicate modern hop varieties. Grassy or onion-like notes suggest old hops or poor storage."
+    },
+    "frontMouth": {
+      "prompt": "Evaluate initial taste impact and carbonation",
+      "keyAttributes": [
+        "Bitterness level (moderate to very high)",
+        "Carbonation bite and mouthfeel",
+        "Initial hop flavors",
+        "Body perception (medium to full)",
+        "Alcohol warmth"
+      ],
+      "expertTips": "IPAs should show immediate hop impact. Carbonation helps lift hop aromatics. Harsh bitterness (vs. clean bitterness) indicates poor hop quality or technique."
+    },
+    "midRearMouth": {
+      "prompt": "Track flavor development and balance",
+      "keyAttributes": [
+        "Hop flavor complexity (resin, citrus, tropical, pine)",
+        "Malt sweetness balance",
+        "Bitterness intensity and quality",
+        "Body and viscosity",
+        "Alcohol integration"
+      ],
+      "expertTips": "Balance is key - bitterness should be supported by malt sweetness. Hazy IPAs show softer bitterness with intense hop flavor. Dry-hopped character should dominate."
+    },
+    "aftertaste": {
+      "prompt": "Evaluate finish bitterness and persistence",
+      "keyAttributes": [
+        "Finish length (medium to very long)",
+        "Bitterness character (clean, resinous, harsh)",
+        "Hop flavor lingering (citrus, pine, tropical)",
+        "Dryness level",
+        "Moreishness (desire for next sip)"
+      ],
+      "expertTips": "IPA finish should be bitter but not astringent. Long finish (30-60 seconds) is typical. Clean, pleasant bitterness encourages another sip. Harsh or metallic finish indicates poor technique."
+    },
+    "emotionalResponse": {
+      "prompt": "Capture the drinking experience and context",
+      "keyAttributes": [
+        "Adventurous vs. familiar feeling",
+        "Social vs. contemplative consumption",
+        "Refreshment level despite high ABV",
+        "Occasion fit (casual, celebration, tasting)",
+        "Drinkability vs. sipping beer"
+      ],
+      "expertTips": "IPAs appeal to craft enthusiasts seeking bold flavors. Session IPAs (<5% ABV) balance flavor with drinkability. Double/Imperial IPAs (7-10% ABV) are sipping beers."
+    }
+  },
+  "commonNeedStates": [
+    "Social enjoyment",
+    "Craft exploration",
+    "Bold flavor experience",
+    "Relaxation",
+    "Celebration"
+  ],
+  "typicalEmotionalTriggers": [
+    "Adventure",
+    "Craft",
+    "Boldness",
+    "Community",
+    "Expertise"
+  ],
+  "benchmarkInsights": "Well-balanced IPAs score 7-8/10 on moreishness. Extreme bitterness (9-10/10) often reduces repeat appeal to 4-6/10. Hazy IPAs show higher immediate appeal but may lack distinctiveness.",
+  "categoryTrends": "Shift from bitter West Coast style to juicy/hazy New England style. Growing interest in low-ABV session IPAs and fruit-forward hop varieties. Freshness dating becoming standard.",
+  "styleTips": {
+    "westCoast": "Crystal clear, high bitterness (60-80 IBU), resinous/piney hops, dry finish",
+    "newEngland": "Hazy/turbid, softer bitterness (40-60 IBU), juicy tropical hops, fuller body",
+    "session": "Lower ABV (3-5%), balanced bitterness, high drinkability",
+    "doubleIPA": "High ABV (7-10%), intense hops, malt-forward, sipping beer"
+  }
+}
