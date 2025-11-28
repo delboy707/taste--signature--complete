@@ -30,6 +30,137 @@
 
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-responsive.css">
+
+    <!-- Wistia Video Player -->
+    <script src="https://fast.wistia.com/player.js" async></script>
+    <script src="https://fast.wistia.com/embed/h2e5wwqxdf.js" async type="module"></script>
+
+    <!-- Wistia Loading State Style -->
+    <style>
+        wistia-player[media-id='h2e5wwqxdf']:not(:defined) {
+            background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/h2e5wwqxdf/swatch');
+            display: block;
+            filter: blur(5px);
+            padding-top: 62.5%;
+        }
+
+        /* Demo Video Modal Styles */
+        .demo-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .demo-modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: scaleUp 0.3s ease;
+            position: relative;
+        }
+
+        .demo-modal-header {
+            padding: 30px 30px 20px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+
+        .demo-modal-header h2 {
+            margin: 0 0 8px 0;
+            color: #6366f1;
+            font-size: 28px;
+        }
+
+        .demo-modal-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .demo-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .demo-modal-close:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .demo-modal-video {
+            padding: 0 30px 30px 30px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleUp {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .demo-modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .demo-modal-header {
+                padding: 20px 20px 15px 20px;
+            }
+
+            .demo-modal-header h2 {
+                font-size: 22px;
+            }
+
+            .demo-modal-video {
+                padding: 0 20px 20px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Authentication Container -->
@@ -315,6 +446,9 @@
                     </button>
                     <button id="restart-tutorial" class="btn-secondary" aria-label="Restart tutorial">
                         🎓 Tutorial
+                    </button>
+                    <button id="watch-demo-button" class="btn-secondary" aria-label="Watch demo video" title="Watch Demo">
+                        ▶️ Watch Demo
                     </button>
                     <button onclick="exportPortfolioReport()" class="btn-primary" title="Export Portfolio PDF Report">
                         📄 Export PDF
@@ -1743,6 +1877,60 @@
             </div>
         </div>
     </div>
+
+    <!-- Demo Video Modal -->
+    <div id="demo-modal" class="demo-modal-overlay">
+        <div class="demo-modal-content">
+            <div class="demo-modal-header">
+                <h2>🎬 Taste Signature Demo</h2>
+                <p>See how to map sensory attributes to emotional outcomes</p>
+                <button class="demo-modal-close" onclick="closeDemoModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="demo-modal-video">
+                <wistia-player media-id="h2e5wwqxdf" aspect="1.6"></wistia-player>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo Modal Functions
+        function openDemoModal() {
+            const modal = document.getElementById('demo-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeDemoModal() {
+            const modal = document.getElementById('demo-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        // Close modal when clicking overlay (but not the modal content)
+        document.getElementById('demo-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDemoModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('demo-modal');
+                if (modal && modal.classList.contains('active')) {
+                    closeDemoModal();
+                }
+            }
+        });
+
+        // Attach event listener to Watch Demo button
+        document.addEventListener('DOMContentLoaded', function() {
+            const watchDemoButton = document.getElementById('watch-demo-button');
+            if (watchDemoButton) {
+                watchDemoButton.addEventListener('click', openDemoModal);
+            }
+        });
+    </script>
 
 </body>
 </html> 
