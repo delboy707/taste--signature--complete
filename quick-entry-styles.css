@@ -489,7 +489,7 @@
     align-items: center;
     padding: 12px 15px;
     margin: 8px 10px 4px 10px;
-    color: var(--text-dark);
+    color: white;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -497,14 +497,14 @@
     cursor: pointer;
     user-select: none;
     transition: all 0.2s;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
 }
 
 .nav-group-header:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .nav-group-header .group-icon {
@@ -537,22 +537,23 @@
     display: flex;
     align-items: center;
     padding: 10px 15px 10px 35px;
-    color: var(--text-dark);
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
 }
 
 .nav-group .nav-item:hover {
-    background: rgba(102, 126, 234, 0.08);
-    border-left-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: rgba(255, 255, 255, 0.5);
+    color: white;
 }
 
 .nav-group .nav-item.active {
-    background: rgba(102, 126, 234, 0.12);
-    border-left-color: var(--primary-color);
-    color: var(--primary-color);
-    font-weight: 500;
+    background: rgba(255, 255, 255, 0.15);
+    border-left-color: white;
+    color: white;
+    font-weight: 600;
 }
 
 .nav-group .nav-item .nav-icon {
@@ -566,8 +567,14 @@
 
 /* Quick Entry nav highlight */
 .nav-item[data-view="quick-entry"] {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border-left: 3px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.12);
+    border-left: 3px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Nav Badge on dark background */
+.nav-group .nav-badge {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
 }
 
 .nav-item[data-view="quick-entry"]:hover {
