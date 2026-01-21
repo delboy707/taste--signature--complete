@@ -487,19 +487,24 @@
 .nav-group-header {
     display: flex;
     align-items: center;
-    padding: 8px 15px;
-    color: var(--text-light);
-    font-size: 0.7rem;
-    font-weight: 600;
+    padding: 12px 15px;
+    margin: 8px 10px 4px 10px;
+    color: var(--text-dark);
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
     user-select: none;
-    transition: color 0.2s;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
 }
 
 .nav-group-header:hover {
-    color: var(--text-dark);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    color: var(--primary-color);
 }
 
 .nav-group-header .group-icon {
