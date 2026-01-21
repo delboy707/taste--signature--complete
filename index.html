@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-responsive.css">
     <link rel="stylesheet" href="quick-entry-styles.css">
+    <link rel="stylesheet" href="integrations-styles.css">
 
     <!-- Wistia Video Player -->
     <script src="https://fast.wistia.com/player.js" async></script>
@@ -364,6 +365,11 @@
                         <a href="#" class="nav-item" data-view="import">
                             <span class="nav-icon">📥</span>
                             <span>Import Data</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="integrations">
+                            <span class="nav-icon">🔗</span>
+                            <span>Integrations</span>
+                            <span class="nav-badge">NEW</span>
                         </a>
                     </div>
                 </div>
@@ -1499,6 +1505,50 @@
                         <button id="btn-load-sample-data" class="btn-primary">Load 15 Sample Concepts</button>
                     </div>
                 </div>
+
+                <!-- Integrations View (NEW - Phase 2) -->
+                <div id="view-integrations" class="view">
+                    <div class="card">
+                        <div class="form-header">
+                            <h3>Data Integrations</h3>
+                            <p class="subtitle">Connect external data sources and automate your workflow</p>
+                        </div>
+
+                        <!-- Tabs for different integration types -->
+                        <div class="integration-tabs" style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                            <button class="btn-primary" onclick="showIntegrationTab('scanner')">
+                                📷 Barcode Scanner
+                            </button>
+                            <button class="btn-secondary" onclick="showIntegrationTab('spreadsheet')">
+                                📊 Spreadsheet Sync
+                            </button>
+                            <button class="btn-secondary" onclick="showIntegrationTab('webhooks')">
+                                🔗 Webhooks & API
+                            </button>
+                        </div>
+
+                        <!-- Barcode Scanner Section -->
+                        <div id="integration-scanner" class="integration-section">
+                            <div id="barcode-scanner-container">
+                                <!-- Barcode scanner UI will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Spreadsheet Sync Section -->
+                        <div id="integration-spreadsheet" class="integration-section" style="display: none;">
+                            <div id="spreadsheet-sync-container">
+                                <!-- Spreadsheet sync UI will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Webhooks Section -->
+                        <div id="integration-webhooks" class="integration-section" style="display: none;">
+                            <div id="webhook-integration-container">
+                                <!-- Webhook UI will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -1564,6 +1614,9 @@
     <script src="demo-mode.js"></script>
     <script src="templates-manager.js"></script>
     <script src="quick-entry.js"></script>
+    <script src="barcode-scanner.js"></script>
+    <script src="spreadsheet-sync.js"></script>
+    <script src="webhook-integration.js"></script>
     <script src="app.js"></script>
 
     <!-- Initialize Authentication & PWA -->

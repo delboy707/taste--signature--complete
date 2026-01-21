@@ -50,6 +50,7 @@ function initNavigation() {
         'approvals': 'Approval Workflows',
         'history': 'Experience History',
         'import': 'Import Data',
+        'integrations': 'Data Integrations',
         'consumer-panel': 'Consumer Panel',
         'custom-lexicon': 'Custom Lexicon',
         'industry-benchmarks': 'Industry Benchmarks'
@@ -92,9 +93,55 @@ function initNavigation() {
             if (viewName === 'team-collaboration') renderTeamCollaborationDashboard();
             if (viewName === 'approvals') renderApprovalsDashboard();
             if (viewName === 'history') updateHistory();
+            if (viewName === 'integrations') renderIntegrationsView();
         });
     });
 }
+
+// ===== INTEGRATIONS VIEW =====
+function renderIntegrationsView() {
+    // Render barcode scanner by default
+    if (typeof renderBarcodeScannerUI === 'function') {
+        renderBarcodeScannerUI('barcode-scanner-container');
+    }
+    if (typeof renderSpreadsheetSyncUI === 'function') {
+        renderSpreadsheetSyncUI('spreadsheet-sync-container');
+    }
+    if (typeof renderWebhookIntegrationUI === 'function') {
+        renderWebhookIntegrationUI('webhook-integration-container');
+    }
+}
+
+function showIntegrationTab(tabName) {
+    // Hide all sections
+    document.querySelectorAll('.integration-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show selected section
+    const section = document.getElementById(`integration-${tabName}`);
+    if (section) {
+        section.style.display = 'block';
+    }
+
+    // Update button styles
+    const buttons = document.querySelectorAll('.integration-tabs button');
+    buttons.forEach(btn => {
+        btn.className = 'btn-secondary';
+    });
+
+    // Find and highlight active button
+    const activeBtn = Array.from(buttons).find(btn =>
+        btn.textContent.toLowerCase().includes(tabName.substring(0, 4))
+    );
+    if (activeBtn) {
+        activeBtn.className = 'btn-primary';
+    }
+}
+
+// Make functions globally available
+window.showIntegrationTab = showIntegrationTab;
+window.renderIntegrationsView = renderIntegrationsView;
 
 // ===== NAVIGATION GROUP TOGGLE =====
 function toggleNavGroup(groupId) {
