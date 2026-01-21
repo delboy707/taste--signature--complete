@@ -30,6 +30,7 @@
 
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-responsive.css">
+    <link rel="stylesheet" href="quick-entry-styles.css">
 
     <!-- Wistia Video Player -->
     <script src="https://fast.wistia.com/player.js" async></script>
@@ -333,90 +334,162 @@
                 <p class="version">Professional Edition</p>
             </div>
             <nav class="sidebar-nav" aria-label="Primary navigation">
+                <!-- Overview (always visible) -->
                 <a href="#" class="nav-item active" data-view="overview">
                     <span class="nav-icon">📊</span>
                     <span>Overview</span>
                 </a>
-                <a href="#" class="nav-item" data-view="log-experience">
-                    <span class="nav-icon">➕</span>
-                    <span>Log Experience</span>
-                </a>
-                <a href="#" class="nav-item" data-view="shape-of-taste">
-                    <span class="nav-icon">📈</span>
-                    <span>Shape of Taste</span>
-                </a>
-                <a href="#" class="nav-item" data-view="emotional-map">
-                    <span class="nav-icon">💫</span>
-                    <span>Emotional Mapping</span>
-                </a>
-                <a href="#" class="nav-item" data-view="need-states">
-                    <span class="nav-icon">🎯</span>
-                    <span>Need States</span>
-                </a>
-                <a href="#" class="nav-item" data-view="comparison">
-                    <span class="nav-icon">⚖️</span>
-                    <span>Compare Products</span>
-                </a>
-                <a href="#" class="nav-item" data-view="portfolio">
-                    <span class="nav-icon">🎨</span>
-                    <span>Portfolio Map</span>
-                </a>
-                <a href="#" class="nav-item" data-view="insights">
-                    <span class="nav-icon">💡</span>
-                    <span>Insights</span>
-                </a>
-                <a href="#" class="nav-item" data-view="ai-insights">
-                    <span class="nav-icon">🤖</span>
-                    <span>AI Insights</span>
-                </a>
-                <a href="#" class="nav-item" data-view="consumer-panel">
-                    <span class="nav-icon">👥</span>
-                    <span>Consumer Panel</span>
-                </a>
-                <a href="#" class="nav-item" data-view="custom-lexicon">
-                    <span class="nav-icon">📚</span>
-                    <span>Custom Lexicon</span>
-                </a>
-                <a href="#" class="nav-item" data-view="industry-benchmarks">
-                    <span class="nav-icon">🏆</span>
-                    <span>Industry Benchmarks</span>
-                </a>
-                <a href="#" class="nav-item" data-view="export-reports">
-                    <span class="nav-icon">📊</span>
-                    <span>Export & Reports</span>
-                </a>
-                <a href="#" class="nav-item" data-view="batch-import">
-                    <span class="nav-icon">📤</span>
-                    <span>Batch Import</span>
-                </a>
-                <a href="#" class="nav-item" data-view="recipe-tracker">
-                    <span class="nav-icon">🧪</span>
-                    <span>Recipe Tracker</span>
-                </a>
-                <a href="#" class="nav-item" data-view="temporal-analysis">
-                    <span class="nav-icon">📈</span>
-                    <span>Temporal Analysis</span>
-                </a>
-                <a href="#" class="nav-item" data-view="photo-gallery">
-                    <span class="nav-icon">📸</span>
-                    <span>Photo Gallery</span>
-                </a>
-                <a href="#" class="nav-item" data-view="team-collaboration">
-                    <span class="nav-icon">👥</span>
-                    <span>Team</span>
-                </a>
-                <a href="#" class="nav-item" data-view="approvals">
-                    <span class="nav-icon">✅</span>
-                    <span>Approvals</span>
-                </a>
-                <a href="#" class="nav-item" data-view="history">
-                    <span class="nav-icon">📋</span>
-                    <span>History</span>
-                </a>
-                <a href="#" class="nav-item" data-view="import">
-                    <span class="nav-icon">📥</span>
-                    <span>Import Data</span>
-                </a>
+
+                <!-- DATA CAPTURE Group -->
+                <div class="nav-group" id="nav-group-capture">
+                    <div class="nav-group-header" onclick="toggleNavGroup('capture')">
+                        <span class="group-icon">📝</span>
+                        <span>DATA CAPTURE</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="quick-entry">
+                            <span class="nav-icon">⚡</span>
+                            <span>Quick Entry</span>
+                            <span class="nav-badge">NEW</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="log-experience">
+                            <span class="nav-icon">➕</span>
+                            <span>Full Evaluation</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="batch-import">
+                            <span class="nav-icon">📤</span>
+                            <span>Batch Import</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="import">
+                            <span class="nav-icon">📥</span>
+                            <span>Import Data</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ANALYSIS Group -->
+                <div class="nav-group" id="nav-group-analysis">
+                    <div class="nav-group-header" onclick="toggleNavGroup('analysis')">
+                        <span class="group-icon">📈</span>
+                        <span>ANALYSIS</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="shape-of-taste">
+                            <span class="nav-icon">📈</span>
+                            <span>Shape of Taste</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="emotional-map">
+                            <span class="nav-icon">💫</span>
+                            <span>Emotional Mapping</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="need-states">
+                            <span class="nav-icon">🎯</span>
+                            <span>Need States</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="portfolio">
+                            <span class="nav-icon">🎨</span>
+                            <span>Portfolio Map</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="temporal-analysis">
+                            <span class="nav-icon">⏱️</span>
+                            <span>Temporal Analysis</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- COMPARISON Group -->
+                <div class="nav-group" id="nav-group-compare">
+                    <div class="nav-group-header" onclick="toggleNavGroup('compare')">
+                        <span class="group-icon">⚖️</span>
+                        <span>COMPARISON</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="comparison">
+                            <span class="nav-icon">⚖️</span>
+                            <span>Compare Products</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="industry-benchmarks">
+                            <span class="nav-icon">🏆</span>
+                            <span>Industry Benchmarks</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="consumer-panel">
+                            <span class="nav-icon">👥</span>
+                            <span>Consumer Panel</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- AI & INSIGHTS Group -->
+                <div class="nav-group" id="nav-group-insights">
+                    <div class="nav-group-header" onclick="toggleNavGroup('insights')">
+                        <span class="group-icon">💡</span>
+                        <span>AI & INSIGHTS</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="ai-insights">
+                            <span class="nav-icon">🤖</span>
+                            <span>AI Insights</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="insights">
+                            <span class="nav-icon">💡</span>
+                            <span>Professional Insights</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="custom-lexicon">
+                            <span class="nav-icon">📚</span>
+                            <span>Custom Lexicon</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- COLLABORATION Group -->
+                <div class="nav-group" id="nav-group-collab">
+                    <div class="nav-group-header" onclick="toggleNavGroup('collab')">
+                        <span class="group-icon">👥</span>
+                        <span>COLLABORATION</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="team-collaboration">
+                            <span class="nav-icon">👥</span>
+                            <span>Team</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="approvals">
+                            <span class="nav-icon">✅</span>
+                            <span>Approvals</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="recipe-tracker">
+                            <span class="nav-icon">🧪</span>
+                            <span>Recipe Tracker</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- EXPORTS Group -->
+                <div class="nav-group" id="nav-group-exports">
+                    <div class="nav-group-header" onclick="toggleNavGroup('exports')">
+                        <span class="group-icon">📊</span>
+                        <span>EXPORTS & DATA</span>
+                        <span class="group-toggle">▼</span>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="#" class="nav-item" data-view="export-reports">
+                            <span class="nav-icon">📊</span>
+                            <span>Export & Reports</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="photo-gallery">
+                            <span class="nav-icon">📸</span>
+                            <span>Photo Gallery</span>
+                        </a>
+                        <a href="#" class="nav-item" data-view="history">
+                            <span class="nav-icon">📋</span>
+                            <span>History</span>
+                        </a>
+                    </div>
+                </div>
             </nav>
 
             <!-- User Profile Section -->
@@ -528,6 +601,19 @@
                         <div class="card">
                             <h3>Quick Insights</h3>
                             <div id="quick-insights"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Entry View (NEW - Phase 1) -->
+                <div id="view-quick-entry" class="view">
+                    <div class="card">
+                        <div class="form-header">
+                            <h3>Quick Product Entry</h3>
+                            <p class="subtitle">Streamlined data entry - capture essential sensory data in 2-3 minutes</p>
+                        </div>
+                        <div id="quick-entry-container">
+                            <!-- Quick Entry form will be rendered here by quick-entry.js -->
                         </div>
                     </div>
                 </div>
@@ -1477,6 +1563,7 @@
     <script src="activity-feed-ui.js"></script>
     <script src="demo-mode.js"></script>
     <script src="templates-manager.js"></script>
+    <script src="quick-entry.js"></script>
     <script src="app.js"></script>
 
     <!-- Initialize Authentication & PWA -->

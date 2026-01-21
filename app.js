@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initImport();
     loadData();
     updateDashboard();
+    restoreNavGroupStates();
+    // Initialize Quick Entry if function exists
+    if (typeof initQuickEntry === 'function') {
+        initQuickEntry();
+    }
 });
 
 // ===== NAVIGATION =====
@@ -27,7 +32,8 @@ function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
     const viewTitles = {
         'overview': 'Dashboard Overview',
-        'log-experience': 'Log New Experience',
+        'quick-entry': 'Quick Product Entry',
+        'log-experience': 'Full Sensory Evaluation',
         'shape-of-taste': 'Shape of Taste Analysis',
         'emotional-map': 'Emotional Mapping & Correlation',
         'need-states': 'Need States & Triggers',
@@ -43,7 +49,10 @@ function initNavigation() {
         'team-collaboration': 'Team Collaboration',
         'approvals': 'Approval Workflows',
         'history': 'Experience History',
-        'import': 'Import Data'
+        'import': 'Import Data',
+        'consumer-panel': 'Consumer Panel',
+        'custom-lexicon': 'Custom Lexicon',
+        'industry-benchmarks': 'Industry Benchmarks'
     };
 
     navItems.forEach(item => {
@@ -64,6 +73,7 @@ function initNavigation() {
 
             // Refresh view-specific content
             if (viewName === 'overview') updateDashboard();
+            if (viewName === 'quick-entry') renderQuickEntryView();
             if (viewName === 'shape-of-taste') updateShapeOfTasteView();
             if (viewName === 'emotional-map') updateEmotionalMappingView();
             if (viewName === 'need-states') updateNeedStatesView();
@@ -85,6 +95,41 @@ function initNavigation() {
         });
     });
 }
+
+// ===== NAVIGATION GROUP TOGGLE =====
+function toggleNavGroup(groupId) {
+    const group = document.getElementById(`nav-group-${groupId}`);
+    if (group) {
+        group.classList.toggle('collapsed');
+        // Save state to localStorage
+        const collapsedGroups = JSON.parse(localStorage.getItem('collapsedNavGroups') || '[]');
+        if (group.classList.contains('collapsed')) {
+            if (!collapsedGroups.includes(groupId)) {
+                collapsedGroups.push(groupId);
+            }
+        } else {
+            const index = collapsedGroups.indexOf(groupId);
+            if (index > -1) {
+                collapsedGroups.splice(index, 1);
+            }
+        }
+        localStorage.setItem('collapsedNavGroups', JSON.stringify(collapsedGroups));
+    }
+}
+
+// Restore collapsed nav groups on load
+function restoreNavGroupStates() {
+    const collapsedGroups = JSON.parse(localStorage.getItem('collapsedNavGroups') || '[]');
+    collapsedGroups.forEach(groupId => {
+        const group = document.getElementById(`nav-group-${groupId}`);
+        if (group) {
+            group.classList.add('collapsed');
+        }
+    });
+}
+
+// Make toggleNavGroup available globally
+window.toggleNavGroup = toggleNavGroup;
 
 // ===== FORM MANAGEMENT =====
 function initForm() {
