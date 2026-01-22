@@ -1,5 +1,35 @@
 /* ===== QUICK ENTRY STYLES ===== */
 
+/* Quick Actions Bar */
+.quick-entry-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.quick-entry-actions-bar .action-hint {
+    color: #059669;
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    .quick-entry-actions-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .quick-entry-actions-bar .photo-ai-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Entry Mode Toggle */
 .entry-mode-toggle {
     display: flex;
