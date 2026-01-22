@@ -102,16 +102,12 @@ class VideoPlayer {
     }
 
     /**
-     * Generate placeholder when no video is set
+     * Generate placeholder when no video is set - shows Wistia demo video
      */
     generatePlaceholder() {
         return `
-            <div class="video-placeholder">
-                <div class="video-placeholder-icon">🎬</div>
-                <div class="video-placeholder-text">Welcome Video Coming Soon!</div>
-                <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">
-                    A video guide will be available here shortly
-                </p>
+            <div class="video-wistia-container" style="position: relative; padding-top: 62.5%;">
+                <wistia-player media-id="h2e5wwqxdf" aspect="1.6" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></wistia-player>
             </div>
         `;
     }
@@ -133,7 +129,7 @@ class VideoPlayer {
             <div class="video-container">
                 ${this.generateEmbed()}
             </div>
-            ${this.videoUrl ? '' : '<p style="margin-top: 15px; color: #666; font-size: 0.9rem;"><em>💡 This video will show you how to get the most out of Taste Signature</em></p>'}
+            <p style="margin-top: 15px; color: #666; font-size: 0.9rem;"><em>💡 Watch this quick demo to get the most out of Taste Signature</em></p>
         `;
 
         container.appendChild(videoSection);
