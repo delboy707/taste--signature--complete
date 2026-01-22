@@ -579,7 +579,13 @@
                         </div>
 
                         <!-- Video Demo Section -->
-                        <div id="welcome-video-container"></div>
+                        <div id="welcome-video-container" class="video-section" style="margin-top: 30px;">
+                            <h3>📹 Getting Started with Taste Signature</h3>
+                            <div class="video-container" style="margin-top: 15px; border-radius: 12px; overflow: hidden;">
+                                <wistia-player media-id="h2e5wwqxdf" aspect="1.6"></wistia-player>
+                            </div>
+                            <p style="margin-top: 15px; color: #666; font-size: 0.9rem;"><em>💡 Watch this quick demo to get the most out of Taste Signature</em></p>
+                        </div>
                     </div>
 
                     <div class="dashboard-grid">
@@ -1695,10 +1701,7 @@
                 initLogoutButton();
                 registerServiceWorker();
 
-                // Initialize video player on welcome section
-                if (window.tasteVideoPlayer) {
-                    window.tasteVideoPlayer.renderOnPage('welcome-video-container', '📹 Getting Started with Taste Signature');
-                }
+                // Video is now embedded directly in HTML - no JS needed
 
                 // Show notification prompt after 5 seconds (if not already decided)
                 setTimeout(() => {
