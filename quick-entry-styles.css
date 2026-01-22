@@ -4,17 +4,38 @@
 .quick-entry-actions-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.quick-entry-actions-bar .photo-ai-btn {
+    background: white;
+    color: #059669;
+    font-weight: 600;
+    padding: 12px 24px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-entry-actions-bar .photo-ai-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .quick-entry-actions-bar .action-hint {
-    color: #059669;
-    font-size: 13px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 @media (max-width: 480px) {
