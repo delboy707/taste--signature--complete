@@ -102,12 +102,18 @@ class VideoPlayer {
     }
 
     /**
-     * Generate placeholder when no video is set - shows Wistia demo video
+     * Generate placeholder when no video is set - shows button to open demo video
      */
     generatePlaceholder() {
         return `
-            <div class="video-wistia-container" style="position: relative; padding-top: 62.5%;">
-                <wistia-player media-id="h2e5wwqxdf" aspect="1.6" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></wistia-player>
+            <div class="video-placeholder" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 12px; text-align: center; color: white;">
+                <div class="video-placeholder-icon" style="font-size: 48px; margin-bottom: 16px;">🎬</div>
+                <div class="video-placeholder-text" style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Platform Demo Video</div>
+                <p style="margin-bottom: 20px; opacity: 0.9;">See how Taste Signature helps you capture and analyze sensory experiences</p>
+                <button onclick="document.getElementById('demo-modal').classList.add('active')"
+                    style="background: white; color: #667eea; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                    ▶ Watch Demo Video
+                </button>
             </div>
         `;
     }
