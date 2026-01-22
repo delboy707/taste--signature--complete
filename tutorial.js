@@ -15,18 +15,40 @@ class TutorialManager {
                 highlight: true
             },
             {
-                target: '[data-view="log-experience"]',
-                title: '➕ Log New Experiences',
-                content: 'Start here to record a new taste experience. You\'ll capture sensory data across 7 stages: Appearance → Aroma → Front Mouth → Mid/Rear → Aftertaste → Triggers → Overall.',
+                target: '[data-view="quick-entry"]',
+                title: '⚡ Quick Entry - Start Here!',
+                content: 'The fastest way to log products! Quick Entry takes just 2-3 minutes. Select a category, and smart defaults are pre-filled for you.',
                 position: 'right',
                 highlight: true,
-                action: () => document.querySelector('[data-view="log-experience"]').click()
+                action: () => document.querySelector('[data-view="quick-entry"]')?.click()
             },
             {
-                target: '#taste-form',
-                title: '📝 Multi-Stage Form',
-                content: 'Rate sensory attributes on a 1-10 scale and select emotions that the product triggers at each stage. The form guides you through the complete taste journey.',
-                position: 'top',
+                target: '.photo-ai-btn',
+                title: '📷 Photo AI - Auto-Detect Products',
+                content: 'Snap a photo of any product! AI will automatically detect the product name, category, and suggest sensory attributes. No typing needed!',
+                position: 'bottom',
+                highlight: true
+            },
+            {
+                target: '[data-view="integrations"]',
+                title: '📊 Import Data Automatically',
+                content: 'Don\'t want to enter data manually? Use Integrations to: scan barcodes, import from spreadsheets, or connect webhooks from other tools.',
+                position: 'right',
+                highlight: true,
+                action: () => document.querySelector('[data-view="integrations"]')?.click()
+            },
+            {
+                target: '[data-view="log-experience"]',
+                title: '📋 Full Evaluation (Detailed)',
+                content: 'For comprehensive analysis, use Full Evaluation. Capture data across 7 stages with detailed sensory and emotional mapping.',
+                position: 'right',
+                highlight: true
+            },
+            {
+                target: '.voice-input-btn',
+                title: '🎤 Voice Input',
+                content: 'See a microphone button? Click it to speak your notes instead of typing. Works on any text field!',
+                position: 'left',
                 highlight: true
             },
             {
