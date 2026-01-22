@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.1.0-voice-photo';
+const VERSION = '3.2.0-stable';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache (only static assets, not HTML/JS which need network-first)
@@ -41,22 +41,23 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up ALL old caches aggressively
+// Activate event - clean up OLD caches only
 self.addEventListener('activate', (event) => {
-  console.log('🔄 Service Worker: Activating and cleaning ALL old caches');
+  console.log('🔄 Service Worker: Activating with version', CACHE_NAME);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       console.log('📦 Found caches:', cacheNames);
-      // Delete ALL caches (even if they match current name - force fresh start)
+      // Only delete OLD caches, keep the current one
       return Promise.all(
-        cacheNames.map((name) => {
-          console.log('🗑️ Deleting cache:', name);
-          return caches.delete(name);
-        })
+        cacheNames
+          .filter((name) => name !== CACHE_NAME && name.startsWith('taste-signature'))
+          .map((name) => {
+            console.log('🗑️ Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
     }).then(() => {
-      console.log('✅ Service Worker: Activated with NEW cache version', CACHE_NAME);
-      console.log('🔥 ALL old caches cleared!');
+      console.log('✅ Service Worker: Activated with cache version', CACHE_NAME);
       return self.clients.claim(); // Take control immediately
     })
   );
