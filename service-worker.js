@@ -2,17 +2,24 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.2.0-stable';
+const VERSION = '3.3.0-offline';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
-// Files to cache (only static assets, not HTML/JS which need network-first)
+// Files to cache for offline use
 const urlsToCache = [
   '/styles.css',
   '/mobile-responsive.css',
+  '/quick-entry-styles.css',
+  '/integrations-styles.css',
+  '/voice-photo-styles.css',
+  '/ui-polish.css',
   '/manifest.json',
   '/icon-192.svg',
   '/icon-512.svg'
 ];
+
+// Offline fallback page
+const OFFLINE_PAGE = '/offline.html';
 
 // Files that should always fetch from network first (HTML, JS modules)
 const networkFirstUrls = [
