@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.0.0-mobile';
+const VERSION = '3.1.0-voice-photo';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache (only static assets, not HTML/JS which need network-first)
@@ -10,8 +10,8 @@ const urlsToCache = [
   '/styles.css',
   '/mobile-responsive.css',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/icon-192.svg',
+  '/icon-512.svg'
 ];
 
 // Files that should always fetch from network first (HTML, JS modules)
