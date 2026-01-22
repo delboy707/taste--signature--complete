@@ -22,16 +22,17 @@
     <link rel="manifest" href="/manifest.json">
 
     <!-- iOS Icons -->
-    <link rel="apple-touch-icon" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+    <link rel="apple-touch-icon" href="/icon-192.svg">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.svg">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="/icon-192.svg">
 
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-responsive.css">
     <link rel="stylesheet" href="quick-entry-styles.css">
     <link rel="stylesheet" href="integrations-styles.css">
+    <link rel="stylesheet" href="onboarding-styles.css">
 
     <!-- Wistia Video Player -->
     <script src="https://fast.wistia.com/player.js" async></script>
@@ -1612,6 +1613,7 @@
     <script src="approval-workflow-ui.js"></script>
     <script src="activity-feed-ui.js"></script>
     <script src="demo-mode.js"></script>
+    <script src="onboarding.js"></script>
     <script src="templates-manager.js"></script>
     <script src="quick-entry.js"></script>
     <script src="barcode-scanner.js"></script>
@@ -1911,6 +1913,13 @@
                     }
 
                     console.log('✅ Demo mode activated - showing sample data');
+
+                    // Show onboarding for first-time demo users
+                    setTimeout(() => {
+                        if (window.OnboardingManager && typeof window.OnboardingManager.showIfNeeded === 'function') {
+                            window.OnboardingManager.showIfNeeded();
+                        }
+                    }, 500);
                 } catch (error) {
                     console.error('❌ Demo mode error:', error);
                     showAuthMessage('login-message', 'Unable to start demo mode. Please try again.', 'error');

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="url(#bg-gradient)"/>
+
+  <!-- Target/Crosshair Icon -->
+  <circle cx="96" cy="96" r="50" fill="none" stroke="white" stroke-width="6"/>
+  <circle cx="96" cy="96" r="30" fill="none" stroke="white" stroke-width="4"/>
+  <circle cx="96" cy="96" r="10" fill="white"/>
+
+  <!-- Crosshair lines -->
+  <line x1="96" y1="30" x2="96" y2="50" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="96" y1="142" x2="96" y2="162" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="30" y1="96" x2="50" y2="96" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="142" y1="96" x2="162" y2="96" stroke="white" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Small decorative elements (taste dots) -->
+  <circle cx="60" cy="60" r="6" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="132" cy="60" r="6" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="60" cy="132" r="6" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="132" cy="132" r="6" fill="rgba(255,255,255,0.5)"/>
+</svg>
