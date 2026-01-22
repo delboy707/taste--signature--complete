@@ -1737,16 +1737,24 @@
                     });
                     console.log('✅ Service Worker registered successfully:', registration.scope);
 
-                    // Check for updates - AUTO RELOAD on new version
+                    // Check for updates - notify user (no auto-reload to prevent loops)
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
-                        console.log('🔄 New version detected, preparing to update...');
+                        console.log('🔄 New version detected...');
 
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('✅ New version ready! Auto-reloading in 2 seconds...');
+                                // Prevent infinite reload loop
+                                const lastReload = sessionStorage.getItem('sw_reload_time');
+                                const now = Date.now();
+                                if (lastReload && (now - parseInt(lastReload)) < 30000) {
+                                    console.log('⏳ Skipping reload - updated recently');
+                                    return;
+                                }
 
-                                // Show a brief notification
+                                console.log('✅ New version ready!');
+
+                                // Show notification - click to reload
                                 const notification = document.createElement('div');
                                 notification.style.cssText = `
                                     position: fixed;
@@ -1759,15 +1767,17 @@
                                     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                                     z-index: 10000;
                                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                                    animation: slideIn 0.3s ease-out;
+                                    cursor: pointer;
                                 `;
-                                notification.textContent = '🎉 New version available! Updating...';
+                                notification.innerHTML = '🎉 Update available! <strong>Click to refresh</strong>';
+                                notification.onclick = () => {
+                                    sessionStorage.setItem('sw_reload_time', now.toString());
+                                    window.location.reload(true);
+                                };
                                 document.body.appendChild(notification);
 
-                                // Auto-reload after 2 seconds
-                                setTimeout(() => {
-                                    window.location.reload(true); // Force reload from server
-                                }, 2000);
+                                // Auto-dismiss after 15 seconds
+                                setTimeout(() => notification.remove(), 15000);
                             }
                         });
                     });
