@@ -6,6 +6,15 @@
 
 ## 🌟 Features
 
+### **Quick Data Entry**
+- ⚡ Quick Entry Mode (2-3 min vs 8-12 min)
+- 📦 16+ Category Templates with smart defaults
+- 📷 Photo AI - auto-detect product from images
+- 🎤 Voice Input - speak your tasting notes
+- 📊 Barcode Scanner - lookup products instantly
+- 📑 Spreadsheet Sync - import from Excel/Google Sheets
+- 🔗 Webhooks & API - connect to Zapier, Slack, Airtable
+
 ### **Sensory Analysis**
 - 📊 7-stage taste journey mapping
 - 💫 Emotional correlation analysis
@@ -14,7 +23,7 @@
 - ⚖️ Product comparison tools
 
 ### **AI-Powered Insights**
-- 🤖 Claude AI integration (Sonnet 4.5)
+- 🤖 Claude AI integration
 - 💡 Natural language queries
 - 🎯 Strategic recommendations
 - 📉 Formulation optimization suggestions
@@ -22,9 +31,10 @@
 ### **User Experience**
 - 🔐 Firebase authentication
 - ☁️ Cloud data storage with Firestore
-- 🎓 Interactive tutorial for new users
-- ❓ Context-aware help system
+- 🎓 Progressive onboarding
+- 🔍 Search & filter products
 - 📱 Responsive mobile design
+- 📴 Offline support (PWA)
 
 ---
 
@@ -38,10 +48,9 @@ See **DEPLOYMENT_GUIDE.md** for detailed instructions.
 
 ## 📚 Documentation
 
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deploy to Vercel (START HERE)
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deploy to Vercel
 - **[FIREBASE_SETUP.md](FIREBASE_SETUP.md)** - Firebase configuration
-- **[AUTHENTICATION_SUMMARY.md](AUTHENTICATION_SUMMARY.md)** - Auth system details
-- **[TUTORIAL_SUMMARY.md](TUTORIAL_SUMMARY.md)** - Tutorial system documentation
+- **[USER_GUIDE.md](USER_GUIDE.md)** - User documentation
 
 ---
 
@@ -50,41 +59,40 @@ See **DEPLOYMENT_GUIDE.md** for detailed instructions.
 - Vanilla JavaScript (ES6+)
 - HTML5 & CSS3
 - Firebase (Auth & Firestore)
-- Anthropic Claude AI
+- Anthropic Claude AI (Vision + Text)
+- Web Speech API
 - Chart.js
+- PWA with Service Worker
 
 ---
 
-## 📦 Project Structure
+## 📦 Key Files
 
 ```
 ├── index.html              # Main app
-├── app.js                  # Application logic (~2,800 lines)
-├── auth.js                 # Authentication (~330 lines)
-├── claude-api.js           # AI integration (~260 lines)
-├── tutorial.js             # Onboarding (~550 lines)
-├── styles.css              # All styles (~2,350 lines)
-├── vercel.json             # Deployment config
-└── [documentation files]   # Guides and setup
+├── app.js                  # Core application logic
+├── quick-entry.js          # Quick Entry mode
+├── barcode-scanner.js      # Barcode scanning
+├── spreadsheet-sync.js     # Excel/Sheets import
+├── webhook-integration.js  # API & webhooks
+├── voice-input.js          # Voice transcription
+├── photo-ai.js             # Image analysis
+├── onboarding.js           # First-time user flow
+├── search-filter.js        # Product search
+├── ui-utils.js             # Toast, loading states
+├── service-worker.js       # Offline support
+└── styles.css              # All styles
 ```
 
 ---
 
 ## 🔒 Security
 
-- Firebase Authentication with email verification
-- Firestore security rules (user data isolation)
+- Firebase Authentication
+- Firestore security rules
 - Environment variables for API keys
-- Security headers configured
-
----
-
-## 📞 Support
-
-See documentation files for setup and deployment help.
+- HTTPS enforced
 
 ---
 
 **Built for the sensory science community** ❤️
-text# Test
- 
