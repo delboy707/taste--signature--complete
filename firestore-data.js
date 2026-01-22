@@ -23,18 +23,33 @@ class FirestoreDataManager {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 this.companyId = userData.companyId;
-
-                if (this.companyId) {
-                    this.isInitialized = true;
-                    console.log('✅ Firestore initialized for company:', this.companyId);
-                    return { success: true, companyId: this.companyId };
-                } else {
-                    console.error('⚠️ User has no company associated');
-                    return { success: false, error: 'No company associated with user' };
-                }
             } else {
-                console.error('⚠️ User document not found');
-                return { success: false, error: 'User document not found' };
+                // Auto-create user document for new users
+                console.log('📝 Creating user document for new user...');
+                const newCompanyId = `company_${userId.substring(0, 8)}`;
+                await this.db.collection('users').doc(userId).set({
+                    companyId: newCompanyId,
+                    createdAt: new Date().toISOString(),
+                    tier: 'free'
+                });
+                this.companyId = newCompanyId;
+
+                // Also create the company document
+                await this.db.collection('companies').doc(newCompanyId).set({
+                    name: 'My Company',
+                    ownerId: userId,
+                    createdAt: new Date().toISOString()
+                });
+                console.log('✅ User and company documents created');
+            }
+
+            if (this.companyId) {
+                this.isInitialized = true;
+                console.log('✅ Firestore initialized for company:', this.companyId);
+                return { success: true, companyId: this.companyId };
+            } else {
+                console.error('⚠️ User has no company associated');
+                return { success: false, error: 'No company associated with user' };
             }
         } catch (error) {
             console.error('Firestore initialization error:', error);
