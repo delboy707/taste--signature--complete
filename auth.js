@@ -393,6 +393,13 @@ class AuthManager {
                 avatarLetter.textContent = firstLetter;
             }
         }
+
+        // Show onboarding for first-time users
+        setTimeout(() => {
+            if (window.OnboardingManager && typeof window.OnboardingManager.showIfNeeded === 'function') {
+                window.OnboardingManager.showIfNeeded();
+            }
+        }, 500);
     }
 
     /**

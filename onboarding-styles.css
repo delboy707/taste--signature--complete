@@ -1,0 +1,380 @@
+/* ===== PROGRESSIVE ONBOARDING STYLES ===== */
+
+/* Overlay */
+.onboarding-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.onboarding-overlay.active {
+    display: flex;
+}
+
+/* Modal */
+.onboarding-modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header */
+.onboarding-header {
+    text-align: center;
+    padding: 40px 30px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.onboarding-logo {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.onboarding-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.onboarding-header p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Content */
+.onboarding-content {
+    padding: 30px;
+}
+
+.onboarding-content.hidden {
+    display: none;
+}
+
+.onboarding-content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+    text-align: center;
+}
+
+.onboarding-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 24px 0;
+    text-align: center;
+}
+
+/* Goal Cards */
+.onboarding-goals {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.goal-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.goal-card:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    transform: translateX(4px);
+}
+
+.goal-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.goal-info {
+    flex: 1;
+}
+
+.goal-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.goal-info p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.goal-arrow {
+    font-size: 20px;
+    color: #667eea;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.goal-card:hover .goal-arrow {
+    opacity: 1;
+}
+
+/* Category Chips */
+.onboarding-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.category-chip {
+    padding: 12px 20px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-chip:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+    color: #667eea;
+    transform: scale(1.05);
+}
+
+/* Import Options */
+.onboarding-import-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.import-option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.import-option:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.import-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.import-info h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.import-info p {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Tour Items */
+.onboarding-tour {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.tour-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.tour-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.tour-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.tour-info p {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Actions */
+.onboarding-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.onboarding-back {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: opacity 0.2s ease;
+}
+
+.onboarding-back:hover {
+    opacity: 0.8;
+}
+
+.onboarding-start {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+/* Footer */
+.onboarding-footer {
+    padding: 16px 30px 24px;
+    text-align: center;
+    border-top: 1px solid #f3f4f6;
+}
+
+.onboarding-skip {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: color 0.2s ease;
+}
+
+.onboarding-skip:hover {
+    color: #6b7280;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .onboarding-overlay {
+        padding: 10px;
+    }
+
+    .onboarding-modal {
+        border-radius: 16px;
+    }
+
+    .onboarding-header {
+        padding: 30px 20px 16px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .onboarding-logo {
+        font-size: 40px;
+    }
+
+    .onboarding-header h1 {
+        font-size: 20px;
+    }
+
+    .onboarding-content {
+        padding: 20px;
+    }
+
+    .onboarding-content h2 {
+        font-size: 18px;
+    }
+
+    .goal-card {
+        padding: 14px 16px;
+    }
+
+    .goal-icon {
+        font-size: 28px;
+    }
+
+    .goal-info h3 {
+        font-size: 14px;
+    }
+
+    .goal-info p {
+        font-size: 12px;
+    }
+
+    .onboarding-tour {
+        grid-template-columns: 1fr;
+    }
+
+    .category-chip {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
