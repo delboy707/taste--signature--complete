@@ -295,6 +295,15 @@ function renderQuickEntryView() {
                 </button>
             </div>
 
+            <!-- Quick Actions -->
+            <div class="quick-entry-actions-bar">
+                <button type="button" class="photo-ai-btn" onclick="PhotoAI.openPhotoModal()">
+                    <span class="photo-icon">📷</span>
+                    <span class="photo-text">Photo AI</span>
+                </button>
+                <span class="action-hint">Snap a photo to auto-fill product details</span>
+            </div>
+
             <!-- Category Selection -->
             <div class="quick-entry-section">
                 <h4>Step 1: Select Product Category</h4>
@@ -493,7 +502,13 @@ function renderQuickEntryView() {
 
                 <div class="quick-form-group" style="margin-top: 20px;">
                     <label for="quick-notes">Quick Notes (optional)</label>
-                    <textarea id="quick-notes" rows="2" placeholder="Any additional observations..."></textarea>
+                    <div class="input-with-voice">
+                        <textarea id="quick-notes" rows="2" placeholder="Any additional observations..."></textarea>
+                        <button type="button" class="voice-input-btn" data-target="quick-notes" onclick="VoiceInput.toggle('quick-notes')">
+                            <span class="voice-icon">🎤</span>
+                            <span class="voice-text">Voice</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="quick-entry-actions">

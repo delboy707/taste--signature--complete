@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="quick-entry-styles.css">
     <link rel="stylesheet" href="integrations-styles.css">
     <link rel="stylesheet" href="onboarding-styles.css">
+    <link rel="stylesheet" href="voice-photo-styles.css">
 
     <!-- Wistia Video Player -->
     <script src="https://fast.wistia.com/player.js" async></script>
@@ -667,6 +668,15 @@
                             <div class="form-stage active" data-stage="1">
                                 <h4>Product Information</h4>
 
+                                <!-- Quick Actions: Photo AI -->
+                                <div class="quick-entry-actions-bar" style="margin-bottom: 20px;">
+                                    <button type="button" class="photo-ai-btn" onclick="PhotoAI.openPhotoModal()">
+                                        <span class="photo-icon">📷</span>
+                                        <span class="photo-text">Photo AI</span>
+                                    </button>
+                                    <span class="action-hint">Snap a photo to auto-detect product details</span>
+                                </div>
+
                                 <!-- Expert Templates Button -->
                                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 10px; margin-bottom: 25px; text-align: center;">
                                     <button type="button" class="btn-primary" onclick="window.templatesManager.showTemplateSelector()"
@@ -1054,7 +1064,13 @@
 
                                 <div class="form-group">
                                     <label for="notes">Additional Notes:</label>
-                                    <textarea id="notes" rows="4"></textarea>
+                                    <div class="input-with-voice">
+                                        <textarea id="notes" rows="4" placeholder="Describe your overall experience, memorable aspects, suggestions..."></textarea>
+                                        <button type="button" class="voice-input-btn" data-target="notes" onclick="VoiceInput.toggle('notes')">
+                                            <span class="voice-icon">🎤</span>
+                                            <span class="voice-text">Voice</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1614,6 +1630,8 @@
     <script src="activity-feed-ui.js"></script>
     <script src="demo-mode.js"></script>
     <script src="onboarding.js"></script>
+    <script src="voice-input.js"></script>
+    <script src="photo-ai.js"></script>
     <script src="templates-manager.js"></script>
     <script src="quick-entry.js"></script>
     <script src="barcode-scanner.js"></script>
