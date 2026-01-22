@@ -579,6 +579,34 @@
                             </button>
                         </div>
 
+                        <!-- Data Import Callout -->
+                        <div class="data-import-callout" style="margin-top: 30px; padding: 24px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 16px;">
+                            <h3 style="margin: 0 0 8px 0; color: #059669; font-size: 18px;">📊 Already Have Data? Import It Automatically!</h3>
+                            <p style="margin: 0 0 16px 0; color: #065f46;">No need to enter products manually. Choose how you want to import:</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                                <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('barcode'), 100);" class="import-option-btn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border: 1px solid #d1fae5; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                                    <span style="font-size: 28px;">📷</span>
+                                    <span style="font-weight: 600; color: #065f46;">Scan Barcode</span>
+                                    <span style="font-size: 11px; color: #6b7280;">Auto-lookup products</span>
+                                </button>
+                                <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('spreadsheet'), 100);" class="import-option-btn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border: 1px solid #d1fae5; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                                    <span style="font-size: 28px;">📑</span>
+                                    <span style="font-weight: 600; color: #065f46;">Spreadsheet</span>
+                                    <span style="font-size: 11px; color: #6b7280;">Excel or Google Sheets</span>
+                                </button>
+                                <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('webhooks'), 100);" class="import-option-btn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border: 1px solid #d1fae5; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                                    <span style="font-size: 28px;">🔗</span>
+                                    <span style="font-weight: 600; color: #065f46;">Webhooks</span>
+                                    <span style="font-size: 11px; color: #6b7280;">Zapier, Slack, API</span>
+                                </button>
+                                <button onclick="navigateToView('quick-entry');" class="import-option-btn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: white; border: 1px solid #d1fae5; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                                    <span style="font-size: 28px;">📷</span>
+                                    <span style="font-weight: 600; color: #065f46;">Photo AI</span>
+                                    <span style="font-size: 11px; color: #6b7280;">Snap & auto-detect</span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="dashboard-grid">
