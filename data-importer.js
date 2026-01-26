@@ -241,32 +241,171 @@ function parseCSVLine(line) {
 }
 
 /**
- * Handle file import
+ * Create default stages structure for imported products
+ */
+function createDefaultStages() {
+    return {
+        appearance: {
+            visualAppeal: 5,
+            colorIntensity: 5,
+            overallIntensity: 5,
+            emotions: {
+                anticipation: 5,
+                desire: 5,
+                excitement: 5,
+                happiness: 5,
+                curiosity: 5
+            }
+        },
+        aroma: {
+            intensity: 5,
+            sweetness: 5,
+            complexity: 5,
+            overallIntensity: 5,
+            emotions: {
+                pleasure: 5,
+                comfort: 5,
+                nostalgia: 5,
+                happiness: 5,
+                energy: 5,
+                relaxation: 5
+            }
+        },
+        frontMouth: {
+            sweetness: 5,
+            sourness: 5,
+            saltiness: 5,
+            texture: 5,
+            overallIntensity: 5,
+            emotions: {
+                excitement: 5,
+                satisfaction: 5
+            }
+        },
+        midRearMouth: {
+            bitterness: 5,
+            umami: 5,
+            richness: 5,
+            creaminess: 5,
+            overallIntensity: 5,
+            emotions: {
+                indulgence: 5,
+                comfort: 5
+            }
+        },
+        aftertaste: {
+            duration: 5,
+            pleasantness: 5,
+            cleanness: 5,
+            overallIntensity: 5,
+            emotions: {
+                satisfaction: 5,
+                completeness: 5
+            }
+        }
+    };
+}
+
+/**
+ * Create a basic experience from generic CSV data
+ * Handles flexible column names
+ */
+function createBasicExperience(item) {
+    // Find product name from common column names
+    const name = item.Flavor_Name || item.Name || item.name || item.Product || item.product ||
+                 item.ProductName || item.product_name || item['Product Name'] || item['product name'] ||
+                 item.Item || item.item || item.Title || item.title;
+
+    if (!name) return null;
+
+    // Find brand
+    const brand = item.Brand || item.brand || item['Brand Name'] || item.Manufacturer ||
+                  item.manufacturer || 'Unknown';
+
+    // Find category/type
+    const type = item.Category || item.category || item.Type || item.type ||
+                 item['Product Category'] || item['product category'] || 'food';
+
+    // Find variant/flavor
+    const variant = item.Variant || item.variant || item.Flavor || item.flavor ||
+                    item.Description || item.description || '';
+
+    // Create minimal experience with defaults
+    return {
+        id: Date.now() + Math.random(),
+        timestamp: new Date().toISOString(),
+        productInfo: {
+            name: name,
+            brand: brand,
+            type: type.toLowerCase(),
+            variant: variant
+        },
+        stages: createDefaultStages(),
+        needState: 'reward',
+        emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
+        notes: 'Imported - requires evaluation'
+    };
+}
+
+/**
+ * Handle file import with flexible format detection
  */
 function handleFileImport(file, callback) {
     const reader = new FileReader();
 
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         const content = e.target.result;
         let data = [];
 
-        if (file.name.endsWith('.csv')) {
-            data = parseCSV(content);
-        } else if (file.name.endsWith('.json')) {
-            data = JSON.parse(content);
-        }
-
-        // Map to experiences
-        const experiences = data.map(item => {
-            // Check if it's already in our format
-            if (item.productInfo && item.stages) {
-                return item;
+        try {
+            if (file.name.endsWith('.csv')) {
+                data = parseCSV(content);
+            } else if (file.name.endsWith('.json')) {
+                data = JSON.parse(content);
             }
-            // Otherwise, map from flavor concept format
-            return mapFlavorConceptToExperience(item);
-        });
 
-        callback(experiences);
+            if (!data || data.length === 0) {
+                console.warn('No data parsed from file');
+                callback([]);
+                return;
+            }
+
+            // Check if data is already in experience format
+            if (data[0].productInfo && data[0].stages) {
+                callback(data);
+                return;
+            }
+
+            // Check if data matches TasteAI format (has required columns)
+            if (data[0].Flavor_Name && data[0].Emotional_Resonance && data[0].Taste_Profile) {
+                const experiences = data.map(item => mapFlavorConceptToExperience(item));
+                callback(experiences);
+                return;
+            }
+
+            // Otherwise, use AutoProcessor for flexible format handling
+            if (typeof AutoProcessor !== 'undefined') {
+                try {
+                    console.log('Using AutoProcessor for flexible import');
+                    const result = await AutoProcessor.processUploadedData(data, { runEmotionInference: true });
+                    if (result.experiences && result.experiences.length > 0) {
+                        callback(result.experiences);
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('AutoProcessor error, falling back to basic import:', error);
+                }
+            }
+
+            // Fallback: try to extract basic info from any format
+            console.log('Using basic import fallback');
+            const experiences = data.map(item => createBasicExperience(item)).filter(e => e !== null);
+            callback(experiences);
+
+        } catch (error) {
+            console.error('File import error:', error);
+            callback([]);
+        }
     };
 
     reader.readAsText(file);
