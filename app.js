@@ -538,12 +538,14 @@ function handleFormSubmit(e) {
                 visualAppeal: parseInt(document.getElementById('appearance-visual-appeal').value),
                 colorIntensity: parseInt(document.getElementById('appearance-color-intensity').value),
                 overallIntensity: parseInt(document.getElementById('appearance-overall-intensity').value),
+                carbonation: parseInt(document.getElementById('appearance-carbonation')?.value || 5),
                 emotions: {
                     anticipation: parseInt(document.getElementById('appearance-anticipation').value),
                     desire: parseInt(document.getElementById('appearance-desire').value),
                     excitement: parseInt(document.getElementById('appearance-excitement').value),
                     happiness: parseInt(document.getElementById('appearance-happiness').value),
-                    curiosity: parseInt(document.getElementById('appearance-curiosity').value)
+                    curiosity: parseInt(document.getElementById('appearance-curiosity').value),
+                    surprise: parseInt(document.getElementById('appearance-surprise')?.value || 5)
                 }
             },
             aroma: {
@@ -551,13 +553,15 @@ function handleFormSubmit(e) {
                 sweetness: parseInt(document.getElementById('aroma-sweetness').value),
                 complexity: parseInt(document.getElementById('aroma-complexity').value),
                 overallIntensity: parseInt(document.getElementById('aroma-overall-intensity').value),
+                persistence: parseInt(document.getElementById('aroma-persistence')?.value || 5),
                 emotions: {
                     pleasure: parseInt(document.getElementById('aroma-pleasure').value),
                     comfort: parseInt(document.getElementById('aroma-comfort').value),
                     nostalgia: parseInt(document.getElementById('aroma-nostalgia').value),
                     happiness: parseInt(document.getElementById('aroma-happiness').value),
                     energy: parseInt(document.getElementById('aroma-energy').value),
-                    relaxation: parseInt(document.getElementById('aroma-relaxation').value)
+                    relaxation: parseInt(document.getElementById('aroma-relaxation').value),
+                    intrigue: parseInt(document.getElementById('aroma-intrigue')?.value || 5)
                 }
             },
             frontMouth: {
@@ -565,12 +569,15 @@ function handleFormSubmit(e) {
                 sourness: parseInt(document.getElementById('front-sourness').value),
                 saltiness: parseInt(document.getElementById('front-saltiness').value),
                 texture: parseInt(document.getElementById('front-texture').value),
+                acidity: parseInt(document.getElementById('front-acidity')?.value || 5),
+                spiciness: parseInt(document.getElementById('front-spiciness')?.value || 3),
                 overallIntensity: parseInt(document.getElementById('front-overall-intensity').value),
                 emotions: {
                     excitement: parseInt(document.getElementById('front-excitement').value),
                     satisfaction: parseInt(document.getElementById('front-satisfaction').value),
                     happiness: parseInt(document.getElementById('front-happiness').value),
-                    pleasure: parseInt(document.getElementById('front-pleasure').value)
+                    pleasure: parseInt(document.getElementById('front-pleasure').value),
+                    disappointment: parseInt(document.getElementById('front-disappointment')?.value || 3)
                 }
             },
             midRearMouth: {
@@ -578,12 +585,15 @@ function handleFormSubmit(e) {
                 umami: parseInt(document.getElementById('mid-umami').value),
                 richness: parseInt(document.getElementById('mid-richness').value),
                 creaminess: parseInt(document.getElementById('mid-creaminess').value),
+                astringency: parseInt(document.getElementById('mid-astringency')?.value || 3),
+                mouthfeel: parseInt(document.getElementById('mid-mouthfeel')?.value || 5),
                 overallIntensity: parseInt(document.getElementById('mid-overall-intensity').value),
                 emotions: {
                     indulgence: parseInt(document.getElementById('mid-indulgence').value),
                     comfort: parseInt(document.getElementById('mid-comfort').value),
                     satisfaction: parseInt(document.getElementById('mid-satisfaction').value),
-                    pleasure: parseInt(document.getElementById('mid-pleasure').value)
+                    pleasure: parseInt(document.getElementById('mid-pleasure').value),
+                    sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 5)
                 }
             },
             aftertaste: {
@@ -594,7 +604,8 @@ function handleFormSubmit(e) {
                 emotions: {
                     satisfaction: parseInt(document.getElementById('after-satisfaction').value),
                     completeness: parseInt(document.getElementById('after-completeness').value),
-                    happiness: parseInt(document.getElementById('after-happiness').value)
+                    happiness: parseInt(document.getElementById('after-happiness').value),
+                    craving: parseInt(document.getElementById('after-craving')?.value || 5)
                 }
             }
         },

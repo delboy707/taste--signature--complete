@@ -13,7 +13,7 @@ const CATEGORY_TEMPLATES = {
             texture: 8,
             aftertaste: { duration: 7, pleasantness: 7 },
             suggestedNeedState: 'reward',
-            suggestedEmotions: ['indulgence', 'comfort', 'pleasure']
+            suggestedEmotions: ['indulgence', 'comfort', 'pleasure', 'sophistication', 'craving']
         },
         guidance: 'Focus on cocoa intensity, melt quality, and lingering finish'
     },
@@ -27,7 +27,7 @@ const CATEGORY_TEMPLATES = {
             texture: 7,
             aftertaste: { duration: 5, pleasantness: 7 },
             suggestedNeedState: 'reward',
-            suggestedEmotions: ['comfort', 'happiness', 'nostalgia']
+            suggestedEmotions: ['comfort', 'happiness', 'nostalgia', 'craving']
         },
         guidance: 'Assess creaminess, sweetness balance, and melt smoothness'
     },
@@ -41,7 +41,7 @@ const CATEGORY_TEMPLATES = {
             texture: 5,
             aftertaste: { duration: 7, pleasantness: 6 },
             suggestedNeedState: 'escape',
-            suggestedEmotions: ['excitement', 'curiosity', 'energy']
+            suggestedEmotions: ['excitement', 'curiosity', 'energy', 'intrigue']
         },
         guidance: 'Note hop character, bitterness balance, and aromatic complexity'
     },
@@ -97,7 +97,7 @@ const CATEGORY_TEMPLATES = {
             texture: 6,
             aftertaste: { duration: 7, pleasantness: 7 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['energy', 'comfort', 'pleasure']
+            suggestedEmotions: ['energy', 'comfort', 'pleasure', 'sophistication', 'intrigue']
         },
         guidance: 'Assess roast character, acidity, body, and flavor notes'
     },
@@ -181,7 +181,7 @@ const CATEGORY_TEMPLATES = {
             texture: 6,
             aftertaste: { duration: 8, pleasantness: 7 },
             suggestedNeedState: 'escape',
-            suggestedEmotions: ['pleasure', 'relaxation', 'sophistication']
+            suggestedEmotions: ['pleasure', 'relaxation', 'sophistication', 'intrigue', 'craving']
         },
         guidance: 'Assess color, nose complexity, palate structure, and finish length'
     },
