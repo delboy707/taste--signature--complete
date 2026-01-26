@@ -439,28 +439,39 @@ async function handleFileDrop(event) {
 async function processUploadedFile(file) {
     const extension = file.name.split('.').pop().toLowerCase();
 
-    let result;
-    if (extension === 'csv') {
-        const text = await file.text();
-        result = parseCSVFile(text);
-    } else if (extension === 'xlsx') {
-        result = await parseExcelFile(file);
-    } else {
-        alert('Unsupported file format. Please upload CSV or Excel (.xlsx) files.');
-        return;
+    try {
+        let result;
+        if (extension === 'csv') {
+            // Use FileReader for better browser compatibility
+            const text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+            result = parseCSVFile(text);
+        } else if (extension === 'xlsx') {
+            result = await parseExcelFile(file);
+        } else {
+            alert('Unsupported file format. Please upload CSV or Excel (.xlsx) files.');
+            return;
+        }
+
+        if (result.error) {
+            alert('Error parsing file: ' + result.error);
+            return;
+        }
+
+        batchImportData.fileName = file.name;
+        batchImportData.headers = result.headers;
+        batchImportData.rows = result.rows;
+        batchImportData.columnMapping = { productInfo: {}, attributes: {}, emotions: {} };
+
+        renderBatchImportDashboard();
+    } catch (error) {
+        console.error('File processing error:', error);
+        alert('Error processing file: ' + error.message);
     }
-
-    if (result.error) {
-        alert('Error parsing file: ' + result.error);
-        return;
-    }
-
-    batchImportData.fileName = file.name;
-    batchImportData.headers = result.headers;
-    batchImportData.rows = result.rows;
-    batchImportData.columnMapping = { productInfo: {}, attributes: {}, emotions: {} };
-
-    renderBatchImportDashboard();
 }
 
 /**
