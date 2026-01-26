@@ -194,14 +194,26 @@ function calculateIntensityProfile(tasteAttributes) {
 }
 
 /**
- * Parse CSV file
+ * Parse CSV file with automatic title row detection
  */
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+    // Detect if first line is a title row (has very few columns compared to second line)
+    let headerLineIndex = 0;
+    const firstLineCols = lines[0].split(',').length;
+    const secondLineCols = lines.length > 1 ? lines[1].split(',').length : 0;
+
+    // If first line has significantly fewer columns, it's likely a title row
+    if (secondLineCols > firstLineCols * 2 && firstLineCols <= 3) {
+        console.log('Detected title row, skipping to line 2 for headers');
+        headerLineIndex = 1;
+    }
+
+    const headers = lines[headerLineIndex].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
 
     const data = [];
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = headerLineIndex + 1; i < lines.length; i++) {
         const values = parseCSVLine(lines[i]);
         if (values.length === headers.length) {
             const row = {};
