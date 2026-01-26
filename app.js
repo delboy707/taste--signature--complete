@@ -1852,70 +1852,85 @@ function initImport() {
     const btnConfirmImport = document.getElementById('btn-confirm-import');
     const btnCancelImport = document.getElementById('btn-cancel-import');
 
-    // File input change
-    fileInput.addEventListener('change', handleFileSelect);
+    // File input change - with null check
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
 
-    // Drag and drop
-    uploadArea.addEventListener('click', () => fileInput.click());
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-    });
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
-    });
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFiles(files);
-        }
-    });
+    // Drag and drop - with null check
+    if (uploadArea) {
+        uploadArea.addEventListener('click', () => fileInput && fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+    }
 
-    // Load sample data
-    btnLoadSample.addEventListener('click', () => {
-        if (confirm(`This will load ${SAMPLE_FLAVOR_CONCEPTS.length} sample flavor concepts. Continue?`)) {
-            const mappedExperiences = SAMPLE_FLAVOR_CONCEPTS.map(concept =>
-                mapFlavorConceptToExperience(concept)
-            );
-            experiences.push(...mappedExperiences);
-            saveData();
-            updateDashboard();
+    // Load sample data - with null check
+    if (btnLoadSample) {
+        btnLoadSample.addEventListener('click', () => {
+            if (confirm(`This will load ${SAMPLE_FLAVOR_CONCEPTS.length} sample flavor concepts. Continue?`)) {
+                const mappedExperiences = SAMPLE_FLAVOR_CONCEPTS.map(concept =>
+                    mapFlavorConceptToExperience(concept)
+                );
+                experiences.push(...mappedExperiences);
+                saveData();
+                updateDashboard();
 
-            const statusDiv = document.getElementById('import-status');
-            statusDiv.innerHTML = `<div class="success">Successfully imported ${mappedExperiences.length} flavor concepts!</div>`;
-            setTimeout(() => {
-                statusDiv.innerHTML = '';
-            }, 5000);
-        }
-    });
+                const statusDiv = document.getElementById('import-status');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `<div class="success">Successfully imported ${mappedExperiences.length} flavor concepts!</div>`;
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 5000);
+                }
+            }
+        });
+    }
 
-    // Confirm import
-    btnConfirmImport.addEventListener('click', () => {
-        if (pendingImportData.length > 0) {
-            experiences.push(...pendingImportData);
-            saveData();
-            updateDashboard();
+    // Confirm import - with null check
+    if (btnConfirmImport) {
+        btnConfirmImport.addEventListener('click', () => {
+            if (pendingImportData.length > 0) {
+                experiences.push(...pendingImportData);
+                saveData();
+                updateDashboard();
 
-            const statusDiv = document.getElementById('import-status');
-            statusDiv.innerHTML = `<div class="success">Successfully imported ${pendingImportData.length} experiences!</div>`;
+                const statusDiv = document.getElementById('import-status');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `<div class="success">Successfully imported ${pendingImportData.length} experiences!</div>`;
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 5000);
+                }
 
-            // Reset
+                // Reset
+                pendingImportData = [];
+                const previewDiv = document.getElementById('import-preview');
+                if (previewDiv) previewDiv.style.display = 'none';
+            }
+        });
+    }
+
+    // Cancel import - with null check
+    if (btnCancelImport) {
+        btnCancelImport.addEventListener('click', () => {
             pendingImportData = [];
-            document.getElementById('import-preview').style.display = 'none';
-
-            setTimeout(() => {
-                statusDiv.innerHTML = '';
-            }, 5000);
-        }
-    });
-
-    // Cancel import
-    btnCancelImport.addEventListener('click', () => {
-        pendingImportData = [];
-        document.getElementById('import-preview').style.display = 'none';
-    });
+            const previewDiv = document.getElementById('import-preview');
+            if (previewDiv) previewDiv.style.display = 'none';
+        });
+    }
 }
 
 function handleFileSelect(e) {
