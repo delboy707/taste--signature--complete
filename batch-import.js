@@ -634,9 +634,10 @@ function formatExperienceForApp(autoProcessedExp) {
 /**
  * Preview auto-evaluation results before final import
  * @param {Array} rows - Array of data rows
+ * @param {Object} options - Options including onProgress callback
  * @returns {Object} - Preview results with inferred values and confidence
  */
-async function previewAutoEvaluation(rows) {
+async function previewAutoEvaluation(rows, options = {}) {
     if (typeof window.AutoProcessor === 'undefined') {
         return {
             available: false,
@@ -661,8 +662,20 @@ async function previewAutoEvaluation(rows) {
 
     // Process first 10 rows for preview
     const previewRows = rows.slice(0, 10);
+    const total = previewRows.length;
 
-    for (const row of previewRows) {
+    for (let i = 0; i < previewRows.length; i++) {
+        const row = previewRows[i];
+
+        // Report progress
+        if (options.onProgress) {
+            options.onProgress({
+                current: i + 1,
+                total: total,
+                percent: Math.round(((i + 1) / total) * 100)
+            });
+        }
+
         try {
             const processed = await window.AutoProcessor.processRow(
                 row,

@@ -671,7 +671,8 @@ Need more help? Check the documentation or contact support.
 let autoEvalState = {
     enabled: true,
     preview: null,
-    processing: false
+    processing: false,
+    filterLowConfidence: false
 };
 
 /**
@@ -702,6 +703,14 @@ function renderAutoEvalToggle() {
 function toggleAutoEval(enabled) {
     autoEvalState.enabled = enabled;
     console.log('Auto-evaluation:', enabled ? 'enabled' : 'disabled');
+}
+
+/**
+ * Toggle low confidence filter in preview
+ */
+function toggleLowConfidenceFilter() {
+    autoEvalState.filterLowConfidence = !autoEvalState.filterLowConfidence;
+    renderBatchImportDashboard();
 }
 
 /**
@@ -741,7 +750,14 @@ function renderAutoEvalPreviewSection() {
             </div>
 
             <div class="preview-table-container">
-                <h5>Inference Preview (First 10 Rows)</h5>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h5 style="margin: 0;">Inference Preview ${autoEvalState.filterLowConfidence ? '(Low Confidence Only)' : '(First 10 Rows)'}</h5>
+                    ${preview.summary.lowConfidence > 0 ? `
+                        <button class="btn-secondary" style="font-size: 13px; padding: 6px 12px;" onclick="toggleLowConfidenceFilter()">
+                            ${autoEvalState.filterLowConfidence ? '📋 Show All' : '⚠️ Show Low Confidence Only ('+preview.summary.lowConfidence+')'}
+                        </button>
+                    ` : ''}
+                </div>
                 <table class="preview-table" style="width: 100%;">
                     <thead>
                         <tr>
@@ -752,14 +768,14 @@ function renderAutoEvalPreviewSection() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${preview.rows.map(row => {
+                        ${(autoEvalState.filterLowConfidence ? preview.rows.filter(r => r.confidence < 0.4) : preview.rows).map(row => {
                             const confidence = getConfidenceLabel(row.confidence);
                             const needState = row.processed?.needState || 'unknown';
                             const topEmotions = getTopEmotions(row.processed);
 
                             return `
                                 <tr>
-                                    <td>${row.original.name || row.original.product_name || row.original.productName || '-'}</td>
+                                    <td>${row.original.name || row.original.product_name || row.original.productName || row.original.Name || row.original.Product_Name || '-'}</td>
                                     <td><span class="need-state-badge ${needState}">${formatNeedState(needState)}</span></td>
                                     <td>${topEmotions}</td>
                                     <td>
@@ -860,29 +876,49 @@ async function runAutoEvalPreview() {
     showAutoEvalLoading();
 
     try {
-        autoEvalState.preview = await window.BatchImport.previewAutoEvaluation(batchImportData.rows);
+        autoEvalState.preview = await window.BatchImport.previewAutoEvaluation(
+            batchImportData.rows,
+            {
+                onProgress: (progress) => {
+                    showAutoEvalLoading(progress);
+                }
+            }
+        );
         renderBatchImportDashboard();
     } catch (error) {
         console.error('Auto-eval preview failed:', error);
-        autoEvalState.preview = null;
+        autoEvalState.preview = { available: false, error: error.message };
     }
 
     autoEvalState.processing = false;
 }
 
 /**
- * Show loading state during auto-evaluation
+ * Show loading state during auto-evaluation with optional progress
  */
-function showAutoEvalLoading() {
-    const container = document.querySelector('.auto-eval-preview');
-    if (container) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <div class="loading-spinner"></div>
-                <p style="margin-top: 16px; color: #6b7280;">Analyzing data and inferring emotions...</p>
+function showAutoEvalLoading(progress = null) {
+    const container = document.getElementById('batch-import-dashboard');
+    if (!container) return;
+
+    let progressHTML = '';
+    if (progress) {
+        progressHTML = `
+            <div style="width: 100%; max-width: 300px; margin: 20px auto;">
+                <div style="background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                    <div style="width: ${progress.percent}%; background: #10b981; height: 8px; transition: width 0.3s;"></div>
+                </div>
+                <p style="margin-top: 10px; color: #374151;">Processing ${progress.current} of ${progress.total} rows...</p>
             </div>
         `;
     }
+
+    container.innerHTML = `
+        <div style="text-align: center; padding: 60px;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 20px; color: #6b7280;">Analyzing data and inferring emotions...</p>
+            ${progressHTML}
+        </div>
+    `;
 }
 
 /**
@@ -930,17 +966,8 @@ async function executeImportWithAutoEval() {
 
         progressContainer.remove();
 
-        let message = `Import with Auto-Evaluation Complete!\n\n`;
-        message += `✅ Successfully imported: ${results.success}\n`;
-        message += `❌ Failed: ${results.failed}\n\n`;
-        message += `📊 Data Type: ${formatDataType(results.autoEvalStats.dataType)}\n`;
-        message += `🎯 Average Confidence: ${Math.round(results.autoEvalStats.averageConfidence * 100)}%\n`;
-
-        if (results.autoEvalStats.warningCount > 0) {
-            message += `⚠️ Warnings: ${results.autoEvalStats.warningCount}\n`;
-        }
-
-        alert(message);
+        // Show enhanced summary modal
+        showImportSummaryModal(results);
 
         if (results.success > 0) {
             resetBatchImport();
@@ -951,5 +978,59 @@ async function executeImportWithAutoEval() {
         progressContainer.remove();
         console.error('Auto-eval import failed:', error);
         alert('Import failed: ' + error.message);
+    }
+}
+
+/**
+ * Show enhanced import summary modal
+ */
+function showImportSummaryModal(results) {
+    const modal = document.createElement('div');
+    modal.id = 'import-summary-modal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" onclick="closeImportSummaryModal()">
+            <div style="background: white; padding: 32px; border-radius: 16px; text-align: center; min-width: 400px; max-width: 500px;" onclick="event.stopPropagation()">
+                <h2 style="margin: 0 0 24px 0; color: #059669;">✅ Import Complete</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div style="background: #f0fdf4; padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #10b981;">${results.success}</div>
+                        <div style="font-size: 14px; color: #6b7280;">Imported</div>
+                    </div>
+                    <div style="background: ${results.failed > 0 ? '#fef2f2' : '#f3f4f6'}; padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: bold; color: ${results.failed > 0 ? '#ef4444' : '#9ca3af'};">${results.failed}</div>
+                        <div style="font-size: 14px; color: #6b7280;">Failed</div>
+                    </div>
+                    <div style="background: #eff6ff; padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${Math.round(results.autoEvalStats.averageConfidence * 100)}%</div>
+                        <div style="font-size: 14px; color: #6b7280;">Avg Confidence</div>
+                    </div>
+                    <div style="background: ${results.autoEvalStats.warningCount > 0 ? '#fef3c7' : '#f3f4f6'}; padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: bold; color: ${results.autoEvalStats.warningCount > 0 ? '#f59e0b' : '#9ca3af'};">${results.autoEvalStats.warningCount}</div>
+                        <div style="font-size: 14px; color: #6b7280;">Warnings</div>
+                    </div>
+                </div>
+
+                <div style="background: #f3f4f6; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
+                    <span style="color: #6b7280;">Data Type:</span>
+                    <strong style="color: #1f2937;">${formatDataType(results.autoEvalStats.dataType)}</strong>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="closeImportSummaryModal()">
+                    Done
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+/**
+ * Close import summary modal
+ */
+function closeImportSummaryModal() {
+    const modal = document.getElementById('import-summary-modal');
+    if (modal) {
+        modal.remove();
     }
 }
