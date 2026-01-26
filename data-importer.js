@@ -254,25 +254,30 @@ function parseCSVLine(line) {
 
 /**
  * Create default stages structure for imported products
+ * Includes new sensory attributes: carbonation, persistence, acidity, spiciness, astringency, mouthfeel
+ * Includes new emotions: surprise, intrigue, disappointment, sophistication, craving
  */
 function createDefaultStages() {
     return {
         appearance: {
             visualAppeal: 5,
             colorIntensity: 5,
+            carbonation: 5,
             overallIntensity: 5,
             emotions: {
                 anticipation: 5,
                 desire: 5,
                 excitement: 5,
                 happiness: 5,
-                curiosity: 5
+                curiosity: 5,
+                surprise: 5
             }
         },
         aroma: {
             intensity: 5,
             sweetness: 5,
             complexity: 5,
+            persistence: 5,
             overallIntensity: 5,
             emotions: {
                 pleasure: 5,
@@ -280,7 +285,8 @@ function createDefaultStages() {
                 nostalgia: 5,
                 happiness: 5,
                 energy: 5,
-                relaxation: 5
+                relaxation: 5,
+                intrigue: 5
             }
         },
         frontMouth: {
@@ -288,10 +294,15 @@ function createDefaultStages() {
             sourness: 5,
             saltiness: 5,
             texture: 5,
+            acidity: 5,
+            spiciness: 3,
             overallIntensity: 5,
             emotions: {
                 excitement: 5,
-                satisfaction: 5
+                satisfaction: 5,
+                happiness: 5,
+                pleasure: 5,
+                disappointment: 3
             }
         },
         midRearMouth: {
@@ -299,10 +310,15 @@ function createDefaultStages() {
             umami: 5,
             richness: 5,
             creaminess: 5,
+            astringency: 3,
+            mouthfeel: 5,
             overallIntensity: 5,
             emotions: {
                 indulgence: 5,
-                comfort: 5
+                comfort: 5,
+                satisfaction: 5,
+                pleasure: 5,
+                sophistication: 5
             }
         },
         aftertaste: {
@@ -312,7 +328,9 @@ function createDefaultStages() {
             overallIntensity: 5,
             emotions: {
                 satisfaction: 5,
-                completeness: 5
+                completeness: 5,
+                happiness: 5,
+                craving: 5
             }
         }
     };

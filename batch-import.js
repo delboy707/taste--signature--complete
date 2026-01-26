@@ -38,7 +38,11 @@ function parseCSVFile(csvText) {
             headers.forEach((header, index) => {
                 row[header] = values[index];
             });
-            rows.push(row);
+            // Normalize row data using SchemaValidation if available
+            const normalizedRow = window.SchemaValidation
+                ? window.SchemaValidation.normalizeRow(row)
+                : row;
+            rows.push(normalizedRow);
         }
     }
 
@@ -475,6 +479,7 @@ function createExperienceFromRow(row, columnMapping) {
 
 /**
  * Get sample template for batch import
+ * Includes all sensory attributes including new ones (acidity, spiciness, astringency, mouthfeel, persistence, carbonation)
  */
 function generateBatchImportTemplate() {
     const headers = [
@@ -482,25 +487,33 @@ function generateBatchImportTemplate() {
         'Brand',
         'Category',
         'Variant',
-        'Price',
-        'Origin',
-        'Visual_Appeal',
-        'Color',
-        'Aroma_Intensity',
-        'Complexity',
-        'Initial_Taste',
-        'Sweetness',
-        'Sourness',
-        'Saltiness',
-        'Bitterness',
-        'Flavor_Development',
-        'Texture',
-        'Richness',
-        'Aftertaste',
-        'Overall_Satisfaction',
-        'Purchase_Intent',
-        'Uniqueness',
-        'Emotions'
+        // Appearance
+        'visualAppeal',
+        'colorIntensity',
+        'carbonation',
+        // Aroma
+        'aromaIntensity',
+        'aromaSweetness',
+        'aromaComplexity',
+        'persistence',
+        // Front Mouth
+        'sweetness',
+        'sourness',
+        'saltiness',
+        'texture',
+        'acidity',
+        'spiciness',
+        // Mid/Rear Mouth
+        'bitterness',
+        'umami',
+        'richness',
+        'creaminess',
+        'astringency',
+        'mouthfeel',
+        // Aftertaste
+        'duration',
+        'pleasantness',
+        'cleanness'
     ];
 
     const sampleRow = [
@@ -508,25 +521,33 @@ function generateBatchImportTemplate() {
         'Sample Brand',
         'food',
         'Original',
-        '5.99',
-        'USA',
-        '8.0',
-        '7.5',
-        '7.0',
-        '8.0',
-        '7.5',
-        '6.0',
-        '5.0',
-        '4.0',
-        '3.0',
-        '8.0',
-        '7.5',
-        '8.0',
-        '7.0',
-        '8.0',
-        '7.5',
-        '8.5',
-        'Excitement, Joy, Comfort'
+        // Appearance
+        '8',
+        '7',
+        '5',
+        // Aroma
+        '7',
+        '6',
+        '8',
+        '6',
+        // Front Mouth
+        '6',
+        '4',
+        '3',
+        '7',
+        '3',
+        '2',
+        // Mid/Rear Mouth
+        '3',
+        '4',
+        '7',
+        '6',
+        '2',
+        '6',
+        // Aftertaste
+        '6',
+        '8',
+        '7'
     ];
 
     let csv = headers.join(',') + '\n';
