@@ -79,6 +79,8 @@ function renderBatchImportOverview() {
                     ❓ Import Guide
                 </button>
             </div>
+
+            ${renderAutoEvalToggle()}
         </div>
     `;
 }
@@ -279,6 +281,8 @@ function renderPreviewSection() {
             <h4>Step 3: Preview & Validate</h4>
             <p class="section-description">Review your data before importing</p>
 
+            ${autoEvalState.enabled && autoEvalState.preview ? renderAutoEvalPreviewSection() : ''}
+
             <div class="validation-summary">
                 <div class="validation-stat valid">
                     <div class="validation-icon">✅</div>
@@ -360,8 +364,8 @@ function renderPreviewSection() {
 
             <div class="import-actions">
                 ${validRows > 0 ? `
-                    <button class="btn-primary btn-large" onclick="executeImport()">
-                        🚀 Import ${validRows} Product${validRows !== 1 ? 's' : ''}
+                    <button class="btn-primary btn-large" onclick="${autoEvalState.enabled ? 'executeImportWithAutoEval()' : 'executeImport()'}">
+                        🚀 ${autoEvalState.enabled ? 'Import with Auto-Eval' : 'Import'} ${validRows} Product${validRows !== 1 ? 's' : ''}
                     </button>
                 ` : ''}
                 <button class="btn-secondary" onclick="goBackToMapping()">
@@ -539,7 +543,12 @@ function proceedToPreview() {
         return;
     }
 
-    renderBatchImportDashboard();
+    // Trigger auto-eval preview if enabled
+    if (autoEvalState.enabled && typeof runAutoEvalPreview === 'function') {
+        runAutoEvalPreview();
+    } else {
+        renderBatchImportDashboard();
+    }
 }
 
 /**
