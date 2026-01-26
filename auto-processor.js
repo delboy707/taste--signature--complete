@@ -296,10 +296,11 @@ class AutoProcessor {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
             productInfo: {
-                name: row.name || row.product_name || row.productName || 'Unknown Product',
-                brand: row.brand || row.Brand || '',
-                type: row.category || row.type || row.Category || 'food',
-                variant: row.variant || row.description || ''
+                name: row.name || row.Name || row.product_name || row.Product_Name ||
+                      row.productName || row.ProductName || row['Product Name'] || 'Unknown Product',
+                brand: row.brand || row.Brand || row.brand_name || row.Brand_Name || '',
+                type: row.category || row.Category || row.type || row.Type || 'food',
+                variant: row.variant || row.Variant || row.description || row.Description || ''
             },
             stages: {
                 appearance: { visualAppeal: 5, colorIntensity: 5, emotions: {} },

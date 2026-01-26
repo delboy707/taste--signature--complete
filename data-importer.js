@@ -311,9 +311,10 @@ function createDefaultStages() {
  * Handles flexible column names
  */
 function createBasicExperience(item) {
-    // Find product name from common column names
+    // Find product name from common column names (case-sensitive)
     const name = item.Flavor_Name || item.Name || item.name || item.Product || item.product ||
-                 item.ProductName || item.product_name || item['Product Name'] || item['product name'] ||
+                 item.ProductName || item.product_name || item.Product_Name ||
+                 item['Product Name'] || item['product name'] ||
                  item.Item || item.item || item.Title || item.title;
 
     if (!name) return null;
