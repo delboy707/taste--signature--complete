@@ -626,7 +626,12 @@ BATCH IMPORT GUIDE
      * Visual_Appeal, Aroma_Intensity
      * Overall_Satisfaction, etc.
 
-5. TIPS
+5. AUTO-EVALUATION
+   - Emotions are automatically inferred from sensory data
+   - Consumer feedback can be converted to sensory profiles
+   - Confidence scores show inference reliability
+
+6. TIPS
    - Download the template for the correct format
    - Review the preview before importing
    - Fix any validation errors shown
@@ -636,4 +641,295 @@ Need more help? Check the documentation or contact support.
     `;
 
     alert(helpText);
+}
+
+// ===== AUTO-EVALUATION UI =====
+
+/**
+ * State for auto-evaluation
+ */
+let autoEvalState = {
+    enabled: true,
+    preview: null,
+    processing: false
+};
+
+/**
+ * Render auto-evaluation toggle in overview
+ */
+function renderAutoEvalToggle() {
+    return `
+        <div class="auto-eval-toggle" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; border: 1px solid #93c5fd;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-eval-toggle" ${autoEvalState.enabled ? 'checked' : ''} onchange="toggleAutoEval(this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <div>
+                    <strong style="color: #1e40af;">🤖 Auto-Evaluation</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #3b82f6;">
+                        Automatically infer emotions from sensory data
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Toggle auto-evaluation
+ */
+function toggleAutoEval(enabled) {
+    autoEvalState.enabled = enabled;
+    console.log('Auto-evaluation:', enabled ? 'enabled' : 'disabled');
+}
+
+/**
+ * Render auto-evaluation preview section
+ */
+function renderAutoEvalPreviewSection() {
+    if (!autoEvalState.preview || !autoEvalState.enabled) return '';
+
+    const preview = autoEvalState.preview;
+
+    return `
+        <div class="analytics-section" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #86efac;">
+            <h4>🤖 Auto-Evaluation Preview</h4>
+            <p class="section-description">AI will automatically infer emotional profiles from your data</p>
+
+            <div class="auto-eval-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div class="stat-box" style="background: white; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #059669;">${preview.summary.total}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Total Rows</div>
+                </div>
+                <div class="stat-box" style="background: white; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">${preview.summary.highConfidence}</div>
+                    <div style="font-size: 12px; color: #6b7280;">High Confidence</div>
+                </div>
+                <div class="stat-box" style="background: white; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${preview.summary.mediumConfidence}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Medium Confidence</div>
+                </div>
+                <div class="stat-box" style="background: white; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${preview.summary.lowConfidence}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Low Confidence</div>
+                </div>
+            </div>
+
+            <div class="data-type-badge" style="display: inline-block; padding: 8px 16px; background: #1e40af; color: white; border-radius: 20px; font-size: 13px; margin-bottom: 16px;">
+                📊 Data Type: <strong>${formatDataType(preview.dataType)}</strong>
+            </div>
+
+            <div class="preview-table-container">
+                <h5>Inference Preview (First 10 Rows)</h5>
+                <table class="preview-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Inferred Need State</th>
+                            <th>Top Emotions</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${preview.rows.map(row => {
+                            const confidence = getConfidenceLabel(row.confidence);
+                            const needState = row.processed?.needState || 'unknown';
+                            const topEmotions = getTopEmotions(row.processed);
+
+                            return `
+                                <tr>
+                                    <td>${row.original.name || row.original.product_name || row.original.productName || '-'}</td>
+                                    <td><span class="need-state-badge ${needState}">${formatNeedState(needState)}</span></td>
+                                    <td>${topEmotions}</td>
+                                    <td>
+                                        <span class="confidence-badge" style="background: ${confidence.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                            ${confidence.label} (${Math.round(row.confidence * 100)}%)
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            ${preview.rows.some(r => r.warnings && r.warnings.length > 0) ? `
+                <div class="auto-eval-warnings" style="margin-top: 16px; padding: 12px; background: #fef3c7; border-radius: 8px;">
+                    <strong>⚠️ Warnings:</strong>
+                    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+                        ${preview.rows.flatMap(r => r.warnings || []).slice(0, 5).map(w => `
+                            <li>${w.message}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * Get confidence label with color
+ */
+function getConfidenceLabel(confidence) {
+    if (confidence >= 0.7) return { label: 'High', color: '#10b981' };
+    if (confidence >= 0.4) return { label: 'Medium', color: '#f59e0b' };
+    return { label: 'Low', color: '#ef4444' };
+}
+
+/**
+ * Format data type for display
+ */
+function formatDataType(dataType) {
+    const types = {
+        'sensory_scores': 'Sensory Panel Data',
+        'consumer_feedback': 'Consumer Feedback',
+        'product_info_only': 'Product Info Only',
+        'mixed': 'Mixed Data'
+    };
+    return types[dataType] || dataType;
+}
+
+/**
+ * Format need state for display
+ */
+function formatNeedState(needState) {
+    const states = {
+        'reward': '🎁 Reward',
+        'escape': '🌅 Escape',
+        'rejuvenation': '⚡ Rejuvenation',
+        'sociability': '👥 Sociability'
+    };
+    return states[needState] || needState;
+}
+
+/**
+ * Get top emotions from processed experience
+ */
+function getTopEmotions(processed) {
+    if (!processed || !processed.stages) return '-';
+
+    const allEmotions = {};
+    Object.values(processed.stages).forEach(stage => {
+        if (stage.emotions) {
+            Object.entries(stage.emotions).forEach(([emotion, value]) => {
+                if (!allEmotions[emotion] || value > allEmotions[emotion]) {
+                    allEmotions[emotion] = value;
+                }
+            });
+        }
+    });
+
+    const top3 = Object.entries(allEmotions)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([emotion]) => emotion);
+
+    return top3.length > 0 ? top3.join(', ') : '-';
+}
+
+/**
+ * Run auto-evaluation preview
+ */
+async function runAutoEvalPreview() {
+    if (!autoEvalState.enabled || typeof window.BatchImport === 'undefined') {
+        return;
+    }
+
+    autoEvalState.processing = true;
+    showAutoEvalLoading();
+
+    try {
+        autoEvalState.preview = await window.BatchImport.previewAutoEvaluation(batchImportData.rows);
+        renderBatchImportDashboard();
+    } catch (error) {
+        console.error('Auto-eval preview failed:', error);
+        autoEvalState.preview = null;
+    }
+
+    autoEvalState.processing = false;
+}
+
+/**
+ * Show loading state during auto-evaluation
+ */
+function showAutoEvalLoading() {
+    const container = document.querySelector('.auto-eval-preview');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 16px; color: #6b7280;">Analyzing data and inferring emotions...</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Execute import with auto-evaluation
+ */
+async function executeImportWithAutoEval() {
+    if (!autoEvalState.enabled) {
+        executeImport();
+        return;
+    }
+
+    const rowCount = batchImportData.rows.length;
+    if (!confirm(`Import ${rowCount} products with auto-evaluation?\n\nEmotions will be automatically inferred from your sensory data.`)) {
+        return;
+    }
+
+    // Show progress
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'import-progress';
+    progressContainer.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div style="background: white; padding: 32px; border-radius: 16px; text-align: center; min-width: 300px;">
+                <h3 style="margin: 0 0 16px 0;">🤖 Auto-Evaluating Products</h3>
+                <div class="progress-bar" style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                    <div id="progress-fill" style="height: 100%; background: #10b981; width: 0%; transition: width 0.3s;"></div>
+                </div>
+                <p id="progress-text" style="margin: 12px 0 0 0; color: #6b7280;">Processing...</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(progressContainer);
+
+    try {
+        const results = await window.BatchImport.executeBatchImportWithAutoEval(
+            batchImportData.rows,
+            batchImportData.columnMapping,
+            {
+                onProgress: (progress) => {
+                    document.getElementById('progress-fill').style.width = `${progress.percent}%`;
+                    document.getElementById('progress-text').textContent =
+                        `Processing ${progress.current} of ${progress.total} products...`;
+                }
+            }
+        );
+
+        progressContainer.remove();
+
+        let message = `Import with Auto-Evaluation Complete!\n\n`;
+        message += `✅ Successfully imported: ${results.success}\n`;
+        message += `❌ Failed: ${results.failed}\n\n`;
+        message += `📊 Data Type: ${formatDataType(results.autoEvalStats.dataType)}\n`;
+        message += `🎯 Average Confidence: ${Math.round(results.autoEvalStats.averageConfidence * 100)}%\n`;
+
+        if (results.autoEvalStats.warningCount > 0) {
+            message += `⚠️ Warnings: ${results.autoEvalStats.warningCount}\n`;
+        }
+
+        alert(message);
+
+        if (results.success > 0) {
+            resetBatchImport();
+            updateDashboard();
+        }
+
+    } catch (error) {
+        progressContainer.remove();
+        console.error('Auto-eval import failed:', error);
+        alert('Import failed: ' + error.message);
+    }
 }

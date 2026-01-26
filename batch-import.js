@@ -548,3 +548,180 @@ function downloadBatchImportTemplate() {
     link.click();
     window.URL.revokeObjectURL(url);
 }
+
+// ===== AUTO-EVALUATION INTEGRATION =====
+
+/**
+ * Execute batch import with automatic sensory/emotional evaluation
+ * @param {Array} rows - Array of data rows
+ * @param {Object} columnMapping - Column mapping configuration
+ * @param {Object} options - Processing options
+ * @returns {Object} - Import results with auto-evaluated experiences
+ */
+async function executeBatchImportWithAutoEval(rows, columnMapping, options = {}) {
+    const results = {
+        success: 0,
+        failed: 0,
+        errors: [],
+        experiences: [],
+        autoEvalStats: {
+            dataType: null,
+            averageConfidence: 0,
+            warningCount: 0
+        }
+    };
+
+    // Check if AutoProcessor is available
+    if (typeof window.AutoProcessor === 'undefined') {
+        console.warn('AutoProcessor not available, falling back to standard import');
+        return executeBatchImport(rows, columnMapping);
+    }
+
+    try {
+        // Process with auto-evaluation
+        const processResult = await window.AutoProcessor.processUploadedData(rows, {
+            onProgress: options.onProgress
+        });
+
+        results.autoEvalStats.dataType = processResult.metadata.dataType;
+        results.autoEvalStats.averageConfidence = processResult.metadata.averageConfidence;
+        results.autoEvalStats.warningCount = processResult.summary.warnings;
+
+        // Convert processed experiences and add to global experiences array
+        processResult.experiences.forEach(exp => {
+            // Convert to the app's experience format if needed
+            const formattedExp = formatExperienceForApp(exp);
+            if (formattedExp) {
+                experiences.push(formattedExp);
+                results.experiences.push(formattedExp);
+                results.success++;
+            }
+        });
+
+        results.failed = processResult.summary.errors;
+        results.errors = processResult.errors;
+
+        // Save data after batch import
+        if (results.success > 0) {
+            saveData();
+        }
+
+    } catch (error) {
+        console.error('Auto-eval batch import failed:', error);
+        results.errors.push({ message: error.message });
+        // Fallback to standard import
+        return executeBatchImport(rows, columnMapping);
+    }
+
+    return results;
+}
+
+/**
+ * Format experience from auto-processor to app's expected format
+ */
+function formatExperienceForApp(autoProcessedExp) {
+    if (!autoProcessedExp || !autoProcessedExp.productInfo) return null;
+
+    // The auto-processor already creates experiences in the correct format
+    // This function can add any additional formatting needed
+    return {
+        ...autoProcessedExp,
+        id: autoProcessedExp.id || Date.now() + Math.random(),
+        timestamp: autoProcessedExp.timestamp || new Date().toISOString()
+    };
+}
+
+/**
+ * Preview auto-evaluation results before final import
+ * @param {Array} rows - Array of data rows
+ * @returns {Object} - Preview results with inferred values and confidence
+ */
+async function previewAutoEvaluation(rows) {
+    if (typeof window.AutoProcessor === 'undefined') {
+        return {
+            available: false,
+            message: 'Auto-evaluation not available'
+        };
+    }
+
+    const preview = {
+        available: true,
+        dataType: null,
+        rows: [],
+        summary: {
+            total: rows.length,
+            highConfidence: 0,
+            mediumConfidence: 0,
+            lowConfidence: 0
+        }
+    };
+
+    // Detect data type
+    preview.dataType = window.AutoProcessor.detectDataType(rows[0], rows);
+
+    // Process first 10 rows for preview
+    const previewRows = rows.slice(0, 10);
+
+    for (const row of previewRows) {
+        try {
+            const processed = await window.AutoProcessor.processRow(
+                row,
+                preview.dataType,
+                {}
+            );
+
+            preview.rows.push({
+                original: row,
+                processed: processed.experience,
+                confidence: processed.confidence,
+                warnings: processed.warnings,
+                success: processed.success
+            });
+
+            // Categorize by confidence
+            if (processed.confidence >= 0.7) {
+                preview.summary.highConfidence++;
+            } else if (processed.confidence >= 0.4) {
+                preview.summary.mediumConfidence++;
+            } else {
+                preview.summary.lowConfidence++;
+            }
+
+        } catch (error) {
+            preview.rows.push({
+                original: row,
+                error: error.message,
+                confidence: 0,
+                success: false
+            });
+            preview.summary.lowConfidence++;
+        }
+    }
+
+    return preview;
+}
+
+/**
+ * Get confidence level label
+ */
+function getConfidenceLabel(confidence) {
+    if (confidence >= 0.7) return { label: 'High', color: '#10b981' };
+    if (confidence >= 0.4) return { label: 'Medium', color: '#f59e0b' };
+    return { label: 'Low', color: '#ef4444' };
+}
+
+// Export functions for use in UI
+if (typeof window !== 'undefined') {
+    window.BatchImport = {
+        parseCSVFile,
+        parseExcelFile,
+        suggestColumnMapping,
+        validateBatchData,
+        executeBatchImport,
+        executeBatchImportWithAutoEval,
+        previewAutoEvaluation,
+        generateBatchImportTemplate,
+        downloadBatchImportTemplate,
+        getConfidenceLabel
+    };
+}
