@@ -190,7 +190,12 @@ class AutoProcessor {
         };
 
         try {
-            let experience = this.createBaseExperience(row);
+            // Normalize row data using SchemaValidation if available
+            const normalizedRow = window.SchemaValidation
+                ? window.SchemaValidation.normalizeRow(row)
+                : row;
+
+            let experience = this.createBaseExperience(normalizedRow);
             let sensoryData = null;
             let emotionalData = null;
 
@@ -296,16 +301,17 @@ class AutoProcessor {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
             productInfo: {
-                name: row.name || row.product_name || row.productName || 'Unknown Product',
-                brand: row.brand || row.Brand || '',
-                type: row.category || row.type || row.Category || 'food',
-                variant: row.variant || row.description || ''
+                name: row.name || row.Name || row.product_name || row.Product_Name ||
+                      row.productName || row.ProductName || row['Product Name'] || 'Unknown Product',
+                brand: row.brand || row.Brand || row.brand_name || row.Brand_Name || '',
+                type: row.category || row.Category || row.type || row.Type || 'food',
+                variant: row.variant || row.Variant || row.description || row.Description || ''
             },
             stages: {
-                appearance: { visualAppeal: 5, colorIntensity: 5, emotions: {} },
-                aroma: { intensity: 5, sweetness: 5, complexity: 5, emotions: {} },
-                frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, emotions: {} },
-                midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, emotions: {} },
+                appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 5, emotions: {} },
+                aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
+                frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3, emotions: {} },
+                midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5, emotions: {} },
                 aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
             },
             needState: '',
@@ -327,6 +333,11 @@ class AutoProcessor {
             aftertaste: {}
         };
 
+        // Normalize row first if SchemaValidation available
+        const normalizedRow = window.SchemaValidation
+            ? window.SchemaValidation.normalizeRow(row)
+            : row;
+
         // Map of column names to stage.attribute
         const columnMappings = {
             // Appearance
@@ -336,6 +347,8 @@ class AutoProcessor {
             'colorIntensity': 'appearance.colorIntensity',
             'color_intensity': 'appearance.colorIntensity',
             'appearance_color': 'appearance.colorIntensity',
+            'carbonation': 'appearance.carbonation',
+            'fizz': 'appearance.carbonation',
 
             // Aroma
             'aromaIntensity': 'aroma.intensity',
@@ -344,6 +357,9 @@ class AutoProcessor {
             'aroma_sweetness': 'aroma.sweetness',
             'aromaComplexity': 'aroma.complexity',
             'aroma_complexity': 'aroma.complexity',
+            'persistence': 'aroma.persistence',
+            'aroma_persistence': 'aroma.persistence',
+            'linger': 'aroma.persistence',
 
             // Front mouth
             'sweetness': 'frontMouth.sweetness',
@@ -351,11 +367,15 @@ class AutoProcessor {
             'front_sweetness': 'frontMouth.sweetness',
             'sourness': 'frontMouth.sourness',
             'taste_sourness': 'frontMouth.sourness',
-            'acidity': 'frontMouth.sourness',
             'saltiness': 'frontMouth.saltiness',
             'taste_saltiness': 'frontMouth.saltiness',
             'texture': 'frontMouth.texture',
             'front_texture': 'frontMouth.texture',
+            'acidity': 'frontMouth.acidity',
+            'acid': 'frontMouth.acidity',
+            'spiciness': 'frontMouth.spiciness',
+            'heat': 'frontMouth.spiciness',
+            'pungency': 'frontMouth.spiciness',
 
             // Mid/rear mouth
             'bitterness': 'midRearMouth.bitterness',
@@ -367,6 +387,13 @@ class AutoProcessor {
             'mid_richness': 'midRearMouth.richness',
             'creaminess': 'midRearMouth.creaminess',
             'mid_creaminess': 'midRearMouth.creaminess',
+            'astringency': 'midRearMouth.astringency',
+            'dryness': 'midRearMouth.astringency',
+            'tannin': 'midRearMouth.astringency',
+            'mouthfeel': 'midRearMouth.mouthfeel',
+            'mouth_feel': 'midRearMouth.mouthfeel',
+            'weight': 'midRearMouth.mouthfeel',
+            'body': 'midRearMouth.mouthfeel',
 
             // Aftertaste
             'aftertasteDuration': 'aftertaste.duration',
@@ -382,7 +409,7 @@ class AutoProcessor {
         };
 
         // Extract values based on column mappings
-        for (const [col, value] of Object.entries(row)) {
+        for (const [col, value] of Object.entries(normalizedRow)) {
             const mapping = columnMappings[col] || columnMappings[col.toLowerCase()];
             if (mapping) {
                 const [stage, attr] = mapping.split('.');
@@ -474,10 +501,15 @@ class AutoProcessor {
      */
     static fallbackEmotionInference(sensoryData) {
         // Basic emotion inference based on key sensory attributes
+        // Use calculateEmotionalTriggers if available
+        const triggers = window.calculateEmotionalTriggers
+            ? window.calculateEmotionalTriggers({ stages: sensoryData })
+            : { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 };
+
         const emotions = {
             stages: {},
             needState: 'reward',
-            emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
+            emotionalTriggers: triggers,
             confidence: 0.4,
             warnings: [{ type: 'fallback', message: 'Using basic emotion inference' }]
         };
@@ -509,6 +541,19 @@ class AutoProcessor {
      * Validate experience object
      */
     static validateExperience(experience) {
+        // Use SchemaValidation if available for comprehensive validation
+        if (window.SchemaValidation) {
+            const validation = window.SchemaValidation.validateExperience(experience);
+            return {
+                valid: validation.valid,
+                warnings: validation.warnings.map(w => ({
+                    type: w.field || 'validation',
+                    message: w.message
+                }))
+            };
+        }
+
+        // Fallback validation
         const warnings = [];
         let valid = true;
 
