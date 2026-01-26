@@ -386,7 +386,7 @@ function attachBatchImportEventListeners() {
     const uploadZone = document.getElementById('file-upload-zone');
 
     if (fileInput) {
-        fileInput.addEventListener('change', handleFileSelect);
+        fileInput.addEventListener('change', handleBatchFileSelect);
     }
 
     if (uploadZone) {
@@ -401,9 +401,9 @@ function attachBatchImportEventListeners() {
 }
 
 /**
- * Handle file selection
+ * Handle file selection for Batch Import
  */
-async function handleFileSelect(event) {
+async function handleBatchFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
 
