@@ -24,24 +24,30 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanation.`;
 const SENSORY_INFERENCE_TEMPLATE = {
     appearance: {
         visualAppeal: 5,
-        colorIntensity: 5
+        colorIntensity: 5,
+        carbonation: 5
     },
     aroma: {
         intensity: 5,
         sweetness: 5,
-        complexity: 5
+        complexity: 5,
+        persistence: 5
     },
     frontMouth: {
         sweetness: 5,
         sourness: 3,
         saltiness: 3,
-        texture: 5
+        texture: 5,
+        acidity: 3,
+        spiciness: 3
     },
     midRearMouth: {
         bitterness: 3,
         umami: 3,
         richness: 5,
-        creaminess: 5
+        creaminess: 5,
+        astringency: 3,
+        mouthfeel: 5
     },
     aftertaste: {
         duration: 5,
@@ -125,45 +131,45 @@ const KEYWORD_SENSORY_RULES = {
  */
 const CATEGORY_BASELINES = {
     chocolate: {
-        appearance: { visualAppeal: 7, colorIntensity: 7 },
-        aroma: { intensity: 7, sweetness: 6, complexity: 6 },
-        frontMouth: { sweetness: 6, sourness: 2, saltiness: 2, texture: 6 },
-        midRearMouth: { bitterness: 5, umami: 2, richness: 7, creaminess: 6 },
+        appearance: { visualAppeal: 7, colorIntensity: 7, carbonation: 0 },
+        aroma: { intensity: 7, sweetness: 6, complexity: 6, persistence: 6 },
+        frontMouth: { sweetness: 6, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
+        midRearMouth: { bitterness: 5, umami: 2, richness: 7, creaminess: 6, astringency: 3, mouthfeel: 7 },
         aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
     },
     beverage: {
-        appearance: { visualAppeal: 6, colorIntensity: 5 },
-        aroma: { intensity: 6, sweetness: 5, complexity: 5 },
-        frontMouth: { sweetness: 5, sourness: 4, saltiness: 2, texture: 4 },
-        midRearMouth: { bitterness: 3, umami: 2, richness: 4, creaminess: 3 },
+        appearance: { visualAppeal: 6, colorIntensity: 5, carbonation: 5 },
+        aroma: { intensity: 6, sweetness: 5, complexity: 5, persistence: 5 },
+        frontMouth: { sweetness: 5, sourness: 4, saltiness: 2, texture: 4, acidity: 4, spiciness: 2 },
+        midRearMouth: { bitterness: 3, umami: 2, richness: 4, creaminess: 3, astringency: 3, mouthfeel: 5 },
         aftertaste: { duration: 5, pleasantness: 6, cleanness: 7 }
     },
     snack: {
-        appearance: { visualAppeal: 6, colorIntensity: 6 },
-        aroma: { intensity: 5, sweetness: 4, complexity: 5 },
-        frontMouth: { sweetness: 4, sourness: 3, saltiness: 5, texture: 7 },
-        midRearMouth: { bitterness: 2, umami: 5, richness: 5, creaminess: 4 },
+        appearance: { visualAppeal: 6, colorIntensity: 6, carbonation: 0 },
+        aroma: { intensity: 5, sweetness: 4, complexity: 5, persistence: 4 },
+        frontMouth: { sweetness: 4, sourness: 3, saltiness: 5, texture: 7, acidity: 3, spiciness: 4 },
+        midRearMouth: { bitterness: 2, umami: 5, richness: 5, creaminess: 4, astringency: 2, mouthfeel: 6 },
         aftertaste: { duration: 4, pleasantness: 6, cleanness: 6 }
     },
     dairy: {
-        appearance: { visualAppeal: 6, colorIntensity: 4 },
-        aroma: { intensity: 5, sweetness: 5, complexity: 4 },
-        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 6 },
-        midRearMouth: { bitterness: 2, umami: 4, richness: 6, creaminess: 8 },
+        appearance: { visualAppeal: 6, colorIntensity: 4, carbonation: 0 },
+        aroma: { intensity: 5, sweetness: 5, complexity: 4, persistence: 4 },
+        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 6, acidity: 3, spiciness: 1 },
+        midRearMouth: { bitterness: 2, umami: 4, richness: 6, creaminess: 8, astringency: 1, mouthfeel: 7 },
         aftertaste: { duration: 5, pleasantness: 6, cleanness: 5 }
     },
     dessert: {
-        appearance: { visualAppeal: 8, colorIntensity: 6 },
-        aroma: { intensity: 7, sweetness: 8, complexity: 6 },
-        frontMouth: { sweetness: 8, sourness: 2, saltiness: 2, texture: 6 },
-        midRearMouth: { bitterness: 2, umami: 2, richness: 7, creaminess: 6 },
+        appearance: { visualAppeal: 8, colorIntensity: 6, carbonation: 0 },
+        aroma: { intensity: 7, sweetness: 8, complexity: 6, persistence: 6 },
+        frontMouth: { sweetness: 8, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
+        midRearMouth: { bitterness: 2, umami: 2, richness: 7, creaminess: 6, astringency: 2, mouthfeel: 6 },
         aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
     },
     default: {
-        appearance: { visualAppeal: 5, colorIntensity: 5 },
-        aroma: { intensity: 5, sweetness: 5, complexity: 5 },
-        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5 },
-        midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5 },
+        appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 3 },
+        aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5 },
+        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3 },
+        midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5 },
         aftertaste: { duration: 5, pleasantness: 5, cleanness: 5 }
     }
 };

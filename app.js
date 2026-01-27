@@ -2248,17 +2248,23 @@ function renderEmotionalProfileRadar(exp) {
 function renderCorrelationHeatmap(exp) {
     const container = document.getElementById('correlation-heatmap');
 
-    // Get all sensory attributes
+    // Get all sensory attributes (including new ones)
     const sensoryAttributes = {
         'Visual Appeal': exp.stages.appearance.visualAppeal,
         'Color Intensity': exp.stages.appearance.colorIntensity,
+        'Carbonation': exp.stages.appearance.carbonation || 5,
         'Aroma Intensity': exp.stages.aroma.intensity,
+        'Aroma Persistence': exp.stages.aroma.persistence || 5,
         'Sweetness': exp.stages.frontMouth.sweetness,
         'Sourness': exp.stages.frontMouth.sourness,
         'Saltiness': exp.stages.frontMouth.saltiness,
+        'Acidity': exp.stages.frontMouth.acidity || 5,
+        'Spiciness': exp.stages.frontMouth.spiciness || 5,
         'Bitterness': exp.stages.midRearMouth.bitterness,
         'Umami': exp.stages.midRearMouth.umami,
         'Richness': exp.stages.midRearMouth.richness,
+        'Astringency': exp.stages.midRearMouth.astringency || 5,
+        'Mouthfeel': exp.stages.midRearMouth.mouthfeel || 5,
         'Texture': exp.stages.frontMouth.texture
     };
 
