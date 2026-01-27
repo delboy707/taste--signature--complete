@@ -7,7 +7,7 @@
 const defaultLexicon = {
     id: 'default',
     name: 'Default Sensory Lexicon',
-    version: '1.0',
+    version: '1.1',
     category: 'General',
     description: 'Standard sensory evaluation framework for general food products',
     stages: [
@@ -18,9 +18,10 @@ const defaultLexicon = {
             attributes: [
                 { id: 'visualAppeal', label: 'Visual Appeal', type: 'slider', min: 1, max: 10, unit: '', description: 'Overall attractiveness' },
                 { id: 'colorIntensity', label: 'Color Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Depth and vibrancy of color' },
+                { id: 'carbonation', label: 'Carbonation/Fizz', type: 'slider', min: 1, max: 10, unit: '', description: 'Visible effervescence' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Combined visual impact' }
             ],
-            emotions: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity']
+            emotions: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise']
         },
         {
             id: 'aroma',
@@ -30,9 +31,10 @@ const defaultLexicon = {
                 { id: 'intensity', label: 'Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Strength of aroma' },
                 { id: 'sweetness', label: 'Sweet Notes', type: 'slider', min: 1, max: 10, unit: '', description: 'Sweet aromatic notes' },
                 { id: 'complexity', label: 'Complexity', type: 'slider', min: 1, max: 10, unit: '', description: 'Number and harmony of notes' },
+                { id: 'persistence', label: 'Persistence/Linger', type: 'slider', min: 1, max: 10, unit: '', description: 'How long aroma lingers' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total aromatic impact' }
             ],
-            emotions: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation']
+            emotions: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue']
         },
         {
             id: 'frontMouth',
@@ -43,9 +45,11 @@ const defaultLexicon = {
                 { id: 'sourness', label: 'Sourness', type: 'slider', min: 1, max: 10, unit: '', description: 'Sour/acidic taste' },
                 { id: 'saltiness', label: 'Saltiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Salty taste intensity' },
                 { id: 'texture', label: 'Texture Impact', type: 'slider', min: 1, max: 10, unit: '', description: 'Initial mouthfeel' },
+                { id: 'acidity', label: 'Acidity', type: 'slider', min: 1, max: 10, unit: '', description: 'Sharp acidic notes' },
+                { id: 'spiciness', label: 'Spiciness/Heat', type: 'slider', min: 1, max: 10, unit: '', description: 'Heat and spice intensity' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total front palate impact' }
             ],
-            emotions: ['excitement', 'satisfaction', 'happiness', 'pleasure']
+            emotions: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment']
         },
         {
             id: 'midRearMouth',
@@ -56,9 +60,11 @@ const defaultLexicon = {
                 { id: 'umami', label: 'Umami', type: 'slider', min: 1, max: 10, unit: '', description: 'Savory taste depth' },
                 { id: 'richness', label: 'Richness', type: 'slider', min: 1, max: 10, unit: '', description: 'Fullness and depth' },
                 { id: 'creaminess', label: 'Creaminess', type: 'slider', min: 1, max: 10, unit: '', description: 'Creamy mouthfeel' },
+                { id: 'astringency', label: 'Astringency/Dryness', type: 'slider', min: 1, max: 10, unit: '', description: 'Drying sensation' },
+                { id: 'mouthfeel', label: 'Mouthfeel/Body', type: 'slider', min: 1, max: 10, unit: '', description: 'Weight and texture in mouth' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total mid/rear palate impact' }
             ],
-            emotions: ['indulgence', 'comfort', 'satisfaction', 'pleasure']
+            emotions: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication']
         },
         {
             id: 'aftertaste',
@@ -70,7 +76,7 @@ const defaultLexicon = {
                 { id: 'cleanness', label: 'Palate Cleanness', type: 'slider', min: 1, max: 10, unit: '', description: 'How clean palate feels' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total aftertaste impact' }
             ],
-            emotions: ['satisfaction', 'completeness', 'happiness']
+            emotions: ['satisfaction', 'completeness', 'happiness', 'craving']
         }
     ],
     emotionalTriggers: [
