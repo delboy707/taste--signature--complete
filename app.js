@@ -789,71 +789,94 @@ function updateDashboard() {
         return;
     }
 
+    // Filter out malformed experiences for safe processing
+    const validExperiences = experiences.filter(e => e && e.productInfo && e.stages);
+
     // Update stats
     document.getElementById('stat-total').textContent = experiences.length;
 
-    const uniqueProducts = new Set(experiences.map(e => e.productInfo.name)).size;
+    const uniqueProducts = new Set(validExperiences.map(e => e?.productInfo?.name).filter(Boolean)).size;
     document.getElementById('stat-products').textContent = uniqueProducts;
 
-    const avgSatisfaction = experiences.reduce((sum, e) =>
-        sum + e.stages.aftertaste.emotions.satisfaction, 0) / experiences.length;
-    document.getElementById('stat-satisfaction').textContent = avgSatisfaction.toFixed(1);
+    if (validExperiences.length > 0) {
+        const avgSatisfaction = validExperiences.reduce((sum, e) =>
+            sum + (e?.stages?.aftertaste?.emotions?.satisfaction || 0), 0) / validExperiences.length;
+        document.getElementById('stat-satisfaction').textContent = avgSatisfaction.toFixed(1);
+    } else {
+        document.getElementById('stat-satisfaction').textContent = '-';
+    }
 
     const needStateCounts = {};
-    experiences.forEach(e => {
-        needStateCounts[e.needState] = (needStateCounts[e.needState] || 0) + 1;
+    validExperiences.forEach(e => {
+        const ns = e?.needState || 'unknown';
+        needStateCounts[ns] = (needStateCounts[ns] || 0) + 1;
     });
-    const topNeedState = Object.keys(needStateCounts).reduce((a, b) =>
-        needStateCounts[a] > needStateCounts[b] ? a : b);
-    document.getElementById('stat-need-state').textContent =
-        topNeedState.charAt(0).toUpperCase() + topNeedState.slice(1);
+    const needStateKeys = Object.keys(needStateCounts);
+    if (needStateKeys.length > 0) {
+        const topNeedState = needStateKeys.reduce((a, b) =>
+            needStateCounts[a] > needStateCounts[b] ? a : b);
+        document.getElementById('stat-need-state').textContent =
+            topNeedState.charAt(0).toUpperCase() + topNeedState.slice(1);
+    } else {
+        document.getElementById('stat-need-state').textContent = '-';
+    }
 
     // Recent activity
-    const recentHTML = experiences
+    const recentHTML = validExperiences
         .slice(-5)
         .reverse()
         .map(e => `
             <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
-                <strong>${e.productInfo.name}</strong> - ${e.productInfo.brand}<br>
-                <small style="color: var(--text-light);">${new Date(e.timestamp).toLocaleDateString()}</small>
+                <strong>${e?.productInfo?.name || 'Unknown'}</strong> - ${e?.productInfo?.brand || 'Unknown'}<br>
+                <small style="color: var(--text-light);">${new Date(e?.timestamp || Date.now()).toLocaleDateString()}</small>
             </div>
         `).join('');
-    document.getElementById('recent-activity').innerHTML = recentHTML;
+    document.getElementById('recent-activity').innerHTML = recentHTML || '<p class="empty-state">No activity yet</p>';
 
     // Quick insights
     const insights = generateQuickInsights();
-    document.getElementById('quick-insights').innerHTML = insights.map(i => `
+    const insightsHTML = insights.map(i => `
         <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
             <strong style="color: var(--primary-color);">${i.title}</strong><br>
             <small>${i.text}</small>
         </div>
     `).join('');
+    document.getElementById('quick-insights').innerHTML = insightsHTML || '<p class="empty-state">No insights yet</p>';
 }
 
 function generateQuickInsights() {
-    if (experiences.length === 0) return [];
+    const validExperiences = experiences.filter(e => e && e.productInfo && e.stages);
+    if (validExperiences.length === 0) return [];
 
     const insights = [];
 
     // Highest rated product
-    const highest = experiences.reduce((max, e) =>
-        e.stages.aftertaste.emotions.satisfaction > max.stages.aftertaste.emotions.satisfaction ? e : max);
+    const highest = validExperiences.reduce((max, e) => {
+        const eSat = e?.stages?.aftertaste?.emotions?.satisfaction || 0;
+        const maxSat = max?.stages?.aftertaste?.emotions?.satisfaction || 0;
+        return eSat > maxSat ? e : max;
+    });
+    const highestSat = highest?.stages?.aftertaste?.emotions?.satisfaction || 0;
     insights.push({
         title: 'Top Rated',
-        text: `${highest.productInfo.name} (${highest.stages.aftertaste.emotions.satisfaction}/10)`
+        text: `${highest?.productInfo?.name || 'Unknown'} (${highestSat}/10)`
     });
 
     // Most common need state
     const needStateCounts = {};
-    experiences.forEach(e => {
-        needStateCounts[e.needState] = (needStateCounts[e.needState] || 0) + 1;
+    validExperiences.forEach(e => {
+        const ns = e?.needState || 'unknown';
+        needStateCounts[ns] = (needStateCounts[ns] || 0) + 1;
     });
-    const topNeed = Object.keys(needStateCounts).reduce((a, b) =>
-        needStateCounts[a] > needStateCounts[b] ? a : b);
-    insights.push({
-        title: 'Dominant Need',
-        text: `${topNeed.charAt(0).toUpperCase() + topNeed.slice(1)} (${needStateCounts[topNeed]} products)`
-    });
+    const needStateKeys = Object.keys(needStateCounts);
+    if (needStateKeys.length > 0) {
+        const topNeed = needStateKeys.reduce((a, b) =>
+            needStateCounts[a] > needStateCounts[b] ? a : b);
+        insights.push({
+            title: 'Dominant Need',
+            text: `${topNeed.charAt(0).toUpperCase() + topNeed.slice(1)} (${needStateCounts[topNeed]} products)`
+        });
+    }
 
     return insights;
 }
@@ -862,11 +885,11 @@ function generateQuickInsights() {
 function updateShapeOfTasteView() {
     const select = document.getElementById('shape-product-select');
     select.innerHTML = '<option value="">Choose a product...</option>' +
-        experiences.map(e => `<option value="${e.id}">${e.productInfo.name} - ${e.productInfo.brand}</option>`).join('');
+        experiences.filter(e => e && e.productInfo).map(e => `<option value="${e.id}">${e.productInfo?.name ?? 'Unknown'} - ${e.productInfo?.brand ?? 'Unknown'}</option>`).join('');
 
     select.onchange = function() {
-        const exp = experiences.find(e => e.id == this.value);
-        if (exp) {
+        const exp = experiences.find(e => e && e.id == this.value);
+        if (exp && exp.productInfo) {
             renderShapeOfTaste(exp);
             renderEmotionalJourney(exp);
         }
@@ -885,17 +908,19 @@ function destroyChart(chartKey) {
 }
 
 function renderShapeOfTaste(exp) {
+    if (!exp || !exp.stages) return;
+
     const ctx = document.getElementById('shape-chart').getContext('2d');
 
     destroyChart('shape');
 
     const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
     const intensities = [
-        exp.stages.appearance.overallIntensity,
-        exp.stages.aroma.overallIntensity,
-        exp.stages.frontMouth.overallIntensity,
-        exp.stages.midRearMouth.overallIntensity,
-        exp.stages.aftertaste.overallIntensity
+        exp.stages.appearance?.overallIntensity ?? 0,
+        exp.stages.aroma?.overallIntensity ?? 0,
+        exp.stages.frontMouth?.overallIntensity ?? 0,
+        exp.stages.midRearMouth?.overallIntensity ?? 0,
+        exp.stages.aftertaste?.overallIntensity ?? 0
     ];
 
     charts.shape = new Chart(ctx, {
@@ -938,7 +963,7 @@ function renderShapeOfTaste(exp) {
             plugins: {
                 title: {
                     display: true,
-                    text: `${exp.productInfo.name} - Shape of Taste`,
+                    text: `${exp.productInfo?.name ?? 'Unknown'} - Shape of Taste`,
                     font: { size: 16 }
                 },
                 legend: {
@@ -950,6 +975,8 @@ function renderShapeOfTaste(exp) {
 }
 
 function renderEmotionalJourney(exp) {
+    if (!exp || !exp.stages) return;
+
     const ctx = document.getElementById('emotional-journey-chart').getContext('2d');
 
     destroyChart('emotionalJourney');
@@ -958,11 +985,11 @@ function renderEmotionalJourney(exp) {
 
     // Get average emotional response per stage
     const emotionalData = [
-        (exp.stages.appearance.emotions.anticipation + exp.stages.appearance.emotions.desire) / 2,
-        (exp.stages.aroma.emotions.pleasure + exp.stages.aroma.emotions.comfort) / 2,
-        (exp.stages.frontMouth.emotions.excitement + exp.stages.frontMouth.emotions.satisfaction) / 2,
-        (exp.stages.midRearMouth.emotions.indulgence + exp.stages.midRearMouth.emotions.comfort) / 2,
-        (exp.stages.aftertaste.emotions.satisfaction + exp.stages.aftertaste.emotions.completeness) / 2
+        ((exp.stages.appearance?.emotions?.anticipation ?? 0) + (exp.stages.appearance?.emotions?.desire ?? 0)) / 2,
+        ((exp.stages.aroma?.emotions?.pleasure ?? 0) + (exp.stages.aroma?.emotions?.comfort ?? 0)) / 2,
+        ((exp.stages.frontMouth?.emotions?.excitement ?? 0) + (exp.stages.frontMouth?.emotions?.satisfaction ?? 0)) / 2,
+        ((exp.stages.midRearMouth?.emotions?.indulgence ?? 0) + (exp.stages.midRearMouth?.emotions?.comfort ?? 0)) / 2,
+        ((exp.stages.aftertaste?.emotions?.satisfaction ?? 0) + (exp.stages.aftertaste?.emotions?.completeness ?? 0)) / 2
     ];
 
     charts.emotionalJourney = new Chart(ctx, {
@@ -1026,7 +1053,10 @@ function renderNeedStateChart() {
 
     const needStateCounts = { reward: 0, escape: 0, rejuvenation: 0, sociability: 0 };
     experiences.forEach(e => {
-        needStateCounts[e.needState]++;
+        const state = e?.needState;
+        if (state && needStateCounts.hasOwnProperty(state)) {
+            needStateCounts[state]++;
+        }
     });
 
     charts.needState = new Chart(ctx, {
@@ -1064,14 +1094,15 @@ function renderTriggersChart() {
     };
 
     experiences.forEach(e => {
-        avgTriggers.moreishness += e.emotionalTriggers.moreishness;
-        avgTriggers.refreshment += e.emotionalTriggers.refreshment;
-        avgTriggers.melt += e.emotionalTriggers.melt;
-        avgTriggers.crunch += e.emotionalTriggers.crunch;
+        avgTriggers.moreishness += e?.emotionalTriggers?.moreishness || 0;
+        avgTriggers.refreshment += e?.emotionalTriggers?.refreshment || 0;
+        avgTriggers.melt += e?.emotionalTriggers?.melt || 0;
+        avgTriggers.crunch += e?.emotionalTriggers?.crunch || 0;
     });
 
+    const count = experiences.length || 1;
     Object.keys(avgTriggers).forEach(key => {
-        avgTriggers[key] /= experiences.length;
+        avgTriggers[key] /= count;
     });
 
     charts.triggers = new Chart(ctx, {
@@ -1110,14 +1141,15 @@ function renderTriggerInsights() {
     };
 
     experiences.forEach(e => {
-        avgTriggers.moreishness += e.emotionalTriggers.moreishness;
-        avgTriggers.refreshment += e.emotionalTriggers.refreshment;
-        avgTriggers.melt += e.emotionalTriggers.melt;
-        avgTriggers.crunch += e.emotionalTriggers.crunch;
+        avgTriggers.moreishness += e?.emotionalTriggers?.moreishness || 0;
+        avgTriggers.refreshment += e?.emotionalTriggers?.refreshment || 0;
+        avgTriggers.melt += e?.emotionalTriggers?.melt || 0;
+        avgTriggers.crunch += e?.emotionalTriggers?.crunch || 0;
     });
 
+    const count = experiences.length || 1;
     Object.keys(avgTriggers).forEach(key => {
-        avgTriggers[key] /= experiences.length;
+        avgTriggers[key] /= count;
     });
 
     const topTrigger = Object.keys(avgTriggers).reduce((a, b) =>
