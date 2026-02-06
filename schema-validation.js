@@ -221,7 +221,7 @@ const STAGE_ATTRIBUTES = {
 /**
  * Valid emotions per stage
  */
-const STAGE_EMOTIONS = {
+const VALIDATION_STAGE_EMOTIONS = {
     appearance: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise'],
     aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
     frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
@@ -515,7 +515,7 @@ function getStageAttributes(stageName) {
  */
 function getStageEmotions(stageName) {
     const canonical = normalizeStageName(stageName);
-    return STAGE_EMOTIONS[canonical] || [];
+    return VALIDATION_STAGE_EMOTIONS[canonical] || [];
 }
 
 // Export for use in other modules
@@ -524,7 +524,7 @@ if (typeof module !== 'undefined' && module.exports) {
         ATTRIBUTE_ALIASES,
         STAGE_ALIASES,
         STAGE_ATTRIBUTES,
-        STAGE_EMOTIONS,
+        VALIDATION_STAGE_EMOTIONS,
         normalizeAttributeName,
         normalizeStageName,
         normalizeRow,
@@ -542,7 +542,7 @@ if (typeof window !== 'undefined') {
         ATTRIBUTE_ALIASES,
         STAGE_ALIASES,
         STAGE_ATTRIBUTES,
-        STAGE_EMOTIONS,
+        VALIDATION_STAGE_EMOTIONS,
         normalizeAttributeName,
         normalizeStageName,
         normalizeRow,
