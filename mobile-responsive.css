@@ -131,6 +131,11 @@ body.menu-open .mobile-menu-toggle .menu-icon {
         transform: translateX(0);
     }
 
+    /* Push sidebar header text below the fixed menu button to prevent overlap */
+    .sidebar .sidebar-header {
+        padding-top: 70px;
+    }
+
     /* Show overlay when menu is open */
     body.menu-open .mobile-overlay {
         display: block;
