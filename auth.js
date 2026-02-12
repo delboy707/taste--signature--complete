@@ -37,7 +37,7 @@ class AuthManager {
                 this.onAuthChangeCallbacks.forEach(callback => callback(user));
 
                 if (user) {
-                    console.log('✅ User logged in:', user.email);
+                    console.log('User authenticated');
                     this.showApp();
 
                     // Initialize Firestore for user data
@@ -149,12 +149,13 @@ class AuthManager {
             const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
 
-            console.log('✅ Login successful for:', email);
+            console.log('User authenticated');
 
             // Check if email is verified
             if (!user.emailVerified) {
                 return {
-                    success: true,
+                    success: false,
+                    requiresVerification: true,
                     user: user,
                     warning: 'Please verify your email address. Check your inbox for the verification link.'
                 };

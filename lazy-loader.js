@@ -1,8 +1,29 @@
 // ===== LAZY LOADER =====
 // Deferred loading of non-critical scripts for better performance
 
+const ALLOWED_SCRIPT_DOMAINS = [
+    'cdn.jsdelivr.net',
+    'cdnjs.cloudflare.com',
+    'unpkg.com',
+];
+
 const LazyLoader = {
     loaded: new Set(),
+
+    /**
+     * Validate that a script src is from an allowed origin
+     */
+    _isAllowedSrc(src) {
+        try {
+            const url = new URL(src, window.location.origin);
+            if (url.origin === window.location.origin) {
+                return true;
+            }
+            return ALLOWED_SCRIPT_DOMAINS.includes(url.hostname);
+        } catch (e) {
+            return false;
+        }
+    },
 
     /**
      * Load a script dynamically
@@ -10,6 +31,10 @@ const LazyLoader = {
     loadScript(src) {
         if (this.loaded.has(src)) {
             return Promise.resolve();
+        }
+
+        if (!this._isAllowedSrc(src)) {
+            return Promise.reject(new Error(`Blocked loading script from disallowed domain: ${src}`));
         }
 
         return new Promise((resolve, reject) => {

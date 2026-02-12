@@ -24,7 +24,8 @@ service cloud.firestore {
       allow read: if belongsToCompany(companyId);
 
       // Allow company owner to update company settings
-      allow update: if belongsToCompany(companyId);
+      allow update: if belongsToCompany(companyId)
+                    && resource.data.ownerId == request.auth.uid;
 
       // Allow create only during signup (user creates their own company)
       allow create: if request.auth != null
@@ -35,8 +36,14 @@ service cloud.firestore {
         allow read: if belongsToCompany(companyId);
         allow create: if belongsToCompany(companyId)
                       && request.resource.data.companyId == companyId
-                      && request.resource.data.addedBy == request.auth.uid;
-        allow update: if belongsToCompany(companyId);
+                      && request.resource.data.addedBy == request.auth.uid
+                      && request.resource.data.productInfo is map
+                      && (!("name" in request.resource.data.productInfo) ||
+                          (request.resource.data.productInfo.name is string
+                           && request.resource.data.productInfo.name.size() > 0
+                           && request.resource.data.productInfo.name.size() <= 500));
+        allow update: if belongsToCompany(companyId)
+                      && request.resource.data.updatedBy == request.auth.uid;
         allow delete: if belongsToCompany(companyId);
       }
 

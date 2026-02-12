@@ -3,13 +3,10 @@
 
 class ClaudeAI {
     constructor() {
-        this.apiKey = window.AI_CONFIG?.ANTHROPIC_API_KEY;
-        this.apiUrl = window.AI_CONFIG?.ANTHROPIC_API_URL;
+        this.apiUrl = window.AI_CONFIG?.ANTHROPIC_API_URL || '/api/claude';
         this.model = window.AI_CONFIG?.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
-        this.isConfigured = window.validateAPIKey ? window.validateAPIKey() : false;
+        this.isConfigured = true; // All calls go through server proxy
         this.usageTracker = new window.UsageTracker();
-
-        console.log('ClaudeAI initialized with URL:', this.apiUrl);
     }
 
     /**
@@ -39,10 +36,11 @@ class ClaudeAI {
     }
 
     /**
-     * Check if user has their own API key configured
+     * Check if AI is available (user is authenticated)
      */
     hasOwnApiKey() {
-        return this.isConfigured && this.apiKey && this.apiKey.startsWith('sk-ant-');
+        // All calls now go through server proxy; no client-side keys
+        return false;
     }
 
     /**
@@ -51,33 +49,10 @@ class ClaudeAI {
     async sendMessage(userMessage, systemPrompt = '') {
         const userId = this.getUserId();
 
-        // Option 1: User has their own API key (no quotas)
-        if (this.hasOwnApiKey()) {
-            console.log('✅ Using user-provided API key (unlimited)');
-            return await this.callAPI(userMessage, systemPrompt, this.apiKey, null);
-        }
-
-        // Option 2: Use server's API key (requires auth + quotas)
-        console.log('🔑 Using server API key (quotas apply)');
-
-        // Check if user is authenticated
+        // All calls go through server proxy with Firebase auth
         const authToken = await this.getAuthToken();
         if (!authToken) {
-            // User not authenticated - offer to add their own key
-            const addKey = confirm(
-                '🔐 Sign In Required\n\n' +
-                'To use AI features with our free tier (5 insights/day), please sign in.\n\n' +
-                'Or, add your own Anthropic API key for unlimited use.\n\n' +
-                'Click OK to add your own key, or Cancel to sign in first.'
-            );
-
-            if (addKey) {
-                if (typeof window.ensureAPIKey === 'function') {
-                    window.ensureAPIKey();
-                }
-            }
-
-            throw new Error('Authentication required. Please sign in or add your own API key.');
+            throw new Error('Authentication required. Please sign in to use AI features.');
         }
 
         // Check quotas
@@ -146,16 +121,11 @@ class ClaudeAI {
                 'Content-Type': 'application/json'
             };
 
-            // Add auth headers based on which mode we're using
-            if (userApiKey) {
-                // User's own key
-                headers['x-api-key'] = userApiKey;
-            } else if (authToken) {
-                // Server key (requires auth)
+            // Add auth headers for server proxy
+            if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
-                headers['X-User-Id'] = this.getUserId();
             } else {
-                throw new Error('No authentication method available');
+                throw new Error('Authentication required');
             }
 
             // Call Anthropic API via CORS proxy
@@ -180,13 +150,15 @@ class ClaudeAI {
                 const errorData = await response.json();
                 const errorMsg = errorData.error?.message || response.statusText;
 
-                // Handle specific error types
+                // Handle specific error types with generic messages
                 if (response.status === 401) {
                     throw new Error('Authentication failed. Please sign in again.');
                 } else if (response.status === 429) {
                     throw new Error('Rate limit exceeded. Please try again later.');
+                } else if (response.status === 503) {
+                    throw new Error('AI service is temporarily unavailable. Please try again later.');
                 } else {
-                    throw new Error(`API Error: ${errorMsg}`);
+                    throw new Error('An error occurred while processing your request. Please try again.');
                 }
             }
 

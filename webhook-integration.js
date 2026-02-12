@@ -13,6 +13,17 @@ let webhookConfig = {
     eventLog: []
 };
 
+// Timing-safe string comparison to prevent timing attacks
+function timingSafeCompare(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string') return false;
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}
+
 // Supported webhook events
 const WEBHOOK_EVENTS = {
     'experience.created': 'New experience logged',
@@ -590,6 +601,24 @@ function saveWebhook(event, editIndex = null) {
 
     const name = document.getElementById('webhook-name').value.trim();
     const url = document.getElementById('webhook-url').value.trim();
+
+    // Validate URL is HTTPS and not a private network address
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'https:') {
+            alert('Webhook URL must use HTTPS');
+            return;
+        }
+        const hostname = parsedUrl.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
+            alert('Webhook URL cannot point to private/local network addresses');
+            return;
+        }
+    } catch (e) {
+        alert('Invalid webhook URL');
+        return;
+    }
+
     const enabled = document.getElementById('webhook-enabled').checked;
 
     const events = Array.from(document.querySelectorAll('input[name="events"]:checked'))
@@ -858,7 +887,7 @@ function triggerWebhooks(eventType, data) {
  */
 function handleInboundWebhook(payload) {
     // Validate API key if configured
-    if (webhookConfig.inbound.apiKey && payload.apiKey !== webhookConfig.inbound.apiKey) {
+    if (webhookConfig.inbound.apiKey && !timingSafeCompare(payload.apiKey, webhookConfig.inbound.apiKey)) {
         console.error('Invalid API key');
         return { success: false, error: 'Invalid API key' };
     }
@@ -1026,10 +1055,14 @@ X-API-Key: your_api_key
 function showWebhookNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `webhook-notification ${type}`;
-    notification.innerHTML = `
-        <span class="notification-icon">${type === 'success' ? '✓' : '✕'}</span>
-        <span class="notification-message">${message}</span>
-    `;
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'notification-icon';
+    iconSpan.textContent = type === 'success' ? '✓' : '✕';
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'notification-message';
+    msgSpan.textContent = message;
+    notification.appendChild(iconSpan);
+    notification.appendChild(msgSpan);
     document.body.appendChild(notification);
 
     setTimeout(() => {

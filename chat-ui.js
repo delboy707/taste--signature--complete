@@ -9,6 +9,19 @@ if (typeof window.claudeAI === 'undefined') {
 }
 
 /**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
  * Initialize chat interface
  */
 function initializeChatUI() {
@@ -54,7 +67,7 @@ function updateUsageIndicator() {
         const todayRemaining = summary.today.remaining;
 
         if (todayLimit === 'Unlimited') {
-            indicator.innerHTML = `✨ <strong>${summary.tier} Tier</strong> - Unlimited AI insights`;
+            indicator.innerHTML = `✨ <strong>${escapeHtml(summary.tier)} Tier</strong> - Unlimited AI insights`;
             indicator.style.color = '#28a745';
         } else {
             const percentage = (todayUsed / todayLimit) * 100;
@@ -66,7 +79,7 @@ function updateUsageIndicator() {
                 color = '#ffc107'; // Yellow
             }
 
-            indicator.innerHTML = `📊 <strong>${summary.tier} Tier</strong>: ${todayRemaining}/${todayLimit} AI insights remaining today`;
+            indicator.innerHTML = `📊 <strong>${escapeHtml(summary.tier)} Tier</strong>: ${escapeHtml(String(todayRemaining))}/${escapeHtml(String(todayLimit))} AI insights remaining today`;
             indicator.style.color = color;
         }
     } catch (error) {
@@ -238,8 +251,8 @@ function addMessageToChat(role, content) {
  * Format message content (basic markdown support)
  */
 function formatMessageContent(content) {
-    // Convert markdown-style formatting
-    let formatted = content
+    // Escape HTML before applying markdown formatting to prevent XSS
+    let formatted = escapeHtml(content)
         // Bold: **text** or __text__
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/__(.*?)__/g, '<strong>$1</strong>')

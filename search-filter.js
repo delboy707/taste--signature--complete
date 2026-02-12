@@ -1,6 +1,12 @@
 // ===== SEARCH & FILTER =====
 // Quick search and filtering for product history
 
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
 const SearchFilter = {
     currentFilters: {
         search: '',
@@ -21,7 +27,7 @@ const SearchFilter = {
                 <div class="search-input-wrapper">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-input" placeholder="Search products..."
-                        value="${this.currentFilters.search}"
+                        value="${escapeHtml(this.currentFilters.search)}"
                         oninput="SearchFilter.onSearchChange(this.value)">
                     ${this.currentFilters.search ? '<button class="clear-search" onclick="SearchFilter.clearSearch()">×</button>' : ''}
                 </div>

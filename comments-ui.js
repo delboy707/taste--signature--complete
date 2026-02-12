@@ -193,10 +193,13 @@ function formatCommentText(text) {
     // Highlight @mentions
     formatted = formatted.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
 
-    // Convert URLs to links
+    // Convert URLs to links (escape quotes in href to prevent attribute breakout)
     formatted = formatted.replace(
         /(https?:\/\/[^\s]+)/g,
-        '<a href="$1" target="_blank" rel="noopener">$1</a>'
+        function(match) {
+            var safeHref = match.replace(/"/g, '&quot;');
+            return '<a href="' + safeHref + '" target="_blank" rel="noopener">' + match + '</a>';
+        }
     );
 
     // Preserve line breaks
@@ -276,6 +279,12 @@ function editCommentDialog(commentId) {
 
     if (!comment) return;
 
+    // Escape comment text for safe inclusion in HTML (textarea content)
+    const escapedText = comment.text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
     const html = `
         <div class="modal-overlay" onclick="closeModal()">
             <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
@@ -289,7 +298,7 @@ function editCommentDialog(commentId) {
                         class="form-control"
                         rows="5"
                         style="width: 100%;"
-                    >${comment.text}</textarea>
+                    >${escapedText}</textarea>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -370,11 +379,14 @@ function deleteCommentDialog(commentId) {
 function showReactionPicker(commentId) {
     const reactions = ['👍', '❤️', '😂', '🎉', '👏', '🔥', '💡', '✅'];
 
+    // Sanitize commentId for safe inclusion in HTML attributes
+    const safeCommentId = String(commentId).replace(/[&<>"']/g, '');
+
     const html = `
         <div class="reaction-picker-overlay" onclick="closeReactionPicker()">
             <div class="reaction-picker" onclick="event.stopPropagation()">
                 ${reactions.map(emoji => `
-                    <button class="reaction-emoji" onclick="toggleReaction('${commentId}', '${emoji}'); closeReactionPicker();">
+                    <button class="reaction-emoji" onclick="toggleReaction('${safeCommentId}', '${emoji}'); closeReactionPicker();">
                         ${emoji}
                     </button>
                 `).join('')}

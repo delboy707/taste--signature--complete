@@ -4,7 +4,7 @@
 
 ### 1. Open the Application
 ```bash
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 open index.html
 ```
 

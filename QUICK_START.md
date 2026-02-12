@@ -16,7 +16,7 @@ Before starting, have these ready:
 
 ```bash
 # Navigate to your project
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 
 # Initialize Git (if not done)
 git init
@@ -141,7 +141,7 @@ npm install -g vercel
 vercel login
 
 # Deploy
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 vercel
 
 # Add env vars via CLI
