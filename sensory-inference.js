@@ -409,6 +409,8 @@ class SensoryInference {
      */
     static setNestedValue(obj, path, value) {
         const parts = path.split('.');
+        const dangerous = ['__proto__', 'constructor', 'prototype'];
+        if (parts.some(part => dangerous.includes(part))) return;
         let current = obj;
         for (let i = 0; i < parts.length - 1; i++) {
             if (!current[parts[i]]) current[parts[i]] = {};

@@ -1,6 +1,19 @@
 // ===== BATCH IMPORT UI MODULE =====
 
 /**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
  * Render Batch Import Dashboard
  */
 function renderBatchImportDashboard() {
@@ -110,7 +123,7 @@ function renderFileUploadSection() {
             ${batchImportData.headers.length > 0 ? `
                 <div class="file-info">
                     <div class="file-info-item">
-                        <strong>File Loaded:</strong> ${batchImportData.fileName || 'Unknown'}
+                        <strong>File Loaded:</strong> ${escapeHtml(batchImportData.fileName || 'Unknown')}
                     </div>
                     <div class="file-info-item">
                         <strong>Columns:</strong> ${batchImportData.headers.length}
@@ -156,7 +169,7 @@ function renderColumnMappingSection() {
                             <select class="column-select" data-category="productInfo" data-field="name">
                                 <option value="">-- Select Column --</option>
                                 ${batchImportData.headers.map(h => `
-                                    <option value="${h}">${h}</option>
+                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                                 `).join('')}
                             </select>
                         </div>
@@ -165,7 +178,7 @@ function renderColumnMappingSection() {
                             <select class="column-select" data-category="productInfo" data-field="brand">
                                 <option value="">-- Select Column --</option>
                                 ${batchImportData.headers.map(h => `
-                                    <option value="${h}">${h}</option>
+                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                                 `).join('')}
                             </select>
                         </div>
@@ -174,7 +187,7 @@ function renderColumnMappingSection() {
                             <select class="column-select" data-category="productInfo" data-field="category">
                                 <option value="">-- Select Column --</option>
                                 ${batchImportData.headers.map(h => `
-                                    <option value="${h}">${h}</option>
+                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                                 `).join('')}
                             </select>
                         </div>
@@ -183,7 +196,7 @@ function renderColumnMappingSection() {
                             <select class="column-select" data-category="productInfo" data-field="variant">
                                 <option value="">-- Select Column --</option>
                                 ${batchImportData.headers.map(h => `
-                                    <option value="${h}">${h}</option>
+                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                                 `).join('')}
                             </select>
                         </div>
@@ -260,7 +273,7 @@ function renderAttributeMappingFields(stage, attributes) {
             <select class="column-select" data-category="attributes" data-field="${stage}.${attr.id}">
                 <option value="">-- Select Column --</option>
                 ${batchImportData.headers.map(h => `
-                    <option value="${h}">${h}</option>
+                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                 `).join('')}
             </select>
         </div>
@@ -335,9 +348,9 @@ function renderPreviewSection() {
                                             ? (result.warnings.length > 0 ? '⚠️' : '✅')
                                             : '❌'}
                                     </td>
-                                    <td>${row[nameCol] || '-'}</td>
-                                    <td>${row[brandCol] || '-'}</td>
-                                    <td>${row[categoryCol] || '-'}</td>
+                                    <td>${escapeHtml(row[nameCol] || '-')}</td>
+                                    <td>${escapeHtml(row[brandCol] || '-')}</td>
+                                    <td>${escapeHtml(row[categoryCol] || '-')}</td>
                                     <td>${attributeCount} mapped</td>
                                 </tr>
                             `;
@@ -355,8 +368,8 @@ function renderPreviewSection() {
                     ${validationResults.filter(r => !r.isValid || r.warnings.length > 0).slice(0, 20).map(result => `
                         <div class="issue-item">
                             <strong>Row ${result.rowIndex + 2}:</strong>
-                            ${result.errors.map(e => `<span class="error-text">❌ ${e}</span>`).join('')}
-                            ${result.warnings.map(w => `<span class="warning-text">⚠️ ${w}</span>`).join('')}
+                            ${result.errors.map(e => `<span class="error-text">❌ ${escapeHtml(e)}</span>`).join('')}
+                            ${result.warnings.map(w => `<span class="warning-text">⚠️ ${escapeHtml(w)}</span>`).join('')}
                         </div>
                     `).join('')}
                 </div>
@@ -775,7 +788,7 @@ function renderAutoEvalPreviewSection() {
 
                             return `
                                 <tr>
-                                    <td>${row.original.name || row.original.product_name || row.original.productName || row.original.Name || row.original.Product_Name || '-'}</td>
+                                    <td>${escapeHtml(row.original.name || row.original.product_name || row.original.productName || row.original.Name || row.original.Product_Name || '-')}</td>
                                     <td><span class="need-state-badge ${needState}">${formatNeedState(needState)}</span></td>
                                     <td>${topEmotions}</td>
                                     <td>
@@ -795,7 +808,7 @@ function renderAutoEvalPreviewSection() {
                     <strong>⚠️ Warnings:</strong>
                     <ul style="margin: 8px 0 0 20px; font-size: 13px;">
                         ${preview.rows.flatMap(r => r.warnings || []).slice(0, 5).map(w => `
-                            <li>${w.message}</li>
+                            <li>${escapeHtml(w.message)}</li>
                         `).join('')}
                     </ul>
                 </div>

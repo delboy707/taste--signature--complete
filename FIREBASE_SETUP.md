@@ -30,7 +30,7 @@ firebase login
 ### Step 3: Initialize Firebase in your project
 
 ```bash
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 firebase init firestore
 ```
 
@@ -70,7 +70,7 @@ Select:
 firebase functions:secrets:set ANTHROPIC_API_KEY
 ```
 
-Paste your API key when prompted: `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`
+Paste your API key when prompted (get yours from https://console.anthropic.com/)
 
 ### Step 3: Create Proxy Function
 

@@ -26,7 +26,8 @@ class FirestoreDataManager {
             } else {
                 // Auto-create user document for new users
                 console.log('📝 Creating user document for new user...');
-                const newCompanyId = `company_${userId.substring(0, 8)}`;
+                const newCompanyRef = this.db.collection('companies').doc();
+                const newCompanyId = newCompanyRef.id;
                 await this.db.collection('users').doc(userId).set({
                     companyId: newCompanyId,
                     createdAt: new Date().toISOString(),
@@ -35,7 +36,7 @@ class FirestoreDataManager {
                 this.companyId = newCompanyId;
 
                 // Also create the company document
-                await this.db.collection('companies').doc(newCompanyId).set({
+                await newCompanyRef.set({
                     name: 'My Company',
                     ownerId: userId,
                     createdAt: new Date().toISOString()
@@ -118,7 +119,7 @@ class FirestoreDataManager {
     async loadExperiences() {
         try {
             const collection = this.getExperiencesCollection();
-            const snapshot = await collection.orderBy('updatedAt', 'desc').get();
+            const snapshot = await collection.orderBy('updatedAt', 'desc').limit(500).get();
 
             const experiences = [];
             snapshot.forEach(doc => {

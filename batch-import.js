@@ -18,6 +18,16 @@ let batchImportData = {
 // ===== CSV PARSING =====
 
 /**
+ * Sanitize CSV cell value to prevent formula injection
+ * Strips leading =, +, -, @, \t, \r characters from cell values
+ */
+function sanitizeCsvValue(value) {
+    if (typeof value !== 'string') return value;
+    // Strip formula injection characters from the start of cell values
+    return value.replace(/^[=+\-@\t\r]+/, '');
+}
+
+/**
  * Parse CSV file
  */
 function parseCSVFile(csvText) {
@@ -69,14 +79,14 @@ function parseCSVLine(line) {
                 inQuotes = !inQuotes;
             }
         } else if (char === ',' && !inQuotes) {
-            values.push(current.trim());
+            values.push(sanitizeCsvValue(current.trim()));
             current = '';
         } else {
             current += char;
         }
     }
 
-    values.push(current.trim());
+    values.push(sanitizeCsvValue(current.trim()));
     return values;
 }
 

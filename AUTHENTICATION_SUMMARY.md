@@ -132,7 +132,7 @@ npm install -g firebase-tools
 firebase login
 
 # Initialize Firestore
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 firebase init firestore
 
 # Deploy rules

@@ -77,11 +77,24 @@ function getCurrentUser() {
     // Try to get from Firebase Auth via authManager
     if (typeof window !== 'undefined' && window.authManager && window.authManager.currentUser) {
         const firebaseUser = window.authManager.currentUser;
+        // Attempt to read role from cached Firestore user document
+        let userRole = UserRoles.VIEWER;
+        try {
+            const cachedDoc = localStorage.getItem('tasteSignature_userDoc_' + firebaseUser.uid);
+            if (cachedDoc) {
+                const parsed = JSON.parse(cachedDoc);
+                if (parsed.role && Object.values(UserRoles).includes(parsed.role)) {
+                    userRole = parsed.role;
+                }
+            }
+        } catch (e) {
+            console.error('Error reading cached user role:', e);
+        }
         return {
             id: firebaseUser.uid,
             name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
             email: firebaseUser.email,
-            role: UserRoles.ADMIN, // Default role, should be fetched from Firestore user doc
+            role: userRole,
             avatar: firebaseUser.photoURL || null,
             joinedAt: firebaseUser.metadata.creationTime
         };
@@ -90,15 +103,22 @@ function getCurrentUser() {
     // Fallback: check localStorage
     const userStr = localStorage.getItem(CURRENT_USER_KEY);
     if (userStr) {
-        return JSON.parse(userStr);
+        try {
+            const parsed = JSON.parse(userStr);
+            if (parsed && typeof parsed.id === 'string' && typeof parsed.email === 'string' && typeof parsed.role === 'string') {
+                return parsed;
+            }
+        } catch (e) {
+            console.error('Error parsing cached user data:', e);
+        }
     }
 
-    // Default user if not authenticated (for offline/demo mode)
+    // Default guest user if not authenticated (for offline/demo mode)
     return {
-        id: 'user-' + Date.now(),
-        name: 'Current User',
-        email: 'user@example.com',
-        role: UserRoles.ADMIN,
+        id: 'guest',
+        name: 'Guest User',
+        email: 'guest@example.com',
+        role: UserRoles.VIEWER,
         avatar: null,
         joinedAt: new Date().toISOString()
     };

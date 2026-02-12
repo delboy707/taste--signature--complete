@@ -18,7 +18,7 @@ Your app is now ready for Vercel deployment! Here's what's been prepared:
 
 #### 1.1 Initialize Git (if not already done)
 ```bash
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 git init
 ```
 
@@ -97,7 +97,7 @@ npm install -g vercel
 vercel login
 
 # Deploy (from your project directory)
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 vercel
 
 # Follow the prompts:
@@ -159,7 +159,7 @@ vercel --prod
 If not already deployed, deploy your security rules:
 
 ```bash
-cd "/Users/derekroberts/Sense Genie App"
+cd /path/to/your/project
 firebase deploy --only firestore:rules
 ```
 
