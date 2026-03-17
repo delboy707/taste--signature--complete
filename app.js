@@ -645,8 +645,34 @@ function handleFormSubmit(e) {
                 sad: parseInt(document.getElementById('mid-sad')?.value || 0)
             };
 
-            // Texture stage - no emotions (new stage)
-            stages.texture.emotions = {};
+            // Texture stage emotions (25-term expanded list)
+            stages.texture.emotions = {
+                satisfied: parseInt(document.getElementById('tex-satisfied')?.value || 5),
+                pleased: parseInt(document.getElementById('tex-pleased')?.value || 5),
+                comforted: parseInt(document.getElementById('tex-comforted')?.value || 5),
+                indulged: parseInt(document.getElementById('tex-indulged')?.value || 5),
+                calmRelaxed: parseInt(document.getElementById('tex-calmRelaxed')?.value || 5),
+                nostalgic: parseInt(document.getElementById('tex-nostalgic')?.value || 5),
+                secure: parseInt(document.getElementById('tex-secure')?.value || 5),
+                excited: parseInt(document.getElementById('tex-excited')?.value || 5),
+                energized: parseInt(document.getElementById('tex-energized')?.value || 5),
+                delighted: parseInt(document.getElementById('tex-delighted')?.value || 5),
+                refreshed: parseInt(document.getElementById('tex-refreshed')?.value || 5),
+                interested: parseInt(document.getElementById('tex-interested')?.value || 5),
+                playful: parseInt(document.getElementById('tex-playful')?.value || 5),
+                pleasantlySurprised: parseInt(document.getElementById('tex-pleasantlySurprised')?.value || 5),
+                disgusted: parseInt(document.getElementById('tex-disgusted')?.value || 0),
+                disappointed: parseInt(document.getElementById('tex-disappointed')?.value || 0),
+                frustrated: parseInt(document.getElementById('tex-frustrated')?.value || 0),
+                annoyedIrritated: parseInt(document.getElementById('tex-annoyedIrritated')?.value || 0),
+                bored: parseInt(document.getElementById('tex-bored')?.value || 0),
+                uncomfortable: parseInt(document.getElementById('tex-uncomfortable')?.value || 0),
+                anxiousUneasy: parseInt(document.getElementById('tex-anxiousUneasy')?.value || 0),
+                unpleasantlySurprised: parseInt(document.getElementById('tex-unpleasantlySurprised')?.value || 0),
+                putOff: parseInt(document.getElementById('tex-putOff')?.value || 0),
+                tiredFatigued: parseInt(document.getElementById('tex-tiredFatigued')?.value || 0),
+                overwhelmed: parseInt(document.getElementById('tex-overwhelmed')?.value || 0)
+            };
 
             stages.aftertaste.emotions = {
                 satisfaction: parseInt(document.getElementById('after-satisfaction')?.value || 5),

@@ -80,7 +80,7 @@ const defaultLexicon = {
                 { id: 'meltRate', label: 'Melt/Dissolution Rate', type: 'slider', min: 1, max: 10, unit: '', description: 'Speed of melting or dissolving' },
                 { id: 'overallTexturalComplexity', label: 'Overall Textural Complexity', type: 'slider', min: 1, max: 10, unit: '', description: 'Combined textural impact' }
             ],
-            emotions: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad']
+            emotions: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed']
         },
         {
             id: 'aftertaste',

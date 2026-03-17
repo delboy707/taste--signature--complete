@@ -12,7 +12,7 @@ const STAGE_EMOTIONS = {
     aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'calm', 'disgusted', 'irritated', 'worried', 'disappointed', 'indifferent', 'anxious', 'repulsed'],
     frontMouth: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried'],
     midRearMouth: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
-    texture: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
+    texture: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed'],
     aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret'],
     overall: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
 };
@@ -430,32 +430,40 @@ const SENSORY_EMOTION_RULES = {
     // Texture stage rules
     texture: {
         smoothness: {
-            satisfaction: 0.8, pleasure: 0.8, comfort: 0.7, indulgence: 0.6,
-            calm: 0.5, warmth: 0.4, joy: 0.5, loving: 0.4,
-            adventurous: 0.2, energized: 0.3, secure: 0.5, nostalgic: 0.3,
-            guilty: -0.2, bored: -0.3, disgusted: -0.3, disappointed: -0.3,
-            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+            satisfied: 0.8, pleased: 0.8, comforted: 0.7, indulged: 0.6,
+            calmRelaxed: 0.5, nostalgic: 0.3, secure: 0.5, excited: 0.3,
+            energized: 0.3, delighted: 0.6, refreshed: 0.4, interested: 0.4,
+            playful: 0.2, pleasantlySurprised: 0.3,
+            disgusted: -0.3, disappointed: -0.3, frustrated: -0.3, annoyedIrritated: -0.3,
+            bored: -0.3, uncomfortable: -0.3, anxiousUneasy: -0.2, unpleasantlySurprised: -0.2,
+            putOff: -0.3, tiredFatigued: -0.2, overwhelmed: -0.2
         },
         crunchiness: {
-            satisfaction: 0.7, pleasure: 0.6, comfort: 0.4, indulgence: 0.5,
-            calm: 0.3, warmth: 0.3, joy: 0.5, loving: 0.3,
-            adventurous: 0.6, energized: 0.6, secure: 0.4, nostalgic: 0.4,
-            guilty: -0.2, bored: -0.4, disgusted: -0.2, disappointed: -0.3,
-            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+            satisfied: 0.7, pleased: 0.6, comforted: 0.4, indulged: 0.5,
+            calmRelaxed: 0.3, nostalgic: 0.4, secure: 0.4, excited: 0.6,
+            energized: 0.6, delighted: 0.5, refreshed: 0.3, interested: 0.5,
+            playful: 0.5, pleasantlySurprised: 0.4,
+            disgusted: -0.2, disappointed: -0.3, frustrated: -0.2, annoyedIrritated: -0.2,
+            bored: -0.4, uncomfortable: -0.2, anxiousUneasy: -0.2, unpleasantlySurprised: -0.2,
+            putOff: -0.2, tiredFatigued: -0.2, overwhelmed: -0.2
         },
         creaminess: {
-            satisfaction: 0.85, pleasure: 0.8, comfort: 0.9, indulgence: 0.9,
-            calm: 0.5, warmth: 0.5, joy: 0.5, loving: 0.5,
-            adventurous: 0.3, energized: 0.3, secure: 0.5, nostalgic: 0.4,
-            guilty: -0.2, bored: -0.3, disgusted: -0.3, disappointed: -0.3,
-            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+            satisfied: 0.85, pleased: 0.8, comforted: 0.9, indulged: 0.9,
+            calmRelaxed: 0.5, nostalgic: 0.4, secure: 0.5, excited: 0.3,
+            energized: 0.3, delighted: 0.7, refreshed: 0.3, interested: 0.4,
+            playful: 0.3, pleasantlySurprised: 0.3,
+            disgusted: -0.3, disappointed: -0.3, frustrated: -0.3, annoyedIrritated: -0.3,
+            bored: -0.3, uncomfortable: -0.3, anxiousUneasy: -0.2, unpleasantlySurprised: -0.2,
+            putOff: -0.3, tiredFatigued: -0.2, overwhelmed: -0.2
         },
         overallTexturalComplexity: {
-            satisfaction: 0.8, pleasure: 0.7, comfort: 0.6, indulgence: 0.7,
-            calm: 0.4, warmth: 0.4, joy: 0.5, loving: 0.4,
-            adventurous: 0.5, energized: 0.4, secure: 0.4, nostalgic: 0.3,
-            guilty: -0.2, bored: -0.4, disgusted: -0.3, disappointed: -0.4,
-            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.4, sad: -0.2
+            satisfied: 0.8, pleased: 0.7, comforted: 0.6, indulged: 0.7,
+            calmRelaxed: 0.4, nostalgic: 0.3, secure: 0.4, excited: 0.5,
+            energized: 0.4, delighted: 0.6, refreshed: 0.3, interested: 0.6,
+            playful: 0.4, pleasantlySurprised: 0.5,
+            disgusted: -0.3, disappointed: -0.4, frustrated: -0.3, annoyedIrritated: -0.3,
+            bored: -0.4, uncomfortable: -0.3, anxiousUneasy: -0.2, unpleasantlySurprised: -0.3,
+            putOff: -0.3, tiredFatigued: -0.2, overwhelmed: -0.2
         }
     },
     // Aftertaste stage rules

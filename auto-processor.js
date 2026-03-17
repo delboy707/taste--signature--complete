@@ -558,7 +558,7 @@ class AutoProcessor {
             aroma: { emotions: { pleasure: 6, comfort: 5 } },
             frontMouth: { emotions: { happiness: sweetness * 0.8, satisfaction: 6 } },
             midRearMouth: { emotions: { indulgence: richness * 0.8, comfort: creaminess * 0.7 } },
-            texture: { emotions: { satisfaction: textureComplexity * 0.7, pleasure: 5, comfort: creaminess * 0.6 } },
+            texture: { emotions: { satisfied: textureComplexity * 0.7, pleased: 5, comforted: creaminess * 0.6, indulged: creaminess * 0.5, delighted: textureComplexity * 0.5 } },
             aftertaste: { emotions: { satisfaction: 6, completeness: 5 } }
         };
 
