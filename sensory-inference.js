@@ -49,6 +49,21 @@ const SENSORY_INFERENCE_TEMPLATE = {
         astringency: 3,
         mouthfeel: 5
     },
+    texture: {
+        hardness: 5,
+        crunchiness: 5,
+        smoothness: 5,
+        creaminess: 5,
+        viscosity: 5,
+        chewiness: 5,
+        moisture: 5,
+        oiliness: 3,
+        effervescence: 3,
+        bodyFullness: 5,
+        astringency: 3,
+        breakdownRate: 5,
+        overallComplexity: 5
+    },
     aftertaste: {
         duration: 5,
         pleasantness: 5,
@@ -88,10 +103,24 @@ const KEYWORD_SENSORY_RULES = {
     buttery: { 'midRearMouth.richness': 8, 'midRearMouth.creaminess': 7 },
 
     // Texture indicators
-    crunchy: { 'frontMouth.texture': 8 },
-    crispy: { 'frontMouth.texture': 9 },
-    chewy: { 'frontMouth.texture': 6, 'aftertaste.duration': 7 },
-    soft: { 'frontMouth.texture': 4, 'midRearMouth.creaminess': 6 },
+    crunchy: { 'frontMouth.texture': 8, 'texture.crunchiness': 9, 'texture.hardness': 7 },
+    crispy: { 'frontMouth.texture': 9, 'texture.crunchiness': 8, 'texture.breakdownRate': 8 },
+    chewy: { 'frontMouth.texture': 6, 'aftertaste.duration': 7, 'texture.chewiness': 9, 'texture.hardness': 5 },
+    soft: { 'frontMouth.texture': 4, 'midRearMouth.creaminess': 6, 'texture.hardness': 2, 'texture.smoothness': 7 },
+    thick: { 'texture.viscosity': 8, 'texture.bodyFullness': 7 },
+    thin: { 'texture.viscosity': 2, 'texture.bodyFullness': 3 },
+    gritty: { 'texture.smoothness': 2, 'texture.overallComplexity': 5 },
+    silky: { 'texture.smoothness': 9, 'texture.creaminess': 8 },
+    fizzy: { 'texture.effervescence': 8 },
+    flat: { 'texture.effervescence': 1 },
+    oily: { 'texture.oiliness': 8 },
+    dry: { 'texture.moisture': 2, 'texture.astringency': 6 },
+    juicy: { 'texture.moisture': 9 },
+    dense: { 'texture.bodyFullness': 8, 'texture.hardness': 6 },
+    light: { 'texture.bodyFullness': 3, 'texture.viscosity': 2 },
+    sticky: { 'texture.chewiness': 6, 'texture.viscosity': 7 },
+    crumbly: { 'texture.breakdownRate': 8, 'texture.hardness': 5 },
+    melt: { 'texture.breakdownRate': 7, 'texture.smoothness': 8, 'texture.creaminess': 7 },
 
     // Savory/umami indicators
     savory: { 'midRearMouth.umami': 7, 'frontMouth.saltiness': 5 },
@@ -135,6 +164,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 7, sweetness: 6, complexity: 6, persistence: 6 },
         frontMouth: { sweetness: 6, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
         midRearMouth: { bitterness: 5, umami: 2, richness: 7, creaminess: 6, astringency: 3, mouthfeel: 7 },
+        texture: { hardness: 6, crunchiness: 3, smoothness: 8, creaminess: 7, viscosity: 4, chewiness: 3, moisture: 3, oiliness: 4, effervescence: 0, bodyFullness: 7, astringency: 3, breakdownRate: 6, overallComplexity: 6 },
         aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
     },
     beverage: {
@@ -142,6 +172,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 6, sweetness: 5, complexity: 5, persistence: 5 },
         frontMouth: { sweetness: 5, sourness: 4, saltiness: 2, texture: 4, acidity: 4, spiciness: 2 },
         midRearMouth: { bitterness: 3, umami: 2, richness: 4, creaminess: 3, astringency: 3, mouthfeel: 5 },
+        texture: { hardness: 1, crunchiness: 0, smoothness: 7, creaminess: 3, viscosity: 4, chewiness: 0, moisture: 9, oiliness: 1, effervescence: 5, bodyFullness: 5, astringency: 3, breakdownRate: 2, overallComplexity: 4 },
         aftertaste: { duration: 5, pleasantness: 6, cleanness: 7 }
     },
     snack: {
@@ -149,6 +180,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 5, sweetness: 4, complexity: 5, persistence: 4 },
         frontMouth: { sweetness: 4, sourness: 3, saltiness: 5, texture: 7, acidity: 3, spiciness: 4 },
         midRearMouth: { bitterness: 2, umami: 5, richness: 5, creaminess: 4, astringency: 2, mouthfeel: 6 },
+        texture: { hardness: 7, crunchiness: 8, smoothness: 3, creaminess: 2, viscosity: 2, chewiness: 4, moisture: 2, oiliness: 5, effervescence: 0, bodyFullness: 5, astringency: 2, breakdownRate: 7, overallComplexity: 6 },
         aftertaste: { duration: 4, pleasantness: 6, cleanness: 6 }
     },
     dairy: {
@@ -156,6 +188,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 5, sweetness: 5, complexity: 4, persistence: 4 },
         frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 6, acidity: 3, spiciness: 1 },
         midRearMouth: { bitterness: 2, umami: 4, richness: 6, creaminess: 8, astringency: 1, mouthfeel: 7 },
+        texture: { hardness: 3, crunchiness: 1, smoothness: 8, creaminess: 9, viscosity: 6, chewiness: 2, moisture: 6, oiliness: 4, effervescence: 0, bodyFullness: 7, astringency: 1, breakdownRate: 5, overallComplexity: 5 },
         aftertaste: { duration: 5, pleasantness: 6, cleanness: 5 }
     },
     dessert: {
@@ -163,6 +196,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 7, sweetness: 8, complexity: 6, persistence: 6 },
         frontMouth: { sweetness: 8, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
         midRearMouth: { bitterness: 2, umami: 2, richness: 7, creaminess: 6, astringency: 2, mouthfeel: 6 },
+        texture: { hardness: 4, crunchiness: 3, smoothness: 7, creaminess: 7, viscosity: 5, chewiness: 4, moisture: 5, oiliness: 4, effervescence: 0, bodyFullness: 6, astringency: 2, breakdownRate: 5, overallComplexity: 6 },
         aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
     },
     default: {
@@ -170,6 +204,7 @@ const CATEGORY_BASELINES = {
         aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5 },
         frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3 },
         midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5 },
+        texture: { hardness: 5, crunchiness: 5, smoothness: 5, creaminess: 5, viscosity: 5, chewiness: 5, moisture: 5, oiliness: 3, effervescence: 3, bodyFullness: 5, astringency: 3, breakdownRate: 5, overallComplexity: 5 },
         aftertaste: { duration: 5, pleasantness: 5, cleanness: 5 }
     }
 };
@@ -326,6 +361,7 @@ class SensoryInference {
   "aroma": { "intensity": 0-10, "sweetness": 0-10, "complexity": 0-10 },
   "frontMouth": { "sweetness": 0-10, "sourness": 0-10, "saltiness": 0-10, "texture": 0-10 },
   "midRearMouth": { "bitterness": 0-10, "umami": 0-10, "richness": 0-10, "creaminess": 0-10 },
+  "texture": { "hardness": 0-10, "crunchiness": 0-10, "smoothness": 0-10, "creaminess": 0-10, "viscosity": 0-10, "chewiness": 0-10, "moisture": 0-10, "oiliness": 0-10, "effervescence": 0-10, "bodyFullness": 0-10, "astringency": 0-10, "breakdownRate": 0-10, "overallComplexity": 0-10 },
   "aftertaste": { "duration": 0-10, "pleasantness": 0-10, "cleanness": 0-10 },
   "confidence": 0-1,
   "inferenceNotes": "Brief explanation of key inferences"
@@ -433,6 +469,7 @@ class SensoryInference {
             aroma: ['aroma', 'smell', 'nose', 'scent'],
             frontMouth: ['frontMouth', 'front_mouth', 'taste', 'initial_taste', 'first_taste'],
             midRearMouth: ['midRearMouth', 'mid_rear_mouth', 'midmouth', 'mid_mouth', 'body', 'mouthfeel'],
+            texture: ['texture', 'mouthfeel_texture', 'textural', 'physical_properties'],
             aftertaste: ['aftertaste', 'after_taste', 'finish', 'ending']
         };
 

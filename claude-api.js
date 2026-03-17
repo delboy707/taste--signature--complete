@@ -555,6 +555,21 @@ Analyze competitive position:
             .map(e => `${e.emotion} (${e.value}/10) at ${e.stage}`)
             .join(', ');
 
+        // Build texture summary from sub-category aggregations if texture stage exists
+        let textureSummary = 'N/A';
+        if (experience.stages.texture) {
+            const tex = experience.stages.texture;
+            const textureEntries = Object.entries(tex).filter(([k, v]) => k !== 'emotions' && typeof v === 'number');
+            if (textureEntries.length > 0) {
+                const topTextureAttrs = textureEntries
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([k, v]) => `${k}: ${v}/10`)
+                    .join(', ');
+                textureSummary = topTextureAttrs;
+            }
+        }
+
         return `**Product**: ${experience.productInfo.name} - ${experience.productInfo.brand}
 **Category**: ${experience.productInfo.type}
 **Need State**: ${experience.needState}
@@ -565,6 +580,7 @@ Analyze competitive position:
 - Aroma: Intensity ${experience.stages.aroma.intensity}/10
 - Taste: Sweet ${experience.stages.frontMouth.sweetness}/10, Sour ${experience.stages.frontMouth.sourness}/10
 - Mouthfeel: Richness ${experience.stages.midRearMouth.richness}/10, Creaminess ${experience.stages.midRearMouth.creaminess}/10
+- Texture: ${textureSummary}
 - Aftertaste: Duration ${experience.stages.aftertaste.duration}/10, Pleasantness ${experience.stages.aftertaste.pleasantness}/10
 
 **Top Emotions**: ${topEmotions}

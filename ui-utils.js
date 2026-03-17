@@ -227,3 +227,39 @@ document.head.appendChild(confirmStyles);
 
 // Export globally
 window.UI = UI;
+
+// ===== SUB-CATEGORY TOGGLE =====
+function toggleSubCategory(headerEl) {
+    const content = headerEl.nextElementSibling;
+    if (!content) return;
+    const isCollapsed = content.classList.contains('collapsed');
+    content.classList.toggle('collapsed');
+    const toggle = headerEl.querySelector('.subcategory-toggle');
+    if (toggle) {
+        toggle.textContent = isCollapsed ? '▾' : '▸';
+    }
+    // Re-init sliders if expanding (for dynamically created elements)
+    if (isCollapsed) {
+        content.querySelectorAll('input[type="range"]').forEach(slider => {
+            const valSpan = document.getElementById(`${slider.id}-val`);
+            if (valSpan && !slider._listenerAdded) {
+                slider.addEventListener('input', (e) => { valSpan.textContent = e.target.value; });
+                slider._listenerAdded = true;
+            }
+        });
+    }
+}
+window.toggleSubCategory = toggleSubCategory;
+
+// ===== MOBILE TOOLTIP SUPPORT =====
+document.addEventListener('click', function(e) {
+    // Close all active tooltips
+    document.querySelectorAll('.tech-term-icon.active').forEach(icon => {
+        if (icon !== e.target) icon.classList.remove('active');
+    });
+    // Toggle tooltip on tap
+    if (e.target.classList.contains('tech-term-icon')) {
+        e.target.classList.toggle('active');
+        e.preventDefault();
+    }
+});

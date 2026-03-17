@@ -377,6 +377,7 @@ function performProductClustering(k) {
         exp.stages.aroma.overallIntensity || 0,
         exp.stages.frontMouth.overallIntensity || 0,
         exp.stages.midRearMouth.overallIntensity || 0,
+        (exp.stages.texture && exp.stages.texture.overallIntensity) || 0,
         exp.stages.aftertaste.overallIntensity || 0,
         exp.stages.aftertaste.emotions.satisfaction || 0,
         exp.emotionalTriggers.moreishness || 0,

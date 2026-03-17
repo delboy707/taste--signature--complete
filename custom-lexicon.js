@@ -67,9 +67,25 @@ const defaultLexicon = {
             emotions: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad']
         },
         {
+            id: 'texture',
+            name: 'Texture',
+            order: 5,
+            attributes: [
+                { id: 'hardnessFirmness', label: 'Hardness/Firmness', type: 'slider', min: 1, max: 10, unit: '', description: 'Resistance to deformation' },
+                { id: 'smoothness', label: 'Smoothness', type: 'slider', min: 1, max: 10, unit: '', description: 'Absence of particles or irregularities' },
+                { id: 'creaminess', label: 'Creaminess', type: 'slider', min: 1, max: 10, unit: '', description: 'Smooth, rich mouthfeel' },
+                { id: 'crunchiness', label: 'Crunchiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Audible and tactile fracture' },
+                { id: 'chewiness', label: 'Chewiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Sustained resistance during chewing' },
+                { id: 'mouthCoating', label: 'Mouth Coating', type: 'slider', min: 1, max: 10, unit: '', description: 'Film left on oral surfaces' },
+                { id: 'meltRate', label: 'Melt/Dissolution Rate', type: 'slider', min: 1, max: 10, unit: '', description: 'Speed of melting or dissolving' },
+                { id: 'overallTexturalComplexity', label: 'Overall Textural Complexity', type: 'slider', min: 1, max: 10, unit: '', description: 'Combined textural impact' }
+            ],
+            emotions: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad']
+        },
+        {
             id: 'aftertaste',
             name: 'Aftertaste',
-            order: 5,
+            order: 6,
             attributes: [
                 { id: 'duration', label: 'Duration', type: 'slider', min: 1, max: 10, unit: 'seconds', description: 'How long flavors linger' },
                 { id: 'pleasantness', label: 'Pleasantness', type: 'slider', min: 1, max: 10, unit: '', description: 'Quality of lingering taste' },
@@ -81,7 +97,7 @@ const defaultLexicon = {
         {
             id: 'overall',
             name: 'Overall',
-            order: 6,
+            order: 7,
             attributes: [],
             emotions: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
         }

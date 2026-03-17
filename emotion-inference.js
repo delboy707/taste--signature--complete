@@ -12,6 +12,7 @@ const STAGE_EMOTIONS = {
     aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'calm', 'disgusted', 'irritated', 'worried', 'disappointed', 'indifferent', 'anxious', 'repulsed'],
     frontMouth: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried'],
     midRearMouth: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
+    texture: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
     aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret'],
     overall: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
 };
@@ -426,6 +427,37 @@ const SENSORY_EMOTION_RULES = {
             sad: -0.2
         }
     },
+    // Texture stage rules
+    texture: {
+        smoothness: {
+            satisfaction: 0.8, pleasure: 0.8, comfort: 0.7, indulgence: 0.6,
+            calm: 0.5, warmth: 0.4, joy: 0.5, loving: 0.4,
+            adventurous: 0.2, energized: 0.3, secure: 0.5, nostalgic: 0.3,
+            guilty: -0.2, bored: -0.3, disgusted: -0.3, disappointed: -0.3,
+            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+        },
+        crunchiness: {
+            satisfaction: 0.7, pleasure: 0.6, comfort: 0.4, indulgence: 0.5,
+            calm: 0.3, warmth: 0.3, joy: 0.5, loving: 0.3,
+            adventurous: 0.6, energized: 0.6, secure: 0.4, nostalgic: 0.4,
+            guilty: -0.2, bored: -0.4, disgusted: -0.2, disappointed: -0.3,
+            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+        },
+        creaminess: {
+            satisfaction: 0.85, pleasure: 0.8, comfort: 0.9, indulgence: 0.9,
+            calm: 0.5, warmth: 0.5, joy: 0.5, loving: 0.5,
+            adventurous: 0.3, energized: 0.3, secure: 0.5, nostalgic: 0.4,
+            guilty: -0.2, bored: -0.3, disgusted: -0.3, disappointed: -0.3,
+            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.3, sad: -0.2
+        },
+        overallTexturalComplexity: {
+            satisfaction: 0.8, pleasure: 0.7, comfort: 0.6, indulgence: 0.7,
+            calm: 0.4, warmth: 0.4, joy: 0.5, loving: 0.4,
+            adventurous: 0.5, energized: 0.4, secure: 0.4, nostalgic: 0.3,
+            guilty: -0.2, bored: -0.4, disgusted: -0.3, disappointed: -0.4,
+            aggressive: -0.2, overwhelmed: -0.2, dissatisfied: -0.4, sad: -0.2
+        }
+    },
     // Aftertaste stage rules
     aftertaste: {
         duration: {
@@ -615,6 +647,7 @@ class EmotionInference {
             aroma: {},
             frontMouth: {},
             midRearMouth: {},
+            texture: {},
             aftertaste: {}
         };
 
@@ -647,6 +680,12 @@ class EmotionInference {
                 creaminess: this.getNumericValue(data.creaminess || data.mid_creaminess),
                 astringency: this.getNumericValue(data.astringency || data.dryness || data.tannin, 3),
                 mouthfeel: this.getNumericValue(data.mouthfeel || data.mouth_feel || data.weight || data.body, 5)
+            };
+            normalized.texture = {
+                smoothness: this.getNumericValue(data.smoothness || data.texture_smoothness, 5),
+                crunchiness: this.getNumericValue(data.crunchiness || data.texture_crunchiness, 5),
+                creaminess: this.getNumericValue(data.textureCreaminess || data.texture_creaminess, 5),
+                overallTexturalComplexity: this.getNumericValue(data.overallTexturalComplexity || data.textural_complexity, 5)
             };
             normalized.aftertaste = {
                 duration: this.getNumericValue(data.aftertasteDuration || data.aftertaste_duration || data.duration),
@@ -874,6 +913,7 @@ class EmotionInference {
             aroma: 'Aroma',
             frontMouth: 'Front Mouth',
             midRearMouth: 'Mid/Rear Mouth',
+            texture: 'Texture',
             aftertaste: 'Aftertaste'
         };
 
