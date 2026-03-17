@@ -180,11 +180,13 @@ class DemoMode {
                         densenessCompactness: 6, bolusFormationEase: 7, chewDownChange: 6,
                         meltRate: 8,
                         emotions: {
-                            satisfaction: 8, pleasure: 8, indulgence: 9, comfort: 7,
-                            calm: 5, warmth: 6, joy: 7, loving: 5, adventurous: 5,
-                            energized: 4, secure: 5, nostalgic: 4,
-                            guilty: 1, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 8, pleased: 7, comforted: 6, indulged: 9,
+                            calmRelaxed: 5, nostalgic: 4, secure: 5, excited: 5,
+                            energized: 4, delighted: 8, refreshed: 3, interested: 6,
+                            playful: 4, pleasantlySurprised: 5,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -395,11 +397,13 @@ class DemoMode {
                         densenessCompactness: 5, bolusFormationEase: 8, chewDownChange: 5,
                         moistureReleaseRate: 4,
                         emotions: {
-                            satisfaction: 7, pleasure: 7, indulgence: 7, comfort: 9,
-                            calm: 7, warmth: 7, joy: 7, loving: 6, adventurous: 2,
-                            energized: 3, secure: 6, nostalgic: 8,
-                            guilty: 1, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 7, pleased: 8, comforted: 9, indulged: 7,
+                            calmRelaxed: 7, nostalgic: 8, secure: 6, excited: 3,
+                            energized: 3, delighted: 7, refreshed: 3, interested: 4,
+                            playful: 3, pleasantlySurprised: 2,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -610,11 +614,13 @@ class DemoMode {
                         overallTexturalComplexity: 6, temperatureContrast: 5,
                         heaviness: 3, lightnessAiriness: 6,
                         emotions: {
-                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 5,
-                            calm: 4, warmth: 6, joy: 6, loving: 4, adventurous: 7,
-                            energized: 7, secure: 4, nostalgic: 3,
-                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 7, pleased: 6, comforted: 4, indulged: 5,
+                            calmRelaxed: 4, nostalgic: 3, secure: 4, excited: 8,
+                            energized: 7, delighted: 6, refreshed: 5, interested: 8,
+                            playful: 5, pleasantlySurprised: 7,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -825,11 +831,13 @@ class DemoMode {
                         overallTexturalComplexity: 7, lightnessAiriness: 5,
                         foamStability: 6,
                         emotions: {
-                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 4,
-                            calm: 4, warmth: 4, joy: 6, loving: 3, adventurous: 8,
-                            energized: 6, secure: 4, nostalgic: 3,
-                            guilty: 0, bored: 0, disgusted: 0, disappointed: 1,
-                            aggressive: 2, overwhelmed: 2, dissatisfied: 0, sad: 0
+                            satisfied: 7, pleased: 6, comforted: 4, indulged: 5,
+                            calmRelaxed: 3, nostalgic: 3, secure: 4, excited: 8,
+                            energized: 7, delighted: 6, refreshed: 5, interested: 6,
+                            playful: 7, pleasantlySurprised: 5,
+                            disgusted: 0, disappointed: 1, frustrated: 1, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 1, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 2
                         }
                     },
                     aftertaste: {
@@ -1040,11 +1048,13 @@ class DemoMode {
                         softness: 8, cohesiveness: 6, moistureReleaseRate: 6,
                         temperatureContrast: 7,
                         emotions: {
-                            satisfaction: 9, pleasure: 9, indulgence: 10, comfort: 9,
-                            calm: 6, warmth: 8, joy: 8, loving: 7, adventurous: 3,
-                            energized: 3, secure: 7, nostalgic: 6,
-                            guilty: 2, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 8, pleased: 9, comforted: 9, indulged: 8,
+                            calmRelaxed: 7, nostalgic: 7, secure: 7, excited: 3,
+                            energized: 3, delighted: 8, refreshed: 4, interested: 5,
+                            playful: 4, pleasantlySurprised: 3,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -1255,11 +1265,13 @@ class DemoMode {
                         residualMouthfeel: 5, overallTexturalComplexity: 7,
                         fibrousness: 4,
                         emotions: {
-                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 8,
-                            calm: 6, warmth: 6, joy: 5, loving: 4, adventurous: 4,
-                            energized: 4, secure: 6, nostalgic: 6,
-                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 8, pleased: 7, comforted: 7, indulged: 5,
+                            calmRelaxed: 6, nostalgic: 6, secure: 7, excited: 4,
+                            energized: 4, delighted: 5, refreshed: 3, interested: 7,
+                            playful: 3, pleasantlySurprised: 4,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -1470,11 +1482,13 @@ class DemoMode {
                         overallTexturalComplexity: 5, particleUniformity: 4,
                         moistureReleaseRate: 3, mouthCoating: 5,
                         emotions: {
-                            satisfaction: 5, pleasure: 5, indulgence: 4, comfort: 5,
-                            calm: 3, warmth: 4, joy: 4, loving: 2, adventurous: 3,
-                            energized: 6, secure: 4, nostalgic: 3,
-                            guilty: 1, bored: 1, disgusted: 0, disappointed: 2,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 1, sad: 0
+                            satisfied: 5, pleased: 5, comforted: 4, indulged: 3,
+                            calmRelaxed: 3, nostalgic: 3, secure: 4, excited: 3,
+                            energized: 5, delighted: 3, refreshed: 2, interested: 4,
+                            playful: 2, pleasantlySurprised: 2,
+                            disgusted: 0, disappointed: 2, frustrated: 3, annoyedIrritated: 2,
+                            bored: 2, uncomfortable: 1, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 1, tiredFatigued: 1, overwhelmed: 0
                         }
                     },
                     aftertaste: {
@@ -1685,11 +1699,13 @@ class DemoMode {
                         overallTexturalComplexity: 5, dryness: 3, moistness: 7,
                         foamStability: 3, bodyFullness: 2,
                         emotions: {
-                            satisfaction: 7, pleasure: 6, indulgence: 2, comfort: 5,
-                            calm: 6, warmth: 2, joy: 5, loving: 2, adventurous: 3,
-                            energized: 6, secure: 4, nostalgic: 2,
-                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
-                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                            satisfied: 7, pleased: 6, comforted: 5, indulged: 2,
+                            calmRelaxed: 7, nostalgic: 2, secure: 4, excited: 4,
+                            energized: 7, delighted: 5, refreshed: 8, interested: 4,
+                            playful: 4, pleasantlySurprised: 3,
+                            disgusted: 0, disappointed: 0, frustrated: 0, annoyedIrritated: 0,
+                            bored: 0, uncomfortable: 0, anxiousUneasy: 0, unpleasantlySurprised: 0,
+                            putOff: 0, tiredFatigued: 0, overwhelmed: 0
                         }
                     },
                     aftertaste: {
