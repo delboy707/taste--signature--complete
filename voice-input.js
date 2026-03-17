@@ -294,7 +294,7 @@ VoiceInput.sensoryVocabulary = {
     tastes: ['sweet', 'sour', 'salty', 'bitter', 'umami', 'spicy', 'tangy', 'savory'],
     textures: ['smooth', 'creamy', 'crunchy', 'crispy', 'chewy', 'grainy', 'velvety', 'silky'],
     aromas: ['floral', 'fruity', 'earthy', 'nutty', 'woody', 'herbal', 'smoky', 'citrus'],
-    emotions: ['refreshing', 'comforting', 'indulgent', 'nostalgic', 'exciting', 'sophisticated', 'playful'],
+    emotions: ['refreshing', 'comforting', 'indulgent', 'nostalgic', 'exciting', 'calm', 'adventurous', 'satisfied', 'pleased', 'disgusted', 'disappointed', 'worried', 'bored', 'guilty', 'loving', 'energized'],
     intensities: ['subtle', 'mild', 'moderate', 'strong', 'intense', 'overwhelming', 'balanced']
 };
 

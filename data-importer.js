@@ -33,7 +33,63 @@ const EMOTIONAL_MAPPING = {
     'energy': { needState: 'rejuvenation', triggers: { moreishness: 6, refreshment: 7, melt: 4, crunch: 7 } },
 
     // Calm
-    'calm': { needState: 'escape', triggers: { moreishness: 5, refreshment: 6, melt: 8, crunch: 2 } }
+    'calm': { needState: 'escape', triggers: { moreishness: 5, refreshment: 6, melt: 8, crunch: 2 } },
+
+    // --- Expanded emotional lexicon ---
+
+    // Positive anticipatory emotions
+    'anticipation': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 4, crunch: 6 } },
+    'desire': { needState: 'reward', triggers: { moreishness: 8, refreshment: 5, melt: 6, crunch: 5 } },
+    'eager': { needState: 'reward', triggers: { moreishness: 7, refreshment: 6, melt: 4, crunch: 6 } },
+    'interested': { needState: 'reward', triggers: { moreishness: 6, refreshment: 5, melt: 4, crunch: 5 } },
+    'intrigued': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 5, crunch: 6 } },
+    'attracted': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 5, crunch: 5 } },
+
+    // Positive experiential emotions
+    'happiness': { needState: 'sociability', triggers: { moreishness: 7, refreshment: 6, melt: 6, crunch: 5 } },
+    'pleasure': { needState: 'reward', triggers: { moreishness: 8, refreshment: 5, melt: 7, crunch: 5 } },
+    'satisfaction': { needState: 'reward', triggers: { moreishness: 8, refreshment: 5, melt: 7, crunch: 6 } },
+    'pleased': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 6, crunch: 5 } },
+    'delighted': { needState: 'reward', triggers: { moreishness: 8, refreshment: 6, melt: 7, crunch: 6 } },
+    'enjoyment': { needState: 'reward', triggers: { moreishness: 8, refreshment: 6, melt: 6, crunch: 6 } },
+    'completeness': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 6, crunch: 5 } },
+
+    // Rejuvenation emotions
+    'energized': { needState: 'rejuvenation', triggers: { moreishness: 6, refreshment: 8, melt: 3, crunch: 6 } },
+    'refreshed': { needState: 'rejuvenation', triggers: { moreishness: 5, refreshment: 10, melt: 3, crunch: 4 } },
+
+    // Escape / soothing emotions
+    'relaxed': { needState: 'escape', triggers: { moreishness: 6, refreshment: 5, melt: 9, crunch: 2 } },
+    'soothed': { needState: 'escape', triggers: { moreishness: 5, refreshment: 6, melt: 8, crunch: 2 } },
+    'secure': { needState: 'escape', triggers: { moreishness: 6, refreshment: 4, melt: 7, crunch: 3 } },
+    'nostalgic': { needState: 'escape', triggers: { moreishness: 9, refreshment: 3, melt: 7, crunch: 5 } },
+
+    // Social emotions
+    'amused': { needState: 'sociability', triggers: { moreishness: 6, refreshment: 5, melt: 5, crunch: 5 } },
+    'loving': { needState: 'sociability', triggers: { moreishness: 8, refreshment: 4, melt: 8, crunch: 4 } },
+    'gratitude': { needState: 'sociability', triggers: { moreishness: 7, refreshment: 5, melt: 6, crunch: 4 } },
+
+    // Achievement / exploration emotions
+    'adventurous': { needState: 'reward', triggers: { moreishness: 8, refreshment: 7, melt: 3, crunch: 7 } },
+    'proud': { needState: 'reward', triggers: { moreishness: 7, refreshment: 5, melt: 5, crunch: 5 } },
+    'surprised': { needState: 'reward', triggers: { moreishness: 7, refreshment: 6, melt: 5, crunch: 6 } },
+
+    // Indulgence / craving emotions
+    'indulgent': { needState: 'reward', triggers: { moreishness: 9, refreshment: 3, melt: 9, crunch: 4 } },
+    'craving': { needState: 'reward', triggers: { moreishness: 10, refreshment: 5, melt: 6, crunch: 6 } },
+
+    // Negative emotions
+    'disappointed': { needState: 'escape', triggers: { moreishness: 2, refreshment: 3, melt: 3, crunch: 3 } },
+    'disgusted': { needState: 'escape', triggers: { moreishness: 1, refreshment: 2, melt: 2, crunch: 2 } },
+    'bored': { needState: 'escape', triggers: { moreishness: 2, refreshment: 2, melt: 3, crunch: 2 } },
+    'guilty': { needState: 'escape', triggers: { moreishness: 6, refreshment: 3, melt: 5, crunch: 3 } },
+    'worried': { needState: 'escape', triggers: { moreishness: 3, refreshment: 3, melt: 3, crunch: 2 } },
+    'anxious': { needState: 'escape', triggers: { moreishness: 3, refreshment: 4, melt: 3, crunch: 3 } },
+    'confused': { needState: 'escape', triggers: { moreishness: 3, refreshment: 3, melt: 3, crunch: 3 } },
+    'sad': { needState: 'escape', triggers: { moreishness: 4, refreshment: 3, melt: 5, crunch: 2 } },
+    'regret': { needState: 'escape', triggers: { moreishness: 3, refreshment: 2, melt: 3, crunch: 2 } },
+    'angry': { needState: 'escape', triggers: { moreishness: 2, refreshment: 3, melt: 2, crunch: 4 } },
+    'dissatisfied': { needState: 'escape', triggers: { moreishness: 2, refreshment: 3, melt: 3, crunch: 3 } }
 };
 
 // Taste profile to sensory attributes mapping
@@ -108,7 +164,13 @@ function mapFlavorConceptToExperience(concept) {
                     desire: intensityProfile.appearance,
                     excitement: emotionalProfile.needState === 'reward' ? 7 : 5,
                     happiness: 6,
-                    curiosity: tasteAttributes.length >= 3 ? 7 : 5
+                    curiosity: tasteAttributes.length >= 3 ? 7 : 5,
+                    interested: tasteAttributes.length >= 3 ? 6 : 4,
+                    intrigued: tasteAttributes.length >= 3 ? 7 : 4,
+                    attracted: intensityProfile.appearance >= 7 ? 7 : 5,
+                    eager: emotionalProfile.needState === 'reward' ? 6 : 4,
+                    surprised: 4,
+                    bored: 2
                 }
             },
             aroma: {
@@ -120,9 +182,17 @@ function mapFlavorConceptToExperience(concept) {
                     pleasure: intensityProfile.aroma,
                     comfort: emotionalProfile.triggers.melt,
                     nostalgia: emotions.includes('nostalgia') ? 8 : 4,
+                    nostalgic: emotions.includes('nostalgia') || emotions.includes('nostalgic') ? 8 : 4,
                     happiness: 6,
                     energy: emotionalProfile.needState === 'rejuvenation' ? 7 : 5,
-                    relaxation: emotionalProfile.needState === 'escape' ? 7 : 4
+                    relaxation: emotionalProfile.needState === 'escape' ? 7 : 4,
+                    relaxed: emotionalProfile.needState === 'escape' ? 7 : 4,
+                    soothed: emotionalProfile.needState === 'escape' ? 6 : 3,
+                    intrigued: tasteAttributes.length >= 3 ? 6 : 4,
+                    anticipation: intensityProfile.aroma >= 7 ? 7 : 5,
+                    desire: intensityProfile.aroma >= 7 ? 7 : 5,
+                    refreshed: emotionalProfile.needState === 'rejuvenation' ? 7 : 4,
+                    energized: emotionalProfile.needState === 'rejuvenation' ? 6 : 4
                 }
             },
             frontMouth: {
@@ -133,7 +203,14 @@ function mapFlavorConceptToExperience(concept) {
                 overallIntensity: intensityProfile.front,
                 emotions: {
                     excitement: emotionalProfile.needState === 'reward' ? 8 : 6,
-                    satisfaction: 7
+                    satisfaction: 7,
+                    pleasure: intensityProfile.front >= 7 ? 7 : 5,
+                    happiness: 6,
+                    surprised: tasteAttributes.length >= 4 ? 6 : 3,
+                    delighted: emotionalProfile.needState === 'reward' ? 7 : 5,
+                    enjoyment: 6,
+                    disappointed: 2,
+                    disgusted: 1
                 }
             },
             midRearMouth: {
@@ -144,7 +221,14 @@ function mapFlavorConceptToExperience(concept) {
                 overallIntensity: intensityProfile.mid,
                 emotions: {
                     indulgence: emotionalProfile.triggers.melt,
-                    comfort: emotionalProfile.triggers.melt
+                    indulgent: emotionalProfile.triggers.melt,
+                    comfort: emotionalProfile.triggers.melt,
+                    satisfaction: 7,
+                    pleasure: emotionalProfile.triggers.melt >= 7 ? 8 : 6,
+                    relaxed: emotionalProfile.needState === 'escape' ? 7 : 4,
+                    soothed: emotionalProfile.triggers.melt >= 7 ? 6 : 3,
+                    loving: emotionalProfile.triggers.melt >= 7 ? 6 : 3,
+                    secure: emotionalProfile.needState === 'escape' ? 5 : 3
                 }
             },
             aftertaste: {
@@ -154,7 +238,51 @@ function mapFlavorConceptToExperience(concept) {
                 overallIntensity: intensityProfile.after,
                 emotions: {
                     satisfaction: 8,
-                    completeness: 7
+                    completeness: 7,
+                    pleased: 7,
+                    craving: emotionalProfile.triggers.moreishness >= 7 ? 8 : 5,
+                    happiness: 6,
+                    nostalgic: emotions.includes('nostalgia') || emotions.includes('nostalgic') ? 7 : 4,
+                    gratitude: 5,
+                    regret: 2,
+                    disappointed: 2,
+                    guilty: emotions.includes('guilty') ? 5 : 2
+                }
+            },
+            overall: {
+                emotions: {
+                    happiness: emotionalProfile.needState === 'sociability' ? 8 : 6,
+                    pleasure: emotionalProfile.triggers.melt >= 7 ? 8 : 6,
+                    satisfaction: emotionalProfile.triggers.moreishness >= 7 ? 8 : 6,
+                    enjoyment: 7,
+                    excitement: emotionalProfile.needState === 'reward' ? 7 : 5,
+                    comfort: emotionalProfile.triggers.melt >= 7 ? 8 : 5,
+                    relaxed: emotionalProfile.needState === 'escape' ? 7 : 4,
+                    energized: emotionalProfile.needState === 'rejuvenation' ? 7 : 4,
+                    refreshed: emotionalProfile.needState === 'rejuvenation' ? 7 : 4,
+                    indulgent: emotionalProfile.triggers.melt >= 7 ? 8 : 5,
+                    adventurous: emotionalProfile.needState === 'reward' && tasteAttributes.length >= 3 ? 7 : 4,
+                    nostalgic: emotions.includes('nostalgia') || emotions.includes('nostalgic') ? 8 : 4,
+                    loving: emotionalProfile.needState === 'sociability' ? 7 : 4,
+                    proud: emotionalProfile.needState === 'reward' ? 6 : 4,
+                    amused: emotionalProfile.needState === 'sociability' ? 6 : 3,
+                    grateful: 5,
+                    craving: emotionalProfile.triggers.moreishness >= 7 ? 8 : 5,
+                    surprised: tasteAttributes.length >= 4 ? 6 : 3,
+                    delighted: emotionalProfile.needState === 'reward' ? 7 : 5,
+                    soothed: emotionalProfile.needState === 'escape' ? 6 : 3,
+                    secure: emotionalProfile.needState === 'escape' ? 5 : 3,
+                    disappointed: 2,
+                    disgusted: 1,
+                    bored: 2,
+                    guilty: emotions.includes('guilty') ? 5 : 2,
+                    worried: 2,
+                    anxious: 2,
+                    confused: 2,
+                    sad: 2,
+                    regret: 2,
+                    angry: 1,
+                    dissatisfied: 2
                 }
             }
         },
@@ -265,12 +393,9 @@ function createDefaultStages() {
             carbonation: 5,
             overallIntensity: 5,
             emotions: {
-                anticipation: 5,
-                desire: 5,
-                excitement: 5,
-                happiness: 5,
-                curiosity: 5,
-                surprise: 5
+                anticipation: 5, curiosity: 5, desire: 5, eager: 5, excitement: 5, happiness: 5,
+                interest: 5, pleased: 5, surprise: 5, attracted: 5,
+                disappointed: 0, disgusted: 0, indifferent: 0, suspicious: 0, worried: 0, anxious: 0, confused: 0, bored: 0
             }
         },
         aroma: {
@@ -280,13 +405,9 @@ function createDefaultStages() {
             persistence: 5,
             overallIntensity: 5,
             emotions: {
-                pleasure: 5,
-                comfort: 5,
-                nostalgia: 5,
-                happiness: 5,
-                energy: 5,
-                relaxation: 5,
-                intrigue: 5
+                pleasure: 5, comfort: 5, nostalgia: 5, happiness: 5, energized: 5, relaxed: 5,
+                intrigued: 5, refreshed: 5, desire: 5, warm: 5, soothed: 5, surprised: 5, interested: 5, calm: 5,
+                disgusted: 0, irritated: 0, worried: 0, disappointed: 0, indifferent: 0, anxious: 0, repulsed: 0
             }
         },
         frontMouth: {
@@ -298,11 +419,9 @@ function createDefaultStages() {
             spiciness: 3,
             overallIntensity: 5,
             emotions: {
-                excitement: 5,
-                satisfaction: 5,
-                happiness: 5,
-                pleasure: 5,
-                disappointment: 3
+                excitement: 5, surprise: 5, happiness: 5, pleasure: 5, interest: 5, satisfaction: 5,
+                energized: 5, delighted: 5, amused: 5,
+                disappointed: 0, disgusted: 0, bored: 0, confused: 0, overwhelmed: 0, upset: 0, worried: 0
             }
         },
         midRearMouth: {
@@ -314,11 +433,9 @@ function createDefaultStages() {
             mouthfeel: 5,
             overallIntensity: 5,
             emotions: {
-                indulgence: 5,
-                comfort: 5,
-                satisfaction: 5,
-                pleasure: 5,
-                sophistication: 5
+                satisfaction: 5, pleasure: 5, indulgence: 5, comfort: 5, calm: 5, warmth: 5,
+                joy: 5, loving: 5, adventurous: 5, energized: 5, secure: 5, nostalgic: 5,
+                guilty: 0, bored: 0, disgusted: 0, disappointed: 0, aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
             }
         },
         aftertaste: {
@@ -327,10 +444,17 @@ function createDefaultStages() {
             cleanness: 5,
             overallIntensity: 5,
             emotions: {
-                satisfaction: 5,
-                completeness: 5,
-                happiness: 5,
-                craving: 5
+                satisfaction: 5, completeness: 5, happiness: 5, craving: 5, calm: 5, comforted: 5,
+                pleased: 5, refreshed: 5, nostalgic: 5, surprised: 5,
+                disappointed: 0, disgusted: 0, guilty: 0, worried: 0, dissatisfied: 0, bored: 0, regret: 0
+            }
+        },
+        overall: {
+            emotions: {
+                satisfaction: 5, happiness: 5, pleasure: 5, enjoyment: 5, comfort: 5, calm: 5,
+                warmth: 5, joy: 5, nostalgia: 5, energized: 5, loving: 5, gratitude: 5,
+                proud: 5, adventurous: 5, indulgent: 5, interested: 5, relaxed: 5, secure: 5, desire: 5, surprised: 5,
+                disappointed: 0, disgusted: 0, bored: 0, guilty: 0, worried: 0, dissatisfied: 0, sad: 0, regret: 0, angry: 0, anxious: 0, confused: 0
             }
         }
     };

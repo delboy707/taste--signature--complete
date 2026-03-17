@@ -13,7 +13,7 @@ const CATEGORY_TEMPLATES = {
             texture: 8,
             aftertaste: { duration: 7, pleasantness: 7 },
             suggestedNeedState: 'reward',
-            suggestedEmotions: ['indulgence', 'comfort', 'pleasure', 'sophistication', 'craving']
+            suggestedEmotions: ['indulgence', 'comfort', 'pleasure', 'satisfied', 'craving']
         },
         guidance: 'Focus on cocoa intensity, melt quality, and lingering finish'
     },
@@ -41,7 +41,7 @@ const CATEGORY_TEMPLATES = {
             texture: 5,
             aftertaste: { duration: 7, pleasantness: 6 },
             suggestedNeedState: 'escape',
-            suggestedEmotions: ['excitement', 'curiosity', 'energy', 'intrigue']
+            suggestedEmotions: ['excitement', 'curiosity', 'energized', 'intrigued']
         },
         guidance: 'Note hop character, bitterness balance, and aromatic complexity'
     },
@@ -69,7 +69,7 @@ const CATEGORY_TEMPLATES = {
             texture: 5,
             aftertaste: { duration: 4, pleasantness: 6 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['refreshment', 'energy', 'happiness']
+            suggestedEmotions: ['refreshed', 'energized', 'happiness']
         },
         guidance: 'Assess carbonation, sweetness level, and refreshing quality'
     },
@@ -83,7 +83,7 @@ const CATEGORY_TEMPLATES = {
             texture: 4,
             aftertaste: { duration: 5, pleasantness: 5 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['energy', 'excitement', 'alertness']
+            suggestedEmotions: ['energized', 'excitement', 'anticipation']
         },
         guidance: 'Note energy sensation, sweetness balance, and drinkability'
     },
@@ -97,7 +97,7 @@ const CATEGORY_TEMPLATES = {
             texture: 6,
             aftertaste: { duration: 7, pleasantness: 7 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['energy', 'comfort', 'pleasure', 'sophistication', 'intrigue']
+            suggestedEmotions: ['energized', 'comfort', 'pleasure', 'warmth', 'intrigued']
         },
         guidance: 'Assess roast character, acidity, body, and flavor notes'
     },
@@ -153,7 +153,7 @@ const CATEGORY_TEMPLATES = {
             texture: 7,
             aftertaste: { duration: 4, pleasantness: 6 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['freshness', 'comfort', 'satisfaction']
+            suggestedEmotions: ['refreshed', 'comfort', 'satisfaction']
         },
         guidance: 'Assess creaminess, tanginess, and overall freshness'
     },
@@ -167,7 +167,7 @@ const CATEGORY_TEMPLATES = {
             texture: 5,
             aftertaste: { duration: 4, pleasantness: 7 },
             suggestedNeedState: 'rejuvenation',
-            suggestedEmotions: ['freshness', 'energy', 'happiness']
+            suggestedEmotions: ['refreshed', 'energized', 'happiness']
         },
         guidance: 'Focus on fruit intensity, freshness, and natural sweetness'
     },
@@ -181,7 +181,7 @@ const CATEGORY_TEMPLATES = {
             texture: 6,
             aftertaste: { duration: 8, pleasantness: 7 },
             suggestedNeedState: 'escape',
-            suggestedEmotions: ['pleasure', 'relaxation', 'sophistication', 'intrigue', 'craving']
+            suggestedEmotions: ['pleasure', 'relaxed', 'calm', 'intrigued', 'craving']
         },
         guidance: 'Assess color, nose complexity, palate structure, and finish length'
     },
@@ -195,7 +195,7 @@ const CATEGORY_TEMPLATES = {
             texture: 6,
             aftertaste: { duration: 9, pleasantness: 7 },
             suggestedNeedState: 'reward',
-            suggestedEmotions: ['indulgence', 'sophistication', 'warmth']
+            suggestedEmotions: ['indulgence', 'warmth', 'adventurous']
         },
         guidance: 'Note nose character, palate development, and finish complexity'
     },
@@ -252,15 +252,36 @@ const QUICK_EMOTIONS = [
     { id: 'indulgence', label: 'Indulgence', icon: '💎' },
     { id: 'nostalgia', label: 'Nostalgia', icon: '🕰️' },
     { id: 'happiness', label: 'Happiness', icon: '😄' },
-    { id: 'energy', label: 'Energy', icon: '⚡' },
-    { id: 'relaxation', label: 'Relaxation', icon: '😌' },
-    { id: 'refreshment', label: 'Refreshment', icon: '💧' },
+    { id: 'energized', label: 'Energized', icon: '⚡' },
+    { id: 'relaxed', label: 'Relaxed', icon: '😌' },
+    { id: 'refreshed', label: 'Refreshed', icon: '💧' },
     { id: 'curiosity', label: 'Curiosity', icon: '🔍' },
     { id: 'warmth', label: 'Warmth', icon: '🔥' },
-    { id: 'sophistication', label: 'Sophistication', icon: '🎩' },
-    { id: 'intrigue', label: 'Intrigue', icon: '🧐' },
+    { id: 'intrigued', label: 'Intrigued', icon: '🧐' },
     { id: 'craving', label: 'Craving', icon: '🤤' },
-    { id: 'surprise', label: 'Surprise', icon: '😮' }
+    { id: 'surprise', label: 'Surprise', icon: '😮' },
+    { id: 'anticipation', label: 'Anticipation', icon: '🎯' },
+    { id: 'desire', label: 'Desire', icon: '💫' },
+    { id: 'calm', label: 'Calm', icon: '🧘' },
+    { id: 'joy', label: 'Joy', icon: '🌟' },
+    { id: 'loving', label: 'Loving', icon: '❤️' },
+    { id: 'gratitude', label: 'Gratitude', icon: '🙏' },
+    { id: 'proud', label: 'Proud', icon: '🏆' },
+    { id: 'adventurous', label: 'Adventurous', icon: '🧭' },
+    { id: 'interested', label: 'Interested', icon: '👀' },
+    { id: 'secure', label: 'Secure', icon: '🛡️' },
+    { id: 'enjoyment', label: 'Enjoyment', icon: '🎉' },
+    { id: 'completeness', label: 'Completeness', icon: '✅' },
+    { id: 'disappointed', label: 'Disappointed', icon: '😞' },
+    { id: 'disgusted', label: 'Disgusted', icon: '🤢' },
+    { id: 'bored', label: 'Bored', icon: '😴' },
+    { id: 'guilty', label: 'Guilty', icon: '😬' },
+    { id: 'worried', label: 'Worried', icon: '😟' },
+    { id: 'anxious', label: 'Anxious', icon: '😰' },
+    { id: 'confused', label: 'Confused', icon: '😕' },
+    { id: 'sad', label: 'Sad', icon: '😢' },
+    { id: 'angry', label: 'Angry', icon: '😠' },
+    { id: 'regret', label: 'Regret', icon: '😔' }
 ];
 
 // Quick Entry state
@@ -772,14 +793,14 @@ function submitQuickEntry() {
                 visualAppeal: parseInt(document.getElementById('quick-visual').value),
                 colorIntensity: parseInt(document.getElementById('quick-visual').value),
                 overallIntensity: parseInt(document.getElementById('quick-visual').value),
-                emotions: buildEmotionObject(['anticipation', 'desire', 'excitement'])
+                emotions: buildEmotionObject(['anticipation', 'desire', 'curiosity', 'intrigued'])
             },
             aroma: {
                 intensity: parseInt(document.getElementById('quick-aroma').value),
                 sweetness: parseInt(document.getElementById('quick-sweetness').value),
                 complexity: parseInt(document.getElementById('quick-aroma').value),
                 overallIntensity: parseInt(document.getElementById('quick-aroma').value),
-                emotions: buildEmotionObject(['pleasure', 'comfort', 'nostalgia'])
+                emotions: buildEmotionObject(['pleasure', 'comfort', 'nostalgia', 'warmth'])
             },
             frontMouth: {
                 sweetness: parseInt(document.getElementById('quick-sweetness').value),
@@ -787,7 +808,7 @@ function submitQuickEntry() {
                 saltiness: parseInt(document.getElementById('quick-salty').value),
                 texture: parseInt(document.getElementById('quick-texture').value),
                 overallIntensity: 5,
-                emotions: buildEmotionObject(['excitement', 'satisfaction'])
+                emotions: buildEmotionObject(['excitement', 'surprise', 'joy'])
             },
             midRearMouth: {
                 bitterness: parseInt(document.getElementById('quick-bitterness').value),
@@ -795,14 +816,14 @@ function submitQuickEntry() {
                 richness: parseInt(document.getElementById('quick-texture').value),
                 creaminess: parseInt(document.getElementById('quick-texture').value),
                 overallIntensity: 5,
-                emotions: buildEmotionObject(['indulgence', 'comfort', 'satisfaction'])
+                emotions: buildEmotionObject(['indulgence', 'satisfaction', 'enjoyment', 'comfort'])
             },
             aftertaste: {
                 duration: parseInt(document.getElementById('quick-aftertaste').value),
                 pleasantness: parseInt(document.getElementById('quick-aftertaste').value),
                 cleanness: 5,
                 overallIntensity: parseInt(document.getElementById('quick-aftertaste').value),
-                emotions: buildEmotionObject(['satisfaction', 'completeness'])
+                emotions: buildEmotionObject(['satisfaction', 'completeness', 'calm'])
             }
         },
         needState: quickEntryState.selectedNeedState,

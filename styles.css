@@ -1292,9 +1292,53 @@ textarea:focus {
 
 .emotion-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
     margin-top: 15px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Valence-based emotion styling */
+.emotion-positive label {
+    color: var(--text-dark);
+}
+
+.emotion-negative {
+    border-left: 3px solid #e74c3c;
+    padding-left: 8px;
+    border-radius: 4px;
+}
+
+.emotion-negative label {
+    color: #c0392b;
+}
+
+.emotion-ambivalent {
+    border-left: 3px solid #f39c12;
+    padding-left: 8px;
+    border-radius: 4px;
+}
+
+.emotion-ambivalent label {
+    color: #d68910;
+}
+
+.emotion-negative input[type="range"]::-webkit-slider-thumb {
+    background: #e74c3c;
+}
+
+.emotion-negative input[type="range"]::-moz-range-thumb {
+    background: #e74c3c;
+}
+
+.emotion-ambivalent input[type="range"]::-webkit-slider-thumb {
+    background: #f39c12;
+}
+
+.emotion-ambivalent input[type="range"]::-moz-range-thumb {
+    background: #f39c12;
 }
 
 /* Correlation Heatmap */
