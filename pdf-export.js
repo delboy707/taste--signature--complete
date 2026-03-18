@@ -3,10 +3,68 @@
 
 class PDFExporter {
     constructor() {
-        this.jsPDF = window.jspdf?.jsPDF;
+        this.jsPDFConstructor = null;
         this.companyData = null;
         this.brandColor = '#667eea'; // Default brand color
         this.logoDataUrl = null;
+        this._initJsPDF();
+    }
+
+    /**
+     * Try to find jsPDF from various access patterns
+     */
+    _initJsPDF() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+            this.jsPDFConstructor = window.jspdf.jsPDF;
+        } else if (window.jsPDF) {
+            this.jsPDFConstructor = window.jsPDF;
+        }
+    }
+
+    /**
+     * Ensure jsPDF is loaded, with dynamic CDN fallback
+     */
+    async _ensureJsPDF() {
+        // Re-check in case it loaded after constructor
+        this._initJsPDF();
+        if (this.jsPDFConstructor) return;
+
+        // Dynamic load from CDN
+        await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+        // Also load autoTable plugin
+        await this._loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+
+        this._initJsPDF();
+
+        if (!this.jsPDFConstructor) {
+            throw new Error('Failed to load jsPDF library. Please check your internet connection and try again.');
+        }
+    }
+
+    /**
+     * Helper: load a script dynamically
+     */
+    _loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Check if already loaded
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Create a new jsPDF document
+     */
+    _createDoc() {
+        return new this.jsPDFConstructor();
     }
 
     /**
@@ -31,7 +89,8 @@ class PDFExporter {
      * Generate Product Insight Report
      */
     async generateProductReport(experience, aiInsights = null) {
-        const doc = new this.jsPDF();
+        await this._ensureJsPDF();
+        const doc = this._createDoc();
         const pageWidth = doc.internal.pageSize.width;
         const pageHeight = doc.internal.pageSize.height;
         let yPos = 20;
@@ -135,10 +194,10 @@ class PDFExporter {
             if (yPos > pageHeight - 60) {
                 doc.addPage();
                 yPos = 20;
-                yPos = this.addHeader(doc, pageWidth, yPos, 'AI Strategic Insights');
+                yPos = this.addHeader(doc, pageWidth, yPos, 'Strategic Insights');
             }
 
-            yPos = this.addSection(doc, yPos, 'AI Strategic Insights', () => {
+            yPos = this.addSection(doc, yPos, 'Strategic Insights', () => {
                 let y = yPos;
                 doc.setFontSize(10);
                 const insights = aiInsights.substring(0, 2000); // Limit length
@@ -162,7 +221,8 @@ class PDFExporter {
      * Generate Portfolio Analysis Report
      */
     async generatePortfolioReport(experiences, portfolioInsights = null) {
-        const doc = new this.jsPDF();
+        await this._ensureJsPDF();
+        const doc = this._createDoc();
         const pageWidth = doc.internal.pageSize.width;
         const pageHeight = doc.internal.pageSize.height;
         let yPos = 20;
@@ -247,7 +307,7 @@ class PDFExporter {
                 yPos = this.addHeader(doc, pageWidth, yPos, 'Strategic Insights');
             }
 
-            yPos = this.addSection(doc, yPos, 'AI Portfolio Insights', () => {
+            yPos = this.addSection(doc, yPos, 'Portfolio Insights', () => {
                 let y = yPos;
                 doc.setFontSize(10);
                 const insights = portfolioInsights.substring(0, 2500);
@@ -271,7 +331,8 @@ class PDFExporter {
      * Generate Product Comparison Report
      */
     async generateComparisonReport(experiences, comparisonInsights = null) {
-        const doc = new this.jsPDF();
+        await this._ensureJsPDF();
+        const doc = this._createDoc();
         const pageWidth = doc.internal.pageSize.width;
         const pageHeight = doc.internal.pageSize.height;
         let yPos = 20;
@@ -350,7 +411,7 @@ class PDFExporter {
                 yPos = this.addHeader(doc, pageWidth, yPos, 'Comparison Insights');
             }
 
-            yPos = this.addSection(doc, yPos, 'AI Comparison Analysis', () => {
+            yPos = this.addSection(doc, yPos, 'Comparison Analysis', () => {
                 let y = yPos;
                 doc.setFontSize(10);
                 const insights = comparisonInsights.substring(0, 2500);
