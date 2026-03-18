@@ -54,10 +54,10 @@ async function exportProductReport(experienceId) {
     try {
         // Get AI insights if available (optional)
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (window.TasteInsightAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
             try {
-                const claude = new ClaudeAI();
-                aiInsights = await claude.analyzeProduct(experience);
+                const insightEngine = new TasteInsightAI();
+                aiInsights = await insightEngine.analyzeProduct(experience);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
             }
@@ -92,10 +92,10 @@ async function exportPortfolioReport() {
     try {
         // Get AI insights if available (optional)
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (window.TasteInsightAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
             try {
-                const claude = new ClaudeAI();
-                aiInsights = await claude.suggestImprovements(experiences);
+                const insightEngine = new TasteInsightAI();
+                aiInsights = await insightEngine.suggestImprovements(experiences);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
             }
@@ -132,10 +132,10 @@ async function exportComparisonReport(selectedIds) {
     try {
         // Get AI comparison insights if available
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (window.TasteInsightAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
             try {
-                const claude = new ClaudeAI();
-                aiInsights = await claude.compareProducts(selectedExperiences);
+                const insightEngine = new TasteInsightAI();
+                aiInsights = await insightEngine.compareProducts(selectedExperiences);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
             }
@@ -157,7 +157,7 @@ async function exportComparisonReport(selectedIds) {
 /**
  * Export to Excel
  */
-function exportToExcel() {
+async function exportToExcel() {
     if (!excelImporter) initializeExporters();
 
     if (experiences.length === 0) {
@@ -174,7 +174,7 @@ function exportToExcel() {
             companyName: 'Your Company' // Can be updated with actual company name
         };
 
-        const result = excelImporter.exportToExcel(exportData, 'taste-signature-data.xlsx');
+        const result = await excelImporter.exportToExcel(exportData, 'taste-signature-data.xlsx');
 
         if (result.success) {
             showExportNotification(`✅ Excel file downloaded: ${result.filename}`, 'success');
@@ -210,10 +210,10 @@ async function exportBeforeAfterReport() {
 
         // Get AI reformulation analysis
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (window.TasteInsightAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
             try {
-                const claude = new ClaudeAI();
-                aiInsights = await claude.analyzeReformulation(beforeProducts[0], afterProducts[0]);
+                const insightEngine = new TasteInsightAI();
+                aiInsights = await insightEngine.analyzeReformulation(beforeProducts[0], afterProducts[0]);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
             }
