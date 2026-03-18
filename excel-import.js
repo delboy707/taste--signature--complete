@@ -8,16 +8,63 @@ class ExcelImporter {
     }
 
     /**
+     * Ensure XLSX (SheetJS) library is loaded
+     */
+    async _ensureXLSX() {
+        if (typeof XLSX !== 'undefined') return;
+
+        // Dynamic load from CDN
+        await new Promise((resolve, reject) => {
+            if (document.querySelector('script[src*="xlsx"]')) {
+                // Script tag exists but maybe still loading — poll for it
+                let attempts = 0;
+                const check = setInterval(() => {
+                    if (typeof XLSX !== 'undefined') {
+                        clearInterval(check);
+                        resolve();
+                    } else if (++attempts > 50) {
+                        clearInterval(check);
+                        reject(new Error('XLSX library failed to load'));
+                    }
+                }, 100);
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Failed to load SheetJS library'));
+            document.head.appendChild(script);
+        });
+
+        if (typeof XLSX === 'undefined') {
+            throw new Error('SheetJS (XLSX) library is not available. Please check your internet connection.');
+        }
+    }
+
+    /**
+     * Safe accessor for XLSX global
+     */
+    _getXLSX() {
+        if (typeof XLSX === 'undefined') {
+            throw new Error('SheetJS (XLSX) library is not loaded. Please try again.');
+        }
+        return XLSX;
+    }
+
+    /**
      * Read Excel file from file input
      */
     async readExcelFile(file) {
+        await this._ensureXLSX();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
             reader.onload = (e) => {
                 try {
+                    const xlsx = this._getXLSX();
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = xlsx.read(data, { type: 'array' });
 
                     this.currentWorkbook = workbook;
                     console.log('✅ Excel file loaded:', workbook.SheetNames);
@@ -60,8 +107,10 @@ class ExcelImporter {
             throw new Error(`Sheet ${sheetName} not found`);
         }
 
+        const xlsx = this._getXLSX();
+
         // Convert to JSON with header row
-        const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: false });
+        const jsonData = xlsx.utils.sheet_to_json(sheet, { raw: false });
 
         return {
             success: true,
@@ -357,28 +406,30 @@ class ExcelImporter {
     /**
      * Export current data to Excel
      */
-    exportToExcel(data, filename = 'taste-signature-export.xlsx') {
+    async exportToExcel(data, filename = 'taste-signature-export.xlsx') {
         try {
-            const workbook = XLSX.utils.book_new();
+            await this._ensureXLSX();
+            const xlsx = this._getXLSX();
+            const workbook = xlsx.utils.book_new();
 
             // Create different sheets for different data types
             if (data.experiences && data.experiences.length > 0) {
                 const expSheet = this.createExperiencesSheet(data.experiences);
-                XLSX.utils.book_append_sheet(workbook, expSheet, 'Experiences');
+                xlsx.utils.book_append_sheet(workbook, expSheet, 'Experiences');
             }
 
             if (data.panelData) {
                 const panelSheet = this.createPanelDataSheet(data.panelData);
-                XLSX.utils.book_append_sheet(workbook, panelSheet, 'Consumer Panel');
+                xlsx.utils.book_append_sheet(workbook, panelSheet, 'Consumer Panel');
             }
 
             if (data.statistics) {
                 const statsSheet = this.createStatisticsSheet(data.statistics);
-                XLSX.utils.book_append_sheet(workbook, statsSheet, 'Statistics');
+                xlsx.utils.book_append_sheet(workbook, statsSheet, 'Statistics');
             }
 
             // Write file
-            XLSX.writeFile(workbook, filename);
+            xlsx.writeFile(workbook, filename);
 
             return {
                 success: true,
@@ -398,6 +449,7 @@ class ExcelImporter {
      * Create experiences sheet
      */
     createExperiencesSheet(experiences) {
+        const xlsx = this._getXLSX();
         const flatData = experiences.map(exp => ({
             'Product': exp.productInfo?.name || '',
             'Brand': exp.productInfo?.brand || '',
@@ -410,20 +462,22 @@ class ExcelImporter {
             // Add more columns as needed
         }));
 
-        return XLSX.utils.json_to_sheet(flatData);
+        return xlsx.utils.json_to_sheet(flatData);
     }
 
     /**
      * Create panel data sheet
      */
     createPanelDataSheet(panelData) {
-        return XLSX.utils.json_to_sheet(panelData.responses || []);
+        const xlsx = this._getXLSX();
+        return xlsx.utils.json_to_sheet(panelData.responses || []);
     }
 
     /**
      * Create statistics sheet
      */
     createStatisticsSheet(stats) {
+        const xlsx = this._getXLSX();
         const flatStats = [];
 
         for (const product in stats.byProduct) {
@@ -442,7 +496,7 @@ class ExcelImporter {
             }
         }
 
-        return XLSX.utils.json_to_sheet(flatStats);
+        return xlsx.utils.json_to_sheet(flatStats);
     }
 }
 
