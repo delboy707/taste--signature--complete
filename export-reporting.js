@@ -5,6 +5,72 @@
  * Generates professional reports, exports data to Excel, and exports charts as images
  */
 
+// ===== STAGES NORMALIZATION HELPER =====
+
+/**
+ * Normalize stages data to array format
+ * Handles both object format (from Firestore: {appearance: {...}, aroma: {...}})
+ * and array format ([{name: 'Appearance', attributes: [...], emotions: [...]}])
+ */
+function normalizeStages(stages) {
+    // Already an array — return as-is
+    if (Array.isArray(stages)) {
+        return stages;
+    }
+
+    // Object format — convert to array
+    if (stages && typeof stages === 'object') {
+        const stageNameMap = {
+            appearance: 'Appearance',
+            aroma: 'Aroma',
+            frontMouth: 'First Taste',
+            midRearMouth: 'Mid-Palate',
+            aftertaste: 'Aftertaste'
+        };
+
+        return Object.entries(stages).map(([key, stageData]) => {
+            // Build attributes array from numeric properties
+            const attributes = [];
+            const emotions = [];
+
+            if (stageData && typeof stageData === 'object') {
+                for (const [prop, value] of Object.entries(stageData)) {
+                    if (prop === 'emotions') {
+                        // Emotions can be an object {joy: 7, surprise: 5} or array ['joy', 'surprise']
+                        if (Array.isArray(value)) {
+                            emotions.push(...value);
+                        } else if (typeof value === 'object' && value !== null) {
+                            // Convert emotion object to array of names (or keep as-is for scoring)
+                            Object.entries(value).forEach(([emotion, score]) => {
+                                if (typeof score === 'number') {
+                                    attributes.push({ label: emotion, value: score });
+                                } else {
+                                    emotions.push(emotion);
+                                }
+                            });
+                        }
+                    } else if (prop === 'overallIntensity') {
+                        attributes.push({ label: 'Overall Intensity', value: parseFloat(value) || 0 });
+                    } else if (typeof value === 'number') {
+                        // Convert camelCase to readable label
+                        const label = prop.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+                        attributes.push({ label: label, value: value });
+                    }
+                }
+            }
+
+            return {
+                name: stageNameMap[key] || key.charAt(0).toUpperCase() + key.slice(1),
+                attributes: attributes,
+                emotions: emotions
+            };
+        });
+    }
+
+    // Fallback — return empty array
+    return [];
+}
+
 // ===== PDF REPORT GENERATION =====
 
 /**
@@ -361,6 +427,9 @@ function generateProductReportContent(experience) {
     </div>
     `;
 
+    // Normalize stages for iteration
+    const stagesArray = normalizeStages(experience.stages);
+
     // Sensory Attributes Section
     html += `
     <div class="section">
@@ -376,7 +445,8 @@ function generateProductReportContent(experience) {
             <tbody>
     `;
 
-    experience.stages.forEach(stage => {
+    stagesArray.forEach(stage => {
+        if (!stage.attributes || stage.attributes.length === 0) return;
         const stageRowspan = stage.attributes.length;
         stage.attributes.forEach((attr, idx) => {
             html += `<tr>`;
@@ -407,7 +477,7 @@ function generateProductReportContent(experience) {
         <h3>Emotional Response Mapping</h3>
     `;
 
-    experience.stages.forEach(stage => {
+    stagesArray.forEach(stage => {
         if (stage.emotions && stage.emotions.length > 0) {
             html += `
                 <h4>${stage.name}</h4>
@@ -468,7 +538,9 @@ function generateComparisonReportContent(products) {
     </div>
     `;
 
-    // Attribute Comparison
+    // Attribute Comparison — normalize stages for the first product to get attribute structure
+    const firstProductStages = normalizeStages(products[0].stages);
+
     html += `
     <div class="section page-break">
         <h3>Attribute Comparison</h3>
@@ -485,13 +557,15 @@ function generateComparisonReportContent(products) {
 
     // Get all unique attributes across products
     const allAttributes = new Map();
-    products[0].stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            const key = `${stage.name}::${attr.label}`;
-            if (!allAttributes.has(key)) {
-                allAttributes.set(key, { stage: stage.name, label: attr.label });
-            }
-        });
+    firstProductStages.forEach(stage => {
+        if (stage.attributes) {
+            stage.attributes.forEach(attr => {
+                const key = `${stage.name}::${attr.label}`;
+                if (!allAttributes.has(key)) {
+                    allAttributes.set(key, { stage: stage.name, label: attr.label });
+                }
+            });
+        }
     });
 
     allAttributes.forEach((attrInfo, key) => {
@@ -500,7 +574,8 @@ function generateComparisonReportContent(products) {
         html += `<td>${attrInfo.label}</td>`;
 
         products.forEach(product => {
-            const stage = product.stages.find(s => s.name === attrInfo.stage);
+            const productStages = normalizeStages(product.stages);
+            const stage = productStages.find(s => s.name === attrInfo.stage);
             const attr = stage ? stage.attributes.find(a => a.label === attrInfo.label) : null;
             const value = attr ? attr.value : 0;
 
@@ -620,15 +695,20 @@ function generateBenchmarkReportContent(data) {
  */
 function generateExecutiveSummary(experience) {
     const overall = calculateOverallScore(experience);
-    const topAttributes = experience.stages.flatMap(s => s.attributes)
+    const stagesArray = normalizeStages(experience.stages);
+
+    const topAttributes = stagesArray.flatMap(s => s.attributes || [])
         .sort((a, b) => b.value - a.value)
         .slice(0, 3);
 
-    const topEmotions = experience.stages.flatMap(s => s.emotions || [])
+    const topEmotions = stagesArray.flatMap(s => s.emotions || [])
         .slice(0, 5);
 
     let summary = `This product achieved an overall sensory score of ${overall.toFixed(1)} out of 10. `;
-    summary += `Key strengths include ${topAttributes.map(a => a.label.toLowerCase()).join(', ')}. `;
+
+    if (topAttributes.length > 0) {
+        summary += `Key strengths include ${topAttributes.map(a => a.label.toLowerCase()).join(', ')}. `;
+    }
 
     if (topEmotions.length > 0) {
         summary += `The product evokes emotional responses such as ${topEmotions.join(', ')}.`;
@@ -646,6 +726,8 @@ function exportProductToExcel(productId) {
     const experience = experiences.find(e => e.id === productId);
     if (!experience) return null;
 
+    const stagesArray = normalizeStages(experience.stages);
+
     let csv = 'Taste Signature - Product Export\n\n';
     csv += `Product Name,${experience.productInfo.name}\n`;
     csv += `Brand,${experience.productInfo.brand}\n`;
@@ -655,15 +737,17 @@ function exportProductToExcel(productId) {
     csv += 'Sensory Attributes\n';
     csv += 'Stage,Attribute,Score (1-10)\n';
 
-    experience.stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            csv += `${stage.name},${attr.label},${attr.value}\n`;
-        });
+    stagesArray.forEach(stage => {
+        if (stage.attributes) {
+            stage.attributes.forEach(attr => {
+                csv += `${stage.name},${attr.label},${attr.value}\n`;
+            });
+        }
     });
 
     csv += '\nEmotional Responses\n';
     csv += 'Stage,Emotions\n';
-    experience.stages.forEach(stage => {
+    stagesArray.forEach(stage => {
         if (stage.emotions && stage.emotions.length > 0) {
             csv += `${stage.name},"${stage.emotions.join(', ')}"\n`;
         }
@@ -690,10 +774,13 @@ function exportAllProductsToExcel() {
     // Get all unique attributes
     const allAttributes = new Set();
     experiences.forEach(exp => {
-        exp.stages.forEach(stage => {
-            stage.attributes.forEach(attr => {
-                allAttributes.add(`${stage.name} - ${attr.label}`);
-            });
+        const stagesArray = normalizeStages(exp.stages);
+        stagesArray.forEach(stage => {
+            if (stage.attributes) {
+                stage.attributes.forEach(attr => {
+                    allAttributes.add(`${stage.name} - ${attr.label}`);
+                });
+            }
         });
     });
 
@@ -702,6 +789,7 @@ function exportAllProductsToExcel() {
     // Add data rows
     experiences.forEach(exp => {
         const overall = calculateOverallScore(exp);
+        const stagesArray = normalizeStages(exp.stages);
         csv += `"${exp.productInfo.name}",`;
         csv += `"${exp.productInfo.brand}",`;
         csv += `"${exp.productInfo.category}",`;
@@ -711,7 +799,7 @@ function exportAllProductsToExcel() {
         // Add attribute values
         allAttributes.forEach(attrKey => {
             const [stageName, attrLabel] = attrKey.split(' - ');
-            const stage = exp.stages.find(s => s.name === stageName);
+            const stage = stagesArray.find(s => s.name === stageName);
             const attr = stage ? stage.attributes.find(a => a.label === attrLabel) : null;
             csv += attr ? `${attr.value.toFixed(2)},` : ',';
         });
@@ -736,18 +824,22 @@ function exportComparisonToExcel(productIds) {
     csv += 'Attribute,' + products.map(p => p.productInfo.name).join(',') + '\n';
 
     // Get all attributes from first product
-    products[0].stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            csv += `${stage.name} - ${attr.label},`;
+    const firstProductStages = normalizeStages(products[0].stages);
+    firstProductStages.forEach(stage => {
+        if (stage.attributes) {
+            stage.attributes.forEach(attr => {
+                csv += `${stage.name} - ${attr.label},`;
 
-            products.forEach(product => {
-                const productStage = product.stages.find(s => s.name === stage.name);
-                const productAttr = productStage ? productStage.attributes.find(a => a.label === attr.label) : null;
-                csv += productAttr ? `${productAttr.value.toFixed(2)},` : ',';
+                products.forEach(product => {
+                    const productStages = normalizeStages(product.stages);
+                    const productStage = productStages.find(s => s.name === stage.name);
+                    const productAttr = productStage ? productStage.attributes.find(a => a.label === attr.label) : null;
+                    csv += productAttr ? `${productAttr.value.toFixed(2)},` : ',';
+                });
+
+                csv += '\n';
             });
-
-            csv += '\n';
-        });
+        }
     });
 
     csv += '\nOverall Score,';
@@ -777,11 +869,32 @@ function downloadCSV(csvContent, filename) {
 
 /**
  * Export any Chart.js chart to PNG
+ * Enhanced with multiple fallback strategies
  */
 function exportChartAsImage(chartId, filename) {
-    const canvas = document.getElementById(chartId);
+    // Strategy 1: Direct ID lookup
+    let canvas = document.getElementById(chartId);
+
+    // Strategy 2: Look inside a wrapper div
     if (!canvas) {
-        console.error('Chart canvas not found');
+        const wrapper = document.getElementById(chartId);
+        if (wrapper) {
+            canvas = wrapper.querySelector('canvas');
+        }
+    }
+
+    // Strategy 3: Search Chart.js registry
+    if (!canvas && window.Chart) {
+        const chartInstances = Object.values(Chart.instances || {});
+        const match = chartInstances.find(c => c.canvas && c.canvas.id === chartId);
+        if (match) {
+            canvas = match.canvas;
+        }
+    }
+
+    if (!canvas) {
+        alert('Chart not found. Please navigate to the chart view first, then try exporting again.');
+        console.error('Chart canvas not found:', chartId);
         return false;
     }
 
@@ -816,16 +929,20 @@ function exportShapeOfTasteChart(productId) {
 
 /**
  * Calculate overall score from experience
+ * Handles both object and array stage formats
  */
 function calculateOverallScore(experience) {
     let total = 0;
     let count = 0;
 
-    experience.stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            total += attr.value;
-            count++;
-        });
+    const stagesArray = normalizeStages(experience.stages);
+    stagesArray.forEach(stage => {
+        if (stage.attributes) {
+            stage.attributes.forEach(attr => {
+                total += attr.value;
+                count++;
+            });
+        }
     });
 
     return count > 0 ? total / count : 0;
