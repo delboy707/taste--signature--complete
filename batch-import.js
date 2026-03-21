@@ -311,8 +311,8 @@ function validateBatchData(rows, columnMapping) {
                 const numValue = parseFloat(value);
                 if (isNaN(numValue)) {
                     result.warnings.push(`${column}: "${value}" is not a valid number`);
-                } else if (numValue < 1 || numValue > 10) {
-                    result.warnings.push(`${column}: ${numValue} is outside valid range (1-10)`);
+                } else if (numValue < 0 || numValue > 10) {
+                    result.warnings.push(`${column}: ${numValue} is outside valid range (0-10)`);
                 }
             }
         });
@@ -384,57 +384,57 @@ function createExperienceFromRow(row, columnMapping) {
             {
                 name: 'Appearance',
                 attributes: [
-                    { label: 'Visual Appeal', value: 5 },
-                    { label: 'Color', value: 5 },
-                    { label: 'Clarity', value: 5 },
-                    { label: 'Gloss', value: 5 }
+                    { label: 'Visual Appeal', value: 0 },
+                    { label: 'Color', value: 0 },
+                    { label: 'Clarity', value: 0 },
+                    { label: 'Gloss', value: 0 }
                 ],
                 emotions: []
             },
             {
                 name: 'Aroma',
                 attributes: [
-                    { label: 'Aroma Intensity', value: 5 },
-                    { label: 'Complexity', value: 5 },
-                    { label: 'Pleasantness', value: 5 }
+                    { label: 'Aroma Intensity', value: 0 },
+                    { label: 'Complexity', value: 0 },
+                    { label: 'Pleasantness', value: 0 }
                 ],
                 emotions: []
             },
             {
                 name: 'Front of Mouth',
                 attributes: [
-                    { label: 'Initial Taste', value: 5 },
-                    { label: 'Sweetness', value: 5 },
-                    { label: 'Sourness', value: 5 },
-                    { label: 'Saltiness', value: 5 },
-                    { label: 'Bitterness', value: 5 },
-                    { label: 'Umami', value: 5 }
+                    { label: 'Initial Taste', value: 0 },
+                    { label: 'Sweetness', value: 0 },
+                    { label: 'Sourness', value: 0 },
+                    { label: 'Saltiness', value: 0 },
+                    { label: 'Bitterness', value: 0 },
+                    { label: 'Umami', value: 0 }
                 ],
                 emotions: []
             },
             {
                 name: 'Mid/Rear Mouth',
                 attributes: [
-                    { label: 'Flavor Development', value: 5 },
-                    { label: 'Texture', value: 5 },
-                    { label: 'Richness', value: 5 }
+                    { label: 'Flavor Development', value: 0 },
+                    { label: 'Texture', value: 0 },
+                    { label: 'Richness', value: 0 }
                 ],
                 emotions: []
             },
             {
                 name: 'Aftertaste',
                 attributes: [
-                    { label: 'Aftertaste Quality', value: 5 },
-                    { label: 'Aftertaste Length', value: 5 }
+                    { label: 'Aftertaste Quality', value: 0 },
+                    { label: 'Aftertaste Length', value: 0 }
                 ],
                 emotions: []
             },
             {
                 name: 'Overall',
                 attributes: [
-                    { label: 'Overall Satisfaction', value: 5 },
-                    { label: 'Purchase Intent', value: 5 },
-                    { label: 'Uniqueness', value: 5 }
+                    { label: 'Overall Satisfaction', value: 0 },
+                    { label: 'Purchase Intent', value: 0 },
+                    { label: 'Uniqueness', value: 0 }
                 ],
                 emotions: []
             }
@@ -459,7 +459,7 @@ function createExperienceFromRow(row, columnMapping) {
                 if (attr) {
                     const value = parseFloat(row[column]);
                     if (!isNaN(value)) {
-                        attr.value = Math.max(1, Math.min(10, value)); // Clamp to 1-10
+                        attr.value = Math.max(0, Math.min(10, value)); // Clamp to 0-10
                     }
                 }
             }

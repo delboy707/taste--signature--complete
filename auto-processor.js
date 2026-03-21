@@ -308,14 +308,14 @@ class AutoProcessor {
                 variant: row.variant || row.Variant || row.description || row.Description || ''
             },
             stages: {
-                appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 5, emotions: {} },
-                aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
-                frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3, emotions: {} },
-                midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5, emotions: {} },
-                aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
+                appearance: { visualAppeal: 0, colorIntensity: 0, carbonation: 0, emotions: {} },
+                aroma: { intensity: 0, sweetness: 0, complexity: 0, persistence: 0, emotions: {} },
+                frontMouth: { sweetness: 0, sourness: 0, saltiness: 0, texture: 0, acidity: 0, spiciness: 0, emotions: {} },
+                midRearMouth: { bitterness: 0, umami: 0, richness: 0, creaminess: 0, astringency: 0, mouthfeel: 0, emotions: {} },
+                aftertaste: { duration: 0, pleasantness: 0, cleanness: 0, emotions: {} }
             },
             needState: '',
-            emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
+            emotionalTriggers: { moreishness: 0, refreshment: 0, melt: 0, crunch: 0 },
             notes: row.notes || row.comments || '',
             _autoProcessed: true
         };
@@ -430,7 +430,7 @@ class AutoProcessor {
         let validCount = 0;
         for (const stage of Object.values(sensoryData)) {
             for (const value of Object.values(stage)) {
-                if (value !== 5 && value !== undefined) { // 5 is default
+                if (value !== 0 && value !== undefined) { // 0 is default
                     validCount++;
                 }
             }
@@ -504,7 +504,7 @@ class AutoProcessor {
         // Use calculateEmotionalTriggers if available
         const triggers = window.calculateEmotionalTriggers
             ? window.calculateEmotionalTriggers({ stages: sensoryData })
-            : { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 };
+            : { moreishness: 0, refreshment: 0, melt: 0, crunch: 0 };
 
         const emotions = {
             stages: {},
@@ -520,11 +520,11 @@ class AutoProcessor {
         const creaminess = sensoryData.midRearMouth?.creaminess || 5;
 
         emotions.stages = {
-            appearance: { emotions: { anticipation: 6, desire: 5, excitement: 5 } },
-            aroma: { emotions: { pleasure: 6, comfort: 5 } },
+            appearance: { emotions: { anticipation: 6, desire: 0, excitement: 0 } },
+            aroma: { emotions: { pleasure: 6, comfort: 0 } },
             frontMouth: { emotions: { happiness: sweetness * 0.8, satisfaction: 6 } },
             midRearMouth: { emotions: { indulgence: richness * 0.8, comfort: creaminess * 0.7 } },
-            aftertaste: { emotions: { satisfaction: 6, completeness: 5 } }
+            aftertaste: { emotions: { satisfaction: 6, completeness: 0 } }
         };
 
         // Determine need state

@@ -400,7 +400,7 @@ function validateExperience(experience) {
         for (const [attr, value] of Object.entries(stage)) {
             if (attr !== 'emotions' && typeof value === 'number') {
                 totalCount++;
-                if (value === 5) defaultCount++;
+                if (value === 0) defaultCount++;
             }
         }
 
@@ -458,11 +458,11 @@ function autoCorrectExperience(experience) {
 
     // Ensure all required stages exist with defaults
     const defaultStages = {
-        appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 5, emotions: {} },
-        aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
-        frontMouth: { sweetness: 5, sourness: 5, saltiness: 5, texture: 5, acidity: 5, spiciness: 5, emotions: {} },
-        midRearMouth: { bitterness: 5, umami: 5, richness: 5, creaminess: 5, astringency: 5, mouthfeel: 5, emotions: {} },
-        aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
+        appearance: { visualAppeal: 0, colorIntensity: 0, carbonation: 0, emotions: {} },
+        aroma: { intensity: 0, sweetness: 0, complexity: 0, persistence: 0, emotions: {} },
+        frontMouth: { sweetness: 0, sourness: 0, saltiness: 0, texture: 0, acidity: 0, spiciness: 0, emotions: {} },
+        midRearMouth: { bitterness: 0, umami: 0, richness: 0, creaminess: 0, astringency: 0, mouthfeel: 0, emotions: {} },
+        aftertaste: { duration: 0, pleasantness: 0, cleanness: 0, emotions: {} }
     };
 
     for (const [stageName, defaults] of Object.entries(defaultStages)) {
@@ -487,7 +487,7 @@ function autoCorrectExperience(experience) {
 
     // Ensure emotional triggers exist
     if (!corrected.emotionalTriggers) {
-        corrected.emotionalTriggers = { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 };
+        corrected.emotionalTriggers = { moreishness: 0, refreshment: 0, melt: 0, crunch: 0 };
     }
 
     // Ensure need state

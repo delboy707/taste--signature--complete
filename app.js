@@ -643,9 +643,9 @@ function handleFormSubmit(e) {
 
     // Reset sliders
     document.querySelectorAll('input[type="range"]').forEach(slider => {
-        slider.value = 5;
+        slider.value = 0;
         const valueSpan = document.getElementById(`${slider.id}-val`);
-        if (valueSpan) valueSpan.textContent = '5';
+        if (valueSpan) valueSpan.textContent = '0';
     });
 
     alert('Experience logged successfully!');

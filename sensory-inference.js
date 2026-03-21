@@ -23,36 +23,36 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanation.`;
  */
 const SENSORY_INFERENCE_TEMPLATE = {
     appearance: {
-        visualAppeal: 5,
-        colorIntensity: 5,
-        carbonation: 5
+        visualAppeal: 0,
+        colorIntensity: 0,
+        carbonation: 0
     },
     aroma: {
-        intensity: 5,
-        sweetness: 5,
-        complexity: 5,
-        persistence: 5
+        intensity: 0,
+        sweetness: 0,
+        complexity: 0,
+        persistence: 0
     },
     frontMouth: {
-        sweetness: 5,
-        sourness: 3,
-        saltiness: 3,
-        texture: 5,
-        acidity: 3,
-        spiciness: 3
+        sweetness: 0,
+        sourness: 0,
+        saltiness: 0,
+        texture: 0,
+        acidity: 0,
+        spiciness: 0
     },
     midRearMouth: {
-        bitterness: 3,
-        umami: 3,
-        richness: 5,
-        creaminess: 5,
-        astringency: 3,
-        mouthfeel: 5
+        bitterness: 0,
+        umami: 0,
+        richness: 0,
+        creaminess: 0,
+        astringency: 0,
+        mouthfeel: 0
     },
     aftertaste: {
-        duration: 5,
-        pleasantness: 5,
-        cleanness: 5
+        duration: 0,
+        pleasantness: 0,
+        cleanness: 0
     }
 };
 

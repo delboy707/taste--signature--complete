@@ -260,77 +260,77 @@ function parseCSVLine(line) {
 function createDefaultStages() {
     return {
         appearance: {
-            visualAppeal: 5,
-            colorIntensity: 5,
-            carbonation: 5,
-            overallIntensity: 5,
+            visualAppeal: 0,
+            colorIntensity: 0,
+            carbonation: 0,
+            overallIntensity: 0,
             emotions: {
-                anticipation: 5,
-                desire: 5,
-                excitement: 5,
-                happiness: 5,
-                curiosity: 5,
-                surprise: 5
+                anticipation: 0,
+                desire: 0,
+                excitement: 0,
+                happiness: 0,
+                curiosity: 0,
+                surprise: 0
             }
         },
         aroma: {
-            intensity: 5,
-            sweetness: 5,
-            complexity: 5,
-            persistence: 5,
-            overallIntensity: 5,
+            intensity: 0,
+            sweetness: 0,
+            complexity: 0,
+            persistence: 0,
+            overallIntensity: 0,
             emotions: {
-                pleasure: 5,
-                comfort: 5,
-                nostalgia: 5,
-                happiness: 5,
-                energy: 5,
-                relaxation: 5,
-                intrigue: 5
+                pleasure: 0,
+                comfort: 0,
+                nostalgia: 0,
+                happiness: 0,
+                energy: 0,
+                relaxation: 0,
+                intrigue: 0
             }
         },
         frontMouth: {
-            sweetness: 5,
-            sourness: 5,
-            saltiness: 5,
-            texture: 5,
-            acidity: 5,
-            spiciness: 3,
-            overallIntensity: 5,
+            sweetness: 0,
+            sourness: 0,
+            saltiness: 0,
+            texture: 0,
+            acidity: 0,
+            spiciness: 0,
+            overallIntensity: 0,
             emotions: {
-                excitement: 5,
-                satisfaction: 5,
-                happiness: 5,
-                pleasure: 5,
-                disappointment: 3
+                excitement: 0,
+                satisfaction: 0,
+                happiness: 0,
+                pleasure: 0,
+                disappointment: 0
             }
         },
         midRearMouth: {
-            bitterness: 5,
-            umami: 5,
-            richness: 5,
-            creaminess: 5,
-            astringency: 3,
-            mouthfeel: 5,
-            overallIntensity: 5,
+            bitterness: 0,
+            umami: 0,
+            richness: 0,
+            creaminess: 0,
+            astringency: 0,
+            mouthfeel: 0,
+            overallIntensity: 0,
             emotions: {
-                indulgence: 5,
-                comfort: 5,
-                satisfaction: 5,
-                pleasure: 5,
-                sophistication: 5
+                indulgence: 0,
+                comfort: 0,
+                satisfaction: 0,
+                pleasure: 0,
+                sophistication: 0
             }
         },
         aftertaste: {
-            duration: 5,
-            pleasantness: 5,
-            cleanness: 5,
-            overallIntensity: 5,
+            duration: 0,
+            pleasantness: 0,
+            cleanness: 0,
+            overallIntensity: 0,
             emotions: {
-                satisfaction: 5,
-                completeness: 5,
-                happiness: 5,
-                craving: 5
+                satisfaction: 0,
+                completeness: 0,
+                happiness: 0,
+                craving: 0
             }
         }
     };
@@ -373,7 +373,7 @@ function createBasicExperience(item) {
         },
         stages: createDefaultStages(),
         needState: 'reward',
-        emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
+        emotionalTriggers: { moreishness: 0, refreshment: 0, melt: 0, crunch: 0 },
         notes: 'Imported - requires evaluation'
     };
 }

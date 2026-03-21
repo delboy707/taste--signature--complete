@@ -231,11 +231,11 @@ const CATEGORY_TEMPLATES = {
         name: 'Other Product',
         icon: '🍽️',
         defaults: {
-            appearance: { visualAppeal: 5, colorIntensity: 5 },
-            aroma: { intensity: 5, complexity: 5 },
-            taste: { sweetness: 5, sourness: 5, saltiness: 5, bitterness: 5, umami: 5, richness: 5 },
-            texture: 5,
-            aftertaste: { duration: 5, pleasantness: 5 },
+            appearance: { visualAppeal: 0, colorIntensity: 0 },
+            aroma: { intensity: 0, complexity: 0 },
+            taste: { sweetness: 0, sourness: 0, saltiness: 0, bitterness: 0, umami: 0, richness: 0 },
+            texture: 0,
+            aftertaste: { duration: 0, pleasantness: 0 },
             suggestedNeedState: null,
             suggestedEmotions: []
         },
@@ -357,88 +357,88 @@ function renderQuickEntryView() {
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Visual Appeal</span>
-                            <span class="slider-value" id="quick-visual-val">5</span>
+                            <span class="slider-value" id="quick-visual-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-visual">−</button>
-                            <input type="range" id="quick-visual" min="0" max="10" value="5">
+                            <input type="range" id="quick-visual" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-visual">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Aroma Intensity</span>
-                            <span class="slider-value" id="quick-aroma-val">5</span>
+                            <span class="slider-value" id="quick-aroma-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-aroma">−</button>
-                            <input type="range" id="quick-aroma" min="0" max="10" value="5">
+                            <input type="range" id="quick-aroma" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-aroma">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Sweetness</span>
-                            <span class="slider-value" id="quick-sweetness-val">5</span>
+                            <span class="slider-value" id="quick-sweetness-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-sweetness">−</button>
-                            <input type="range" id="quick-sweetness" min="0" max="10" value="5">
+                            <input type="range" id="quick-sweetness" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-sweetness">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Sourness/Acidity</span>
-                            <span class="slider-value" id="quick-sourness-val">5</span>
+                            <span class="slider-value" id="quick-sourness-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-sourness">−</button>
-                            <input type="range" id="quick-sourness" min="0" max="10" value="5">
+                            <input type="range" id="quick-sourness" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-sourness">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Bitterness</span>
-                            <span class="slider-value" id="quick-bitterness-val">5</span>
+                            <span class="slider-value" id="quick-bitterness-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-bitterness">−</button>
-                            <input type="range" id="quick-bitterness" min="0" max="10" value="5">
+                            <input type="range" id="quick-bitterness" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-bitterness">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Saltiness/Umami</span>
-                            <span class="slider-value" id="quick-salty-val">5</span>
+                            <span class="slider-value" id="quick-salty-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-salty">−</button>
-                            <input type="range" id="quick-salty" min="0" max="10" value="5">
+                            <input type="range" id="quick-salty" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-salty">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Texture Quality</span>
-                            <span class="slider-value" id="quick-texture-val">5</span>
+                            <span class="slider-value" id="quick-texture-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-texture">−</button>
-                            <input type="range" id="quick-texture" min="0" max="10" value="5">
+                            <input type="range" id="quick-texture" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-texture">+</button>
                         </div>
                     </div>
                     <div class="quick-slider-group">
                         <label>
                             <span class="slider-label">Aftertaste</span>
-                            <span class="slider-value" id="quick-aftertaste-val">5</span>
+                            <span class="slider-value" id="quick-aftertaste-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-aftertaste">−</button>
-                            <input type="range" id="quick-aftertaste" min="0" max="10" value="5">
+                            <input type="range" id="quick-aftertaste" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-aftertaste">+</button>
                         </div>
                     </div>
@@ -449,11 +449,11 @@ function renderQuickEntryView() {
                     <div class="quick-slider-group highlight">
                         <label>
                             <span class="slider-label">Overall Satisfaction</span>
-                            <span class="slider-value large" id="quick-satisfaction-val">5</span>
+                            <span class="slider-value large" id="quick-satisfaction-val">0</span>
                         </label>
                         <div class="slider-with-buttons">
                             <button type="button" class="slider-btn minus" data-slider="quick-satisfaction">−</button>
-                            <input type="range" id="quick-satisfaction" min="0" max="10" value="5">
+                            <input type="range" id="quick-satisfaction" min="0" max="10" value="0">
                             <button type="button" class="slider-btn plus" data-slider="quick-satisfaction">+</button>
                         </div>
                     </div>
@@ -786,7 +786,7 @@ function submitQuickEntry() {
                 sourness: parseInt(document.getElementById('quick-sourness').value),
                 saltiness: parseInt(document.getElementById('quick-salty').value),
                 texture: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                overallIntensity: 0,
                 emotions: buildEmotionObject(['excitement', 'satisfaction'])
             },
             midRearMouth: {
@@ -794,23 +794,23 @@ function submitQuickEntry() {
                 umami: parseInt(document.getElementById('quick-salty').value),
                 richness: parseInt(document.getElementById('quick-texture').value),
                 creaminess: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                overallIntensity: 0,
                 emotions: buildEmotionObject(['indulgence', 'comfort', 'satisfaction'])
             },
             aftertaste: {
                 duration: parseInt(document.getElementById('quick-aftertaste').value),
                 pleasantness: parseInt(document.getElementById('quick-aftertaste').value),
-                cleanness: 5,
+                cleanness: 0,
                 overallIntensity: parseInt(document.getElementById('quick-aftertaste').value),
                 emotions: buildEmotionObject(['satisfaction', 'completeness'])
             }
         },
         needState: quickEntryState.selectedNeedState,
         emotionalTriggers: {
-            moreishness: quickEntryState.selectedEmotions.includes('moreishness') ? 7 : 5,
-            refreshment: quickEntryState.selectedEmotions.includes('refreshment') ? 7 : 5,
-            melt: 5,
-            crunch: 5
+            moreishness: quickEntryState.selectedEmotions.includes('moreishness') ? 7 : 0,
+            refreshment: quickEntryState.selectedEmotions.includes('refreshment') ? 7 : 0,
+            melt: 0,
+            crunch: 0
         },
         quickEmotions: quickEntryState.selectedEmotions,
         overallSatisfaction: parseInt(document.getElementById('quick-satisfaction').value),
