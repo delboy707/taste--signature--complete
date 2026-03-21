@@ -569,7 +569,7 @@ class AutoProcessor {
             for (const [key, value] of Object.entries(stage)) {
                 if (key !== 'emotions' && typeof value === 'number') {
                     totalCount++;
-                    if (value === 5) defaultCount++;
+                    if (value === 0) defaultCount++;
                 }
             }
         }

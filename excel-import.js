@@ -278,7 +278,7 @@ class ExcelImporter {
      */
     extractStageData(row, stageName, subStage = null) {
         const stageData = {
-            overallIntensity: 5,
+            overallIntensity: 0,
             emotions: {}
         };
 

@@ -583,45 +583,45 @@ function importMappedData(rows, mapping) {
                 },
                 stages: {
                     appearance: {
-                        visualAppeal: parseScore(row[mapping.appearance]) || 5,
-                        colorIntensity: 5,
-                        overallIntensity: parseScore(row[mapping.appearance]) || 5,
+                        visualAppeal: parseScore(row[mapping.appearance]) || 0,
+                        colorIntensity: 0,
+                        overallIntensity: parseScore(row[mapping.appearance]) || 0,
                         emotions: {}
                     },
                     aroma: {
-                        intensity: parseScore(row[mapping.aroma]) || 5,
-                        sweetness: parseScore(row[mapping.sweetness]) || 5,
-                        complexity: 5,
-                        overallIntensity: parseScore(row[mapping.aroma]) || 5,
+                        intensity: parseScore(row[mapping.aroma]) || 0,
+                        sweetness: parseScore(row[mapping.sweetness]) || 0,
+                        complexity: 0,
+                        overallIntensity: parseScore(row[mapping.aroma]) || 0,
                         emotions: {}
                     },
                     frontMouth: {
-                        sweetness: parseScore(row[mapping.sweetness]) || 5,
-                        sourness: parseScore(row[mapping.sourness]) || 5,
-                        saltiness: parseScore(row[mapping.saltiness]) || 5,
-                        texture: parseScore(row[mapping.texture]) || 5,
-                        overallIntensity: 5,
+                        sweetness: parseScore(row[mapping.sweetness]) || 0,
+                        sourness: parseScore(row[mapping.sourness]) || 0,
+                        saltiness: parseScore(row[mapping.saltiness]) || 0,
+                        texture: parseScore(row[mapping.texture]) || 0,
+                        overallIntensity: 0,
                         emotions: {}
                     },
                     midRearMouth: {
-                        bitterness: parseScore(row[mapping.bitterness]) || 5,
-                        umami: 5,
-                        richness: 5,
-                        creaminess: 5,
-                        overallIntensity: 5,
+                        bitterness: parseScore(row[mapping.bitterness]) || 0,
+                        umami: 0,
+                        richness: 0,
+                        creaminess: 0,
+                        overallIntensity: 0,
                         emotions: {}
                     },
                     aftertaste: {
-                        duration: parseScore(row[mapping.aftertaste]) || 5,
-                        pleasantness: parseScore(row[mapping.aftertaste]) || 5,
-                        cleanness: 5,
-                        overallIntensity: parseScore(row[mapping.aftertaste]) || 5,
+                        duration: parseScore(row[mapping.aftertaste]) || 0,
+                        pleasantness: parseScore(row[mapping.aftertaste]) || 0,
+                        cleanness: 0,
+                        overallIntensity: parseScore(row[mapping.aftertaste]) || 0,
                         emotions: {}
                     }
                 },
                 needState: 'reward',
-                emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
-                overallSatisfaction: parseScore(row[mapping.overall]) || 5,
+                emotionalTriggers: { moreishness: 0, refreshment: 0, melt: 0, crunch: 0 },
+                overallSatisfaction: parseScore(row[mapping.overall]) || 0,
                 notes: mapping.notes !== undefined ? row[mapping.notes] || '' : ''
             };
 
