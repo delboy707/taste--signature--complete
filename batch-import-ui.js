@@ -650,7 +650,7 @@ BATCH IMPORT GUIDE
 3. ATTRIBUTE VALUES
    - Use numbers between 1-10
    - Decimal values are supported (e.g., 7.5)
-   - Leave blank for default value (5.0)
+   - Leave blank for default value (0)
 
 4. COLUMN NAMING
    - Use clear, descriptive column names

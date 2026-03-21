@@ -676,9 +676,9 @@ function applyTemplateDefaults(defaults) {
         'quick-visual': defaults.appearance?.visualAppeal,
         'quick-aroma': defaults.aroma?.intensity,
         'quick-sweetness': defaults.taste?.sweetness,
-        'quick-sourness': defaults.taste?.sourness || 5,
-        'quick-bitterness': defaults.taste?.bitterness || 5,
-        'quick-salty': defaults.taste?.saltiness || defaults.taste?.umami || 5,
+        'quick-sourness': defaults.taste?.sourness || 0,
+        'quick-bitterness': defaults.taste?.bitterness || 0,
+        'quick-salty': defaults.taste?.saltiness || defaults.taste?.umami || 0,
         'quick-texture': defaults.texture,
         'quick-aftertaste': defaults.aftertaste?.pleasantness
     };
@@ -721,9 +721,9 @@ function resetQuickEntry() {
     document.getElementById('quick-occasion').value = '';
     document.getElementById('quick-notes').value = '';
 
-    // Reset sliders to 5
+    // Reset sliders to 0
     document.querySelectorAll('#quick-entry-form-section input[type="range"]').forEach(slider => {
-        const defaultVal = slider.id === 'quick-purchase' ? 3 : 5;
+        const defaultVal = slider.id === 'quick-purchase' ? 3 : 0;
         slider.value = defaultVal;
         const valSpan = document.getElementById(`${slider.id}-val`);
         if (valSpan) valSpan.textContent = defaultVal;

@@ -515,9 +515,9 @@ class AutoProcessor {
         };
 
         // Simple mappings
-        const sweetness = sensoryData.frontMouth?.sweetness || 5;
-        const richness = sensoryData.midRearMouth?.richness || 5;
-        const creaminess = sensoryData.midRearMouth?.creaminess || 5;
+        const sweetness = sensoryData.frontMouth?.sweetness || 0;
+        const richness = sensoryData.midRearMouth?.richness || 0;
+        const creaminess = sensoryData.midRearMouth?.creaminess || 0;
 
         emotions.stages = {
             appearance: { emotions: { anticipation: 6, desire: 0, excitement: 0 } },

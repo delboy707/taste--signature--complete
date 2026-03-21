@@ -538,14 +538,14 @@ function handleFormSubmit(e) {
                 visualAppeal: parseInt(document.getElementById('appearance-visual-appeal').value),
                 colorIntensity: parseInt(document.getElementById('appearance-color-intensity').value),
                 overallIntensity: parseInt(document.getElementById('appearance-overall-intensity').value),
-                carbonation: parseInt(document.getElementById('appearance-carbonation')?.value || 5),
+                carbonation: parseInt(document.getElementById('appearance-carbonation')?.value || 0),
                 emotions: {
                     anticipation: parseInt(document.getElementById('appearance-anticipation').value),
                     desire: parseInt(document.getElementById('appearance-desire').value),
                     excitement: parseInt(document.getElementById('appearance-excitement').value),
                     happiness: parseInt(document.getElementById('appearance-happiness').value),
                     curiosity: parseInt(document.getElementById('appearance-curiosity').value),
-                    surprise: parseInt(document.getElementById('appearance-surprise')?.value || 5)
+                    surprise: parseInt(document.getElementById('appearance-surprise')?.value || 0)
                 }
             },
             aroma: {
@@ -553,7 +553,7 @@ function handleFormSubmit(e) {
                 sweetness: parseInt(document.getElementById('aroma-sweetness').value),
                 complexity: parseInt(document.getElementById('aroma-complexity').value),
                 overallIntensity: parseInt(document.getElementById('aroma-overall-intensity').value),
-                persistence: parseInt(document.getElementById('aroma-persistence')?.value || 5),
+                persistence: parseInt(document.getElementById('aroma-persistence')?.value || 0),
                 emotions: {
                     pleasure: parseInt(document.getElementById('aroma-pleasure').value),
                     comfort: parseInt(document.getElementById('aroma-comfort').value),
@@ -561,7 +561,7 @@ function handleFormSubmit(e) {
                     happiness: parseInt(document.getElementById('aroma-happiness').value),
                     energy: parseInt(document.getElementById('aroma-energy').value),
                     relaxation: parseInt(document.getElementById('aroma-relaxation').value),
-                    intrigue: parseInt(document.getElementById('aroma-intrigue')?.value || 5)
+                    intrigue: parseInt(document.getElementById('aroma-intrigue')?.value || 0)
                 }
             },
             frontMouth: {
@@ -570,14 +570,14 @@ function handleFormSubmit(e) {
                 saltiness: parseInt(document.getElementById('front-saltiness').value),
                 texture: parseInt(document.getElementById('front-texture').value),
                 overallIntensity: parseInt(document.getElementById('front-overall-intensity').value),
-                acidity: parseInt(document.getElementById('front-acidity')?.value || 5),
-                spiciness: parseInt(document.getElementById('front-spiciness')?.value || 5),
+                acidity: parseInt(document.getElementById('front-acidity')?.value || 0),
+                spiciness: parseInt(document.getElementById('front-spiciness')?.value || 0),
                 emotions: {
                     excitement: parseInt(document.getElementById('front-excitement').value),
                     satisfaction: parseInt(document.getElementById('front-satisfaction').value),
                     happiness: parseInt(document.getElementById('front-happiness').value),
                     pleasure: parseInt(document.getElementById('front-pleasure').value),
-                    disappointment: parseInt(document.getElementById('front-disappointment')?.value || 5)
+                    disappointment: parseInt(document.getElementById('front-disappointment')?.value || 0)
                 }
             },
             midRearMouth: {
@@ -586,14 +586,14 @@ function handleFormSubmit(e) {
                 richness: parseInt(document.getElementById('mid-richness').value),
                 creaminess: parseInt(document.getElementById('mid-creaminess').value),
                 overallIntensity: parseInt(document.getElementById('mid-overall-intensity').value),
-                astringency: parseInt(document.getElementById('mid-astringency')?.value || 5),
-                mouthfeel: parseInt(document.getElementById('mid-mouthfeel')?.value || 5),
+                astringency: parseInt(document.getElementById('mid-astringency')?.value || 0),
+                mouthfeel: parseInt(document.getElementById('mid-mouthfeel')?.value || 0),
                 emotions: {
                     indulgence: parseInt(document.getElementById('mid-indulgence').value),
                     comfort: parseInt(document.getElementById('mid-comfort').value),
                     satisfaction: parseInt(document.getElementById('mid-satisfaction').value),
                     pleasure: parseInt(document.getElementById('mid-pleasure').value),
-                    sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 5)
+                    sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 0)
                 }
             },
             aftertaste: {
@@ -605,7 +605,7 @@ function handleFormSubmit(e) {
                     satisfaction: parseInt(document.getElementById('after-satisfaction').value),
                     completeness: parseInt(document.getElementById('after-completeness').value),
                     happiness: parseInt(document.getElementById('after-happiness').value),
-                    craving: parseInt(document.getElementById('after-craving')?.value || 5)
+                    craving: parseInt(document.getElementById('after-craving')?.value || 0)
                 }
             }
         },
@@ -2284,19 +2284,19 @@ function renderCorrelationHeatmap(exp) {
     const sensoryAttributes = {
         'Visual Appeal': exp.stages.appearance.visualAppeal,
         'Color Intensity': exp.stages.appearance.colorIntensity,
-        'Carbonation': exp.stages.appearance.carbonation || 5,
+        'Carbonation': exp.stages.appearance.carbonation || 0,
         'Aroma Intensity': exp.stages.aroma.intensity,
-        'Aroma Persistence': exp.stages.aroma.persistence || 5,
+        'Aroma Persistence': exp.stages.aroma.persistence || 0,
         'Sweetness': exp.stages.frontMouth.sweetness,
         'Sourness': exp.stages.frontMouth.sourness,
         'Saltiness': exp.stages.frontMouth.saltiness,
-        'Acidity': exp.stages.frontMouth.acidity || 5,
-        'Spiciness': exp.stages.frontMouth.spiciness || 5,
+        'Acidity': exp.stages.frontMouth.acidity || 0,
+        'Spiciness': exp.stages.frontMouth.spiciness || 0,
         'Bitterness': exp.stages.midRearMouth.bitterness,
         'Umami': exp.stages.midRearMouth.umami,
         'Richness': exp.stages.midRearMouth.richness,
-        'Astringency': exp.stages.midRearMouth.astringency || 5,
-        'Mouthfeel': exp.stages.midRearMouth.mouthfeel || 5,
+        'Astringency': exp.stages.midRearMouth.astringency || 0,
+        'Mouthfeel': exp.stages.midRearMouth.mouthfeel || 0,
         'Texture': exp.stages.frontMouth.texture
     };
 
@@ -2560,8 +2560,8 @@ function renderPortfolioCluster() {
     const productPoints = experiences.map(exp => {
         const emotionScores = calculateEmotionScores(exp);
         return {
-            x: emotionScores[xAxisEmotion] || 5,
-            y: emotionScores[yAxisEmotion] || 5,
+            x: emotionScores[xAxisEmotion] || 0,
+            y: emotionScores[yAxisEmotion] || 0,
             label: exp.productInfo.name,
             needState: exp.needState
         };
@@ -2674,8 +2674,8 @@ function renderWhiteSpaceAnalysis() {
 
     experiences.forEach(exp => {
         const scores = calculateEmotionScores(exp);
-        const indulgence = scores.indulgence || 5;
-        const excitement = scores.excitement || 5;
+        const indulgence = scores.indulgence || 0;
+        const excitement = scores.excitement || 0;
 
         const highIndulgence = indulgence >= 6;
         const highExcitement = excitement >= 6;
@@ -2844,7 +2844,7 @@ function findOverlaps() {
             // Calculate Euclidean distance
             let distance = 0;
             ['indulgence', 'excitement', 'comfort', 'refreshment'].forEach(emotion => {
-                const diff = (scores1[emotion] || 5) - (scores2[emotion] || 5);
+                const diff = (scores1[emotion] || 0) - (scores2[emotion] || 0);
                 distance += diff * diff;
             });
             distance = Math.sqrt(distance);
@@ -2876,7 +2876,7 @@ function findUniqueProducts() {
             const scores2 = calculateEmotionScores(other);
             let distance = 0;
             ['indulgence', 'excitement', 'comfort', 'refreshment'].forEach(emotion => {
-                const diff = (scores1[emotion] || 5) - (scores2[emotion] || 5);
+                const diff = (scores1[emotion] || 0) - (scores2[emotion] || 0);
                 distance += diff * diff;
             });
             distance = Math.sqrt(distance);
@@ -3356,7 +3356,7 @@ function createSampleExperience(config) {
                 emotions: {}
             },
             frontMouth: {
-                sweetness: config.profile.sweet || 5,
+                sweetness: config.profile.sweet || 0,
                 sourness: config.profile.sourness || 3,
                 bitterness: config.profile.bitter || 2,
                 saltiness: config.profile.saltiness || 3,
@@ -3365,8 +3365,8 @@ function createSampleExperience(config) {
                 emotions: {}
             },
             midRearMouth: {
-                richness: config.profile.richness || 5,
-                creaminess: config.profile.creaminess || 5,
+                richness: config.profile.richness || 0,
+                creaminess: config.profile.creaminess || 0,
                 mouthCoating: 5 + Math.floor(Math.random() * 3),
                 textureAppeal: 6 + Math.floor(Math.random() * 3),
                 emotions: {}
@@ -3383,7 +3383,7 @@ function createSampleExperience(config) {
         emotionalTriggers: {
             moreishness: 6 + Math.floor(Math.random() * 4),
             refreshment: config.needState === 'Refreshment' ? 8 + Math.floor(Math.random() * 2) : 4,
-            melt: config.profile.creaminess || 5,
+            melt: config.profile.creaminess || 0,
             crunch: config.type === 'Snack' ? 7 + Math.floor(Math.random() * 3) : 2
         },
         overall: {
