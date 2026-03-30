@@ -40,7 +40,7 @@ This audit identified **47 security findings** across the Taste Signature applic
 
 The file contains a complete, valid-format Anthropic API key:
 ```
-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
+[REDACTED — API key removed for security. The key was in sk-ant-api03-*** format.]
 ```
 
 **Action Required:** Immediately rotate this key in your Anthropic account. Scrub it from git history using `git filter-branch` or BFG Repo-Cleaner.

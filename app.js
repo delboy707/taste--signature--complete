@@ -1277,6 +1277,13 @@ async function getAIComparisonInsights() {
 function formatAIResponse(text) {
     if (!text) return '';
 
+    // Escape HTML entities first to prevent XSS
+    text = text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#039;');
+
     // Convert **bold** to <strong>
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
