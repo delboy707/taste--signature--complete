@@ -2322,7 +2322,8 @@ function renderShapeOfEmotion(exp) {
         'Front': calculateAvgEmotions(exp.stages.frontMouth.emotions),
         'Mid/Rear': calculateAvgEmotions(exp.stages.midRearMouth.emotions),
         'Texture': calculateAvgEmotions(exp.stages.texture?.emotions || {}),
-        'Aftertaste': calculateAvgEmotions(exp.stages.aftertaste.emotions)
+        'Aftertaste': calculateAvgEmotions(exp.stages.aftertaste.emotions),
+        'Overall': calculateAvgEmotions(exp.stages.overall?.emotions || {})
     };
 
     charts.shapeEmotion = new Chart(ctx, {
