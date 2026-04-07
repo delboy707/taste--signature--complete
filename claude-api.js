@@ -565,6 +565,7 @@ Analyze competitive position:
 - Aroma: Intensity ${experience.stages.aroma.intensity}/10
 - Taste: Sweet ${experience.stages.frontMouth.sweetness}/10, Sour ${experience.stages.frontMouth.sourness}/10
 - Mouthfeel: Richness ${experience.stages.midRearMouth.richness}/10, Creaminess ${experience.stages.midRearMouth.creaminess}/10
+${experience.stages?.texture?.emotions ? `- Texture Emotions: ${Object.entries(experience.stages.texture.emotions).map(([e, v]) => `${e}: ${v}/10`).join(', ')}` : ''}
 - Aftertaste: Duration ${experience.stages.aftertaste.duration}/10, Pleasantness ${experience.stages.aftertaste.pleasantness}/10
 
 **Top Emotions**: ${topEmotions}

@@ -67,9 +67,16 @@ const defaultLexicon = {
             emotions: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication']
         },
         {
+            id: 'texture',
+            name: 'Texture',
+            order: 5,
+            attributes: [],
+            emotions: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed']
+        },
+        {
             id: 'aftertaste',
             name: 'Aftertaste',
-            order: 5,
+            order: 6,
             attributes: [
                 { id: 'duration', label: 'Duration', type: 'slider', min: 1, max: 10, unit: 'seconds', description: 'How long flavors linger' },
                 { id: 'pleasantness', label: 'Pleasantness', type: 'slider', min: 1, max: 10, unit: '', description: 'Quality of lingering taste' },

@@ -204,7 +204,11 @@ const STAGE_ALIASES = {
     'after_taste': 'aftertaste',
     'After_Taste': 'aftertaste',
     'finish': 'aftertaste',
-    'Finish': 'aftertaste'
+    'Finish': 'aftertaste',
+
+    'texture': 'texture',
+    'Texture': 'texture',
+    'mouthfeel stage': 'texture'
 };
 
 /**
@@ -215,7 +219,8 @@ const STAGE_ATTRIBUTES = {
     aroma: ['intensity', 'sweetness', 'complexity', 'persistence', 'overallIntensity'],
     frontMouth: ['sweetness', 'sourness', 'saltiness', 'texture', 'acidity', 'spiciness', 'overallIntensity'],
     midRearMouth: ['bitterness', 'umami', 'richness', 'creaminess', 'astringency', 'mouthfeel', 'overallIntensity'],
-    aftertaste: ['duration', 'pleasantness', 'cleanness', 'overallIntensity']
+    aftertaste: ['duration', 'pleasantness', 'cleanness', 'overallIntensity'],
+    texture: []
 };
 
 /**
@@ -226,7 +231,8 @@ const VALIDATION_STAGE_EMOTIONS = {
     aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
     frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
     midRearMouth: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication'],
-    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving']
+    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving'],
+    texture: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed']
 };
 
 /**
@@ -368,7 +374,7 @@ function validateExperience(experience) {
     }
 
     // Validate each stage
-    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste'];
+    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste', 'texture'];
 
     for (const stageName of requiredStages) {
         const stage = experience.stages[stageName];
@@ -462,7 +468,8 @@ function autoCorrectExperience(experience) {
         aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
         frontMouth: { sweetness: 5, sourness: 5, saltiness: 5, texture: 5, acidity: 5, spiciness: 5, emotions: {} },
         midRearMouth: { bitterness: 5, umami: 5, richness: 5, creaminess: 5, astringency: 5, mouthfeel: 5, emotions: {} },
-        aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
+        aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} },
+        texture: { emotions: {} }
     };
 
     for (const [stageName, defaults] of Object.entries(defaultStages)) {

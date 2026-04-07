@@ -2,7 +2,7 @@
 let experiences = [];
 let charts = {};
 let currentStage = 1;
-const totalStages = 7;
+const totalStages = 8;
 let firestoreManager = null;
 let isCloudSyncEnabled = false;
 
@@ -596,6 +596,35 @@ function handleFormSubmit(e) {
                     sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 5)
                 }
             },
+            texture: {
+                emotions: {
+                    satisfied: parseInt(document.getElementById('texture-satisfied')?.value || 5),
+                    pleased: parseInt(document.getElementById('texture-pleased')?.value || 5),
+                    comforted: parseInt(document.getElementById('texture-comforted')?.value || 5),
+                    indulged: parseInt(document.getElementById('texture-indulged')?.value || 5),
+                    calmRelaxed: parseInt(document.getElementById('texture-calmRelaxed')?.value || 5),
+                    nostalgic: parseInt(document.getElementById('texture-nostalgic')?.value || 5),
+                    secure: parseInt(document.getElementById('texture-secure')?.value || 5),
+                    excited: parseInt(document.getElementById('texture-excited')?.value || 5),
+                    energized: parseInt(document.getElementById('texture-energized')?.value || 5),
+                    delighted: parseInt(document.getElementById('texture-delighted')?.value || 5),
+                    refreshed: parseInt(document.getElementById('texture-refreshed')?.value || 5),
+                    interested: parseInt(document.getElementById('texture-interested')?.value || 5),
+                    playful: parseInt(document.getElementById('texture-playful')?.value || 5),
+                    pleasantlySurprised: parseInt(document.getElementById('texture-pleasantlySurprised')?.value || 5),
+                    disgusted: parseInt(document.getElementById('texture-disgusted')?.value || 5),
+                    disappointed: parseInt(document.getElementById('texture-disappointed')?.value || 5),
+                    frustrated: parseInt(document.getElementById('texture-frustrated')?.value || 5),
+                    annoyedIrritated: parseInt(document.getElementById('texture-annoyedIrritated')?.value || 5),
+                    bored: parseInt(document.getElementById('texture-bored')?.value || 5),
+                    uncomfortable: parseInt(document.getElementById('texture-uncomfortable')?.value || 5),
+                    anxiousUneasy: parseInt(document.getElementById('texture-anxiousUneasy')?.value || 5),
+                    unpleasantlySurprised: parseInt(document.getElementById('texture-unpleasantlySurprised')?.value || 5),
+                    putOff: parseInt(document.getElementById('texture-putOff')?.value || 5),
+                    tiredFatigued: parseInt(document.getElementById('texture-tiredFatigued')?.value || 5),
+                    overwhelmed: parseInt(document.getElementById('texture-overwhelmed')?.value || 5)
+                }
+            },
             aftertaste: {
                 duration: parseInt(document.getElementById('after-duration').value),
                 pleasantness: parseInt(document.getElementById('after-pleasantness').value),
@@ -914,12 +943,13 @@ function renderShapeOfTaste(exp) {
 
     destroyChart('shape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
     const intensities = [
         exp.stages.appearance?.overallIntensity ?? 0,
         exp.stages.aroma?.overallIntensity ?? 0,
         exp.stages.frontMouth?.overallIntensity ?? 0,
         exp.stages.midRearMouth?.overallIntensity ?? 0,
+        exp.stages.texture?.overallIntensity ?? 0,
         exp.stages.aftertaste?.overallIntensity ?? 0
     ];
 
@@ -981,7 +1011,7 @@ function renderEmotionalJourney(exp) {
 
     destroyChart('emotionalJourney');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
 
     // Get average emotional response per stage
     const emotionalData = [
@@ -989,6 +1019,7 @@ function renderEmotionalJourney(exp) {
         ((exp.stages.aroma?.emotions?.pleasure ?? 0) + (exp.stages.aroma?.emotions?.comfort ?? 0)) / 2,
         ((exp.stages.frontMouth?.emotions?.excitement ?? 0) + (exp.stages.frontMouth?.emotions?.satisfaction ?? 0)) / 2,
         ((exp.stages.midRearMouth?.emotions?.indulgence ?? 0) + (exp.stages.midRearMouth?.emotions?.comfort ?? 0)) / 2,
+        ((exp.stages.texture?.emotions?.satisfied ?? 0) + (exp.stages.texture?.emotions?.comforted ?? 0)) / 2,
         ((exp.stages.aftertaste?.emotions?.satisfaction ?? 0) + (exp.stages.aftertaste?.emotions?.completeness ?? 0)) / 2
     ];
 
@@ -1295,7 +1326,7 @@ function renderComparisonShapeChart(products) {
 
     destroyChart('comparisonShape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
     const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
 
     const datasets = products.map((exp, idx) => ({
@@ -1305,6 +1336,7 @@ function renderComparisonShapeChart(products) {
             exp.stages.aroma.overallIntensity,
             exp.stages.frontMouth.overallIntensity,
             exp.stages.midRearMouth.overallIntensity,
+            exp.stages.texture?.overallIntensity ?? 0,
             exp.stages.aftertaste.overallIntensity
         ],
         borderColor: colors[idx],
@@ -1489,6 +1521,11 @@ function renderComparisonAttributeMatrix(products) {
                 { key: 'overallIntensity', label: 'Overall Intensity' }
             ],
             stageKey: 'midRearMouth'
+        },
+        {
+            stage: 'Texture',
+            attributes: [],
+            stageKey: 'texture'
         },
         {
             stage: 'Aftertaste',
@@ -1790,6 +1827,7 @@ function generateProfessionalInsights() {
         aroma: experiences.reduce((sum, e) => sum + e.stages.aroma.overallIntensity, 0) / experiences.length,
         front: experiences.reduce((sum, e) => sum + e.stages.frontMouth.overallIntensity, 0) / experiences.length,
         mid: experiences.reduce((sum, e) => sum + e.stages.midRearMouth.overallIntensity, 0) / experiences.length,
+        texture: experiences.reduce((sum, e) => sum + (e.stages.texture?.overallIntensity || 0), 0) / experiences.length,
         after: experiences.reduce((sum, e) => sum + e.stages.aftertaste.overallIntensity, 0) / experiences.length
     };
     const peakStage = Object.keys(avgJourney).reduce((a, b) =>
@@ -1799,6 +1837,7 @@ function generateProfessionalInsights() {
         aroma: 'Aroma',
         front: 'Front of Mouth',
         mid: 'Mid/Rear Mouth',
+        texture: 'Texture',
         after: 'Aftertaste'
     };
     insights.push({
@@ -2110,6 +2149,7 @@ function renderEmotionalMap(exp) {
         'Aroma': exp.stages.aroma.emotions,
         'Front': exp.stages.frontMouth.emotions,
         'Mid/Rear': exp.stages.midRearMouth.emotions,
+        'Texture': exp.stages.texture?.emotions || {},
         'Aftertaste': exp.stages.aftertaste.emotions
     };
 
@@ -2175,6 +2215,7 @@ function renderShapeOfEmotion(exp) {
         'Aroma': calculateAvgEmotions(exp.stages.aroma.emotions),
         'Front': calculateAvgEmotions(exp.stages.frontMouth.emotions),
         'Mid/Rear': calculateAvgEmotions(exp.stages.midRearMouth.emotions),
+        'Texture': calculateAvgEmotions(exp.stages.texture?.emotions || {}),
         'Aftertaste': calculateAvgEmotions(exp.stages.aftertaste.emotions)
     };
 
@@ -3369,6 +3410,9 @@ function createSampleExperience(config) {
                 creaminess: config.profile.creaminess || 5,
                 mouthCoating: 5 + Math.floor(Math.random() * 3),
                 textureAppeal: 6 + Math.floor(Math.random() * 3),
+                emotions: {}
+            },
+            texture: {
                 emotions: {}
             },
             aftertaste: {
