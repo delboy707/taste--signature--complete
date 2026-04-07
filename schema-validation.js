@@ -208,7 +208,11 @@ const STAGE_ALIASES = {
 
     'texture': 'texture',
     'Texture': 'texture',
-    'mouthfeel stage': 'texture'
+    'mouthfeel stage': 'texture',
+
+    'overall': 'overall',
+    'Overall': 'overall',
+    'overall assessment': 'overall'
 };
 
 /**
@@ -220,19 +224,21 @@ const STAGE_ATTRIBUTES = {
     frontMouth: ['sweetness', 'sourness', 'saltiness', 'texture', 'acidity', 'spiciness', 'overallIntensity'],
     midRearMouth: ['bitterness', 'umami', 'richness', 'creaminess', 'astringency', 'mouthfeel', 'overallIntensity'],
     aftertaste: ['duration', 'pleasantness', 'cleanness', 'overallIntensity'],
-    texture: []
+    texture: [],
+    overall: []
 };
 
 /**
  * Valid emotions per stage
  */
 const VALIDATION_STAGE_EMOTIONS = {
-    appearance: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise'],
-    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
-    frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
-    midRearMouth: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication'],
-    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving'],
-    texture: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed']
+    appearance: ['anticipation', 'curiosity', 'desire', 'eager', 'excitement', 'happiness', 'interest', 'pleased', 'surprise', 'attracted', 'disappointed', 'disgusted', 'indifferent', 'suspicious', 'worried', 'anxious', 'confused', 'bored'],
+    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'calm', 'disgusted', 'irritated', 'worried', 'disappointed', 'indifferent', 'anxious', 'repulsed'],
+    frontMouth: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried'],
+    midRearMouth: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
+    texture: ['satisfied', 'pleased', 'comforted', 'indulged', 'calmRelaxed', 'nostalgic', 'secure', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'pleasantlySurprised', 'disgusted', 'disappointed', 'frustrated', 'annoyedIrritated', 'bored', 'uncomfortable', 'anxiousUneasy', 'unpleasantlySurprised', 'putOff', 'tiredFatigued', 'overwhelmed'],
+    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving-want-more', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret'],
+    overall: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
 };
 
 /**
@@ -374,7 +380,7 @@ function validateExperience(experience) {
     }
 
     // Validate each stage
-    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste', 'texture'];
+    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste', 'texture', 'overall'];
 
     for (const stageName of requiredStages) {
         const stage = experience.stages[stageName];
@@ -469,7 +475,8 @@ function autoCorrectExperience(experience) {
         frontMouth: { sweetness: 5, sourness: 5, saltiness: 5, texture: 5, acidity: 5, spiciness: 5, emotions: {} },
         midRearMouth: { bitterness: 5, umami: 5, richness: 5, creaminess: 5, astringency: 5, mouthfeel: 5, emotions: {} },
         aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} },
-        texture: { emotions: {} }
+        texture: { emotions: {} },
+        overall: { emotions: {} }
     };
 
     for (const [stageName, defaults] of Object.entries(defaultStages)) {

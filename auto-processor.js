@@ -313,7 +313,8 @@ class AutoProcessor {
                 frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3, emotions: {} },
                 midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5, emotions: {} },
                 aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} },
-                texture: { emotions: {} }
+                texture: { emotions: {} },
+                overall: { emotions: {} }
             },
             needState: '',
             emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
