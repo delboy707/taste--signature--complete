@@ -279,6 +279,35 @@ const defaultLexicon = {
                 { id: 'cooling-persistence', label: 'Cooling Persistence', technicalTerm: 'Residual Thermal Cooling', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Persistence of residual cooling' }
             ],
             emotions: ['satisfaction', 'completeness', 'happiness', 'craving-want-more', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret']
+        },
+        {
+            id: 'overallAssessment',
+            name: 'Overall Assessment',
+            order: 7,
+            attributes: [
+                { id: 'overall-quality', label: 'Overall Quality', technicalTerm: 'Perceived Quality', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall perceived quality' },
+                { id: 'balance', label: 'Balance', technicalTerm: 'Sensory Equilibrium', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Equilibrium between sensory elements' },
+                { id: 'harmony', label: 'Harmony', technicalTerm: 'Sensory Coherence/Integration', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Coherence and integration of sensory notes' },
+                { id: 'true-to-type-character', label: 'True-to-Type Character', technicalTerm: 'Typicality/Authenticity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Typicality and authenticity of character' },
+                { id: 'craftsmanship', label: 'Craftsmanship', technicalTerm: 'Finesse/Elegance', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Finesse and elegance of execution' },
+                { id: 'flavour-complexity-overall', label: 'Flavour Complexity', technicalTerm: 'Overall Multi-Dimensionality', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall multi-dimensional flavour complexity' },
+                { id: 'flavour-depth-overall', label: 'Flavour Depth', technicalTerm: 'Sensory Layering', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Depth and layering of sensory experience' },
+                { id: 'flavour-coherence', label: 'Flavour Coherence', technicalTerm: 'Sensory Integration', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Integration and coherence of flavours' },
+                { id: 'flavour-richness', label: 'Flavour Richness', technicalTerm: 'Sensory Amplitude', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Amplitude and richness of sensory experience' },
+                { id: 'overall-strength', label: 'Overall Strength', technicalTerm: 'Total Sensory Intensity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Total sensory intensity' },
+                { id: 'flavour-impact', label: 'Flavour Impact', technicalTerm: 'Sensory Distinctiveness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Distinctiveness of sensory impact' },
+                { id: 'memorability', label: 'Memorability', technicalTerm: 'Sensory Recall Potential', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Potential for sensory recall' },
+                { id: 'want-more-quality', label: 'Want-More Quality', technicalTerm: 'Moreishness/Compulsive Palatability', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Desire to consume more' },
+                { id: 'satisfaction-overall', label: 'Satisfaction', technicalTerm: 'Hedonic Fulfilment', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall hedonic fulfilment' },
+                { id: 'refreshing-quality', label: 'Refreshing Quality', technicalTerm: 'Refreshment/Invigoration', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Refreshing and invigorating quality' },
+                { id: 'palatability', label: 'Palatability', technicalTerm: 'Overall Hedonic Appeal', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall hedonic appeal' },
+                { id: 'craveability', label: 'Craveability', technicalTerm: 'Anticipated Wanting', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Anticipated desire to consume again' },
+                { id: 'filling-quality', label: 'Filling Quality', technicalTerm: 'Expected Satiety Impact', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Expected satiety and filling impact' },
+                { id: 'thirst-quenching-quality', label: 'Thirst-Quenching Quality', technicalTerm: 'Thirst Quenching', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Ability to quench thirst' },
+                { id: 'sensory-journey', label: 'Sensory Journey', technicalTerm: 'Temporal Sensory Arc', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall temporal arc of the sensory experience' },
+                { id: 'flavour-fatigue-resistance', label: 'Flavour Fatigue Resistance', technicalTerm: 'Sensory-Specific Satiation Resistance', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Resistance to sensory-specific satiation' }
+            ],
+            emotions: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
         }
     ],
     emotionalTriggers: [
