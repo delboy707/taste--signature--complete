@@ -309,12 +309,6 @@ const defaultLexicon = {
             ],
             emotions: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
         }
-    ],
-    emotionalTriggers: [
-        { id: 'moreishness', label: 'Moreishness', description: 'Desire to consume more' },
-        { id: 'refreshment', label: 'Refreshment', description: 'Refreshing quality' },
-        { id: 'melt', label: 'Melt-in-Mouth', description: 'Pleasant melting sensation' },
-        { id: 'crunch', label: 'Crunch Factor', description: 'Satisfying crunch' }
     ]
 };
 
