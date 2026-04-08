@@ -464,8 +464,9 @@ function addAttributeToStage(lexiconId, stageId, attribute) {
         id: `attr_${Date.now()}`,
         label: attribute.label,
         type: attribute.type || 'slider',
-        min: attribute.min || 1,
+        min: attribute.min ?? 0,
         max: attribute.max || 10,
+        defaultValue: attribute.defaultValue ?? 0,
         unit: attribute.unit || '',
         description: attribute.description || ''
     };
@@ -672,8 +673,9 @@ function createLexiconFromTemplate(templateKey) {
             id: `attr_${Date.now()}_${attrIndex}`,
             label: attr.label,
             type: 'slider',
-            min: 1,
+            min: 0,
             max: 10,
+            defaultValue: 0,
             unit: '',
             description: attr.description
         })),

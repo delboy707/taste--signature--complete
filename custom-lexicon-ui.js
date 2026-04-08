@@ -343,8 +343,9 @@ function showAddAttributeDialog(lexiconId, stageId) {
     const attribute = {
         label: label,
         type: 'slider',
-        min: 1,
+        min: 0,
         max: 10,
+        defaultValue: 0,
         unit: '',
         description: description || ''
     };

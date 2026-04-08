@@ -374,9 +374,9 @@ class EmotionInference {
     }
 
     /**
-     * Get numeric value, defaulting to 5 (neutral) if missing
+     * Get numeric value, defaulting to 0 if missing
      */
-    static getNumericValue(value, defaultValue = 5) {
+    static getNumericValue(value, defaultValue = 0) {
         if (value === undefined || value === null || value === '') {
             return defaultValue;
         }
@@ -396,9 +396,9 @@ class EmotionInference {
         const stageEmotionList = STAGE_EMOTIONS[stage] || [];
         const rules = SENSORY_EMOTION_RULES[stage] || {};
 
-        // Initialize all stage emotions to neutral
+        // Initialize all stage emotions to 0
         for (const emotion of stageEmotionList) {
-            emotions[emotion] = 5;
+            emotions[emotion] = 0;
         }
 
         // Apply rules based on sensory attributes
@@ -554,7 +554,7 @@ class EmotionInference {
         for (const stage of Object.values(normalizedData)) {
             for (const value of Object.values(stage || {})) {
                 dataPoints++;
-                if (value !== 5) { // 5 is our default, so non-5 values were likely provided
+                if (value !== 0) { // 0 is our default, so non-0 values were likely provided
                     providedPoints++;
                 }
             }
@@ -589,7 +589,7 @@ class EmotionInference {
         for (const [stage, name] of Object.entries(stageNames)) {
             const stageData = normalizedData[stage] || {};
             const values = Object.values(stageData);
-            const nonDefaultValues = values.filter(v => v !== 5);
+            const nonDefaultValues = values.filter(v => v !== 0);
 
             if (values.length === 0 || nonDefaultValues.length === 0) {
                 warnings.push({
@@ -689,7 +689,7 @@ function calculateEmotionalTriggers(experience) {
     const stages = experience.stages;
 
     // Extract sensory values from stages
-    const getSensoryValue = (stage, attr, defaultVal = 5) => {
+    const getSensoryValue = (stage, attr, defaultVal = 0) => {
         return stages[stage]?.[attr] ?? defaultVal;
     };
 
