@@ -252,12 +252,33 @@ const defaultLexicon = {
             name: 'Aftertaste',
             order: 6,
             attributes: [
-                { id: 'duration', label: 'Duration', type: 'slider', min: 1, max: 10, unit: 'seconds', description: 'How long flavors linger' },
-                { id: 'pleasantness', label: 'Pleasantness', type: 'slider', min: 1, max: 10, unit: '', description: 'Quality of lingering taste' },
-                { id: 'cleanness', label: 'Palate Cleanness', type: 'slider', min: 1, max: 10, unit: '', description: 'How clean palate feels' },
-                { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total aftertaste impact' }
+                { id: 'finish-length', label: 'Finish Length', technicalTerm: 'Aftertaste Duration/Persistence', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'How long the finish persists' },
+                { id: 'flavour-linger', label: 'Flavour Linger', technicalTerm: 'Aftertaste Tenacity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Tenacity of lingering flavour' },
+                { id: 'fade-pattern', label: 'Fade Pattern', technicalTerm: 'Aftertaste Decay Profile/R_dec', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'How the aftertaste decays over time' },
+                { id: 'sweet-linger', label: 'Sweet Linger', technicalTerm: 'Residual Sweetness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual sweetness after swallowing' },
+                { id: 'bitter-linger', label: 'Bitter Linger', technicalTerm: 'Residual Bitterness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual bitterness after swallowing' },
+                { id: 'sour-linger', label: 'Sour Linger', technicalTerm: 'Residual Acidity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual acidity after swallowing' },
+                { id: 'salt-linger', label: 'Salt Linger', technicalTerm: 'Residual Saltiness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual saltiness after swallowing' },
+                { id: 'umami-linger', label: 'Umami Linger', technicalTerm: 'Residual Savouriness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual savouriness after swallowing' },
+                { id: 'astringent-linger', label: 'Astringent Linger', technicalTerm: 'Residual Dryness/Puckering', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual dryness or puckering' },
+                { id: 'metallic-linger', label: 'Metallic Linger', technicalTerm: 'Residual Metallic Sensation', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual metallic sensation' },
+                { id: 'heat-linger', label: 'Heat Linger', technicalTerm: 'Residual Spicy/Capsaicin Persistence', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Residual spicy heat or capsaicin persistence' },
+                { id: 'after-smell-strength', label: 'After-Smell Strength', technicalTerm: 'Retronasal Aroma Intensity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Intensity of retronasal aroma after swallowing' },
+                { id: 'after-smell-variety', label: 'After-Smell Variety', technicalTerm: 'Retronasal Aroma Complexity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Complexity of retronasal aroma' },
+                { id: 'after-smell-character', label: 'After-Smell Character', technicalTerm: 'Retronasal Aroma Quality', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Quality and character of retronasal aroma' },
+                { id: 'after-smell-development', label: 'After-Smell Development', technicalTerm: 'Retronasal Aroma Evolution', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'How retronasal aroma evolves' },
+                { id: 'mouth-coating-aftertaste', label: 'Mouth Coating', technicalTerm: 'Palate Coating Persistence', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Persistence of palate coating' },
+                { id: 'palate-cleansing', label: 'Palate Cleansing', technicalTerm: 'Palate Cleanness/Reset Speed', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Speed of palate reset and cleanness' },
+                { id: 'after-dryness', label: 'After-Dryness', technicalTerm: 'Post-Consumption Oral Dryness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Post-consumption oral dryness' },
+                { id: 'after-salivation', label: 'After-Salivation', technicalTerm: 'Post-Consumption Mouth-Watering', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Post-consumption mouth-watering response' },
+                { id: 'finish-evolution', label: 'Finish Evolution', technicalTerm: 'Aftertaste Transformation', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'How the aftertaste transforms over time' },
+                { id: 'finish-quality', label: 'Finish Quality', technicalTerm: 'Aftertaste Pleasantness', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Overall pleasantness of the aftertaste' },
+                { id: 'finish-cleanness', label: 'Finish Cleanness', technicalTerm: 'Aftertaste Purity', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Purity and cleanness of the finish' },
+                { id: 'finish-complexity', label: 'Finish Complexity', technicalTerm: 'Aftertaste Multi-Dimensionality', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Multi-dimensional complexity of the finish' },
+                { id: 'warming-persistence', label: 'Warming Persistence', technicalTerm: 'Residual Thermal Warming', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Persistence of residual warmth' },
+                { id: 'cooling-persistence', label: 'Cooling Persistence', technicalTerm: 'Residual Thermal Cooling', subCategory: null, type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Persistence of residual cooling' }
             ],
-            emotions: ['satisfaction', 'completeness', 'happiness', 'craving']
+            emotions: ['satisfaction', 'completeness', 'happiness', 'craving-want-more', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret']
         }
     ],
     emotionalTriggers: [
