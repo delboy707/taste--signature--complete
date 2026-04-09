@@ -373,14 +373,14 @@ function renderProductSegmentation() {
 function performProductClustering(k) {
     // Extract features for clustering
     const data = experiences.map(exp => [
-        exp.stages.appearance.overallIntensity || 0,
-        exp.stages.aroma.overallIntensity || 0,
-        exp.stages.frontMouth.overallIntensity || 0,
-        exp.stages.midRearMouth.overallIntensity || 0,
-        exp.stages.aftertaste.overallIntensity || 0,
-        exp.stages.aftertaste.emotions.satisfaction || 0,
-        exp.emotionalTriggers.moreishness || 0,
-        exp.emotionalTriggers.refreshment || 0
+        stageIntensity(exp, 'appearance'),
+        stageIntensity(exp, 'aroma'),
+        stageIntensity(exp, 'frontMouth'),
+        stageIntensity(exp, 'midRearMouth'),
+        stageIntensity(exp, 'aftertaste'),
+        stageEmotion(exp, 'aftertaste', 'satisfaction'),
+        stageEmotion(exp, 'aftertaste', 'moreishness'),
+        stageEmotion(exp, 'aftertaste', 'refreshment')
     ]);
 
     const { clusters, centroids } = kMeansClustering(data, k);
@@ -391,9 +391,9 @@ function performProductClustering(k) {
         const clusterProducts = experiences.filter((_, idx) => clusters[idx] === i);
 
         // Analyze cluster characteristics
-        const avgSatisfaction = mean(clusterProducts.map(p => p.stages.aftertaste.emotions.satisfaction || 0));
-        const avgIntensity = mean(clusterProducts.map(p => p.stages.frontMouth.overallIntensity || 0));
-        const avgMoreishness = mean(clusterProducts.map(p => p.emotionalTriggers.moreishness || 0));
+        const avgSatisfaction = mean(clusterProducts.map(p => stageEmotion(p, 'aftertaste', 'satisfaction')));
+        const avgIntensity = mean(clusterProducts.map(p => stageIntensity(p, 'frontMouth')));
+        const avgMoreishness = mean(clusterProducts.map(p => stageEmotion(p, 'aftertaste', 'moreishness')));
 
         const characteristics = [];
         if (avgIntensity > 7) characteristics.push('High intensity profile');
@@ -435,8 +435,8 @@ function renderSegmentationChart() {
 
     // Create scatter plot of products (intensity vs satisfaction)
     const data = experiences.map(exp => ({
-        x: exp.stages.frontMouth.overallIntensity || 0,
-        y: exp.stages.aftertaste.emotions.satisfaction || 0,
+        x: stageIntensity(exp, 'frontMouth'),
+        y: stageEmotion(exp, 'aftertaste', 'satisfaction'),
         label: exp.productInfo.name
     }));
 
@@ -507,15 +507,15 @@ function renderPredictiveInsights() {
     html += '<p class="section-description">Data-driven recommendations based on your portfolio</p>';
 
     // Regression analysis: What predicts satisfaction?
-    const satisfactionScores = experiences.map(e => e.stages.aftertaste.emotions.satisfaction || 0);
+    const satisfactionScores = experiences.map(e => stageEmotion(e, 'aftertaste', 'satisfaction'));
 
     // Test various predictors
     const predictors = [
-        { name: 'Moreishness', values: experiences.map(e => e.emotionalTriggers.moreishness || 0) },
-        { name: 'Visual Appeal', values: experiences.map(e => e.stages.appearance.visualAppeal || 0) },
-        { name: 'Aroma Intensity', values: experiences.map(e => e.stages.aroma.overallIntensity || 0) },
-        { name: 'Front Sweetness', values: experiences.map(e => e.stages.frontMouth.sweetness || 0) },
-        { name: 'Aftertaste Duration', values: experiences.map(e => e.stages.aftertaste.duration || 0) }
+        { name: 'Moreishness', values: experiences.map(e => stageEmotion(e, 'aftertaste', 'moreishness')) },
+        { name: 'Visual Appeal', values: experiences.map(e => stageIntensity(e, 'appearance')) },
+        { name: 'Aroma Intensity', values: experiences.map(e => stageIntensity(e, 'aroma')) },
+        { name: 'Front Intensity', values: experiences.map(e => stageIntensity(e, 'frontMouth')) },
+        { name: 'Aftertaste Intensity', values: experiences.map(e => stageIntensity(e, 'aftertaste')) }
     ];
 
     const regressions = predictors.map(pred => {
@@ -590,9 +590,9 @@ function predictNeedStateFromSensory() {
         const group = needStateGroups[ns];
         if (group.length > 0) {
             profiles[ns] = {
-                sweetness: mean(group.map(e => e.stages.frontMouth.sweetness || 0)),
-                richness: mean(group.map(e => e.stages.midRearMouth.richness || 0)),
-                moreishness: mean(group.map(e => e.emotionalTriggers.moreishness || 0))
+                frontIntensity: mean(group.map(e => stageIntensity(e, 'frontMouth'))),
+                midIntensity: mean(group.map(e => stageIntensity(e, 'midRearMouth'))),
+                moreishness: mean(group.map(e => stageEmotion(e, 'aftertaste', 'moreishness')))
             };
         }
     });

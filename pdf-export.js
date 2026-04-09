@@ -60,14 +60,16 @@ class PDFExporter {
             let y = yPos;
 
             // Create sensory attributes table
-            const sensoryData = [
-                ['Stage', 'Key Attributes', 'Intensity'],
-                ['Appearance', `Visual Appeal: ${experience.stages.appearance.visualAppeal}/10`, `${experience.stages.appearance.overallIntensity}/10`],
-                ['Aroma', `Intensity: ${experience.stages.aroma.intensity}/10, Complexity: ${experience.stages.aroma.complexity}/10`, `${experience.stages.aroma.overallIntensity}/10`],
-                ['First Taste', `Sweet: ${experience.stages.frontMouth.sweetness}/10, Sour: ${experience.stages.frontMouth.sourness}/10`, `${experience.stages.frontMouth.overallIntensity}/10`],
-                ['Mid-Palate', `Rich: ${experience.stages.midRearMouth.richness}/10, Creamy: ${experience.stages.midRearMouth.creaminess}/10`, `${experience.stages.midRearMouth.overallIntensity}/10`],
-                ['Aftertaste', `Duration: ${experience.stages.aftertaste.duration}/10, Pleasant: ${experience.stages.aftertaste.pleasantness}/10`, `${experience.stages.aftertaste.overallIntensity}/10`]
-            ];
+            // Build sensory table dynamically from stored stage data
+            const stageRows = Object.entries(experience.stages || {}).map(([stageId, stageData]) => {
+                const attrs = Object.entries(stageData)
+                    .filter(([k, v]) => k !== 'emotions' && typeof v === 'number')
+                    .slice(0, 3);
+                const keyAttrs = attrs.map(([k, v]) => `${k.replace(/-/g, ' ')}: ${v}/10`).join(', ') || '—';
+                const intensity = attrs.length ? Math.round(attrs.reduce((s, [, v]) => s + v, 0) / attrs.length) : 0;
+                return [stageId.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()), keyAttrs, `${intensity}/10`];
+            });
+            const sensoryData = [['Stage', 'Key Attributes', 'Avg Intensity'], ...stageRows];
 
             doc.autoTable({
                 startY: y,
@@ -109,12 +111,23 @@ class PDFExporter {
         yPos = this.addSection(doc, yPos, 'Emotional Triggers', () => {
             let y = yPos;
 
+            // Build emotion summary from all stages
+            const allEmotions = {};
+            Object.values(experience.stages || {}).forEach(stageData => {
+                Object.entries(stageData.emotions || {}).forEach(([k, v]) => {
+                    if (typeof v === 'number') allEmotions[k] = Math.max(allEmotions[k] || 0, v);
+                });
+            });
+            const topEmotions = Object.entries(allEmotions)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 4);
             const triggerData = [
-                ['Trigger', 'Rating', 'Impact'],
-                ['Moreishness', `${experience.emotionalTriggers.moreishness}/10`, this.getRatingLevel(experience.emotionalTriggers.moreishness)],
-                ['Refreshment', `${experience.emotionalTriggers.refreshment}/10`, this.getRatingLevel(experience.emotionalTriggers.refreshment)],
-                ['The Melt', `${experience.emotionalTriggers.melt}/10`, this.getRatingLevel(experience.emotionalTriggers.melt)],
-                ['Texture/Crunch', `${experience.emotionalTriggers.crunch}/10`, this.getRatingLevel(experience.emotionalTriggers.crunch)]
+                ['Emotion', 'Rating', 'Impact'],
+                ...(topEmotions.length ? topEmotions.map(([k, v]) => [
+                    k.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    `${v}/10`,
+                    this.getRatingLevel(v)
+                ]) : [['No emotion data', '—', '—']])
             ];
 
             doc.autoTable({
@@ -294,14 +307,21 @@ class PDFExporter {
         yPos = this.addSection(doc, yPos, 'Sensory Comparison', () => {
             let y = yPos;
 
+            const lexicon = typeof getActiveLexicon === 'function' ? getActiveLexicon() : null;
+            const stageIds = lexicon ? lexicon.stages.map(s => s.id) : Object.keys(experiences[0]?.stages || {});
             const comparisonData = [
-                ['Attribute', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
-                ['Visual Appeal', ...experiences.map(exp => `${exp.stages.appearance.visualAppeal}/10`)],
-                ['Aroma Intensity', ...experiences.map(exp => `${exp.stages.aroma.intensity}/10`)],
-                ['Sweetness', ...experiences.map(exp => `${exp.stages.frontMouth.sweetness}/10`)],
-                ['Richness', ...experiences.map(exp => `${exp.stages.midRearMouth.richness}/10`)],
-                ['Aftertaste', ...experiences.map(exp => `${exp.stages.aftertaste.duration}/10`)],
-                ['Satisfaction', ...experiences.map(exp => `${exp.stages.aftertaste.emotions.satisfaction}/10`)]
+                ['Stage', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
+                ...stageIds.map(stageId => [
+                    stageId.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()),
+                    ...experiences.map(exp => {
+                        const stageData = exp.stages?.[stageId] || {};
+                        const nums = Object.entries(stageData)
+                            .filter(([k, v]) => k !== 'emotions' && typeof v === 'number')
+                            .map(([, v]) => v);
+                        const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : '—';
+                        return nums.length ? `${avg}/10` : '—';
+                    })
+                ])
             ];
 
             doc.autoTable({
@@ -317,16 +337,32 @@ class PDFExporter {
             return doc.lastAutoTable.finalY + 10;
         });
 
-        // Emotional Trigger Comparison
-        yPos = this.addSection(doc, yPos, 'Emotional Triggers Comparison', () => {
+        // Top Emotions Comparison
+        yPos = this.addSection(doc, yPos, 'Top Emotions Comparison', () => {
             let y = yPos;
 
+            // Collect union of all emotion keys across all products
+            const emotionKeySet = new Set();
+            experiences.forEach(exp => {
+                Object.values(exp.stages || {}).forEach(stageData => {
+                    Object.keys(stageData.emotions || {}).forEach(k => emotionKeySet.add(k));
+                });
+            });
+            const emotionKeys = [...emotionKeySet].slice(0, 4);
+            const getMaxEmotion = (exp, key) => {
+                let max = 0;
+                Object.values(exp.stages || {}).forEach(stageData => {
+                    const v = stageData.emotions?.[key];
+                    if (typeof v === 'number' && v > max) max = v;
+                });
+                return max;
+            };
             const triggerData = [
-                ['Trigger', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
-                ['Moreishness', ...experiences.map(exp => `${exp.emotionalTriggers.moreishness}/10`)],
-                ['Refreshment', ...experiences.map(exp => `${exp.emotionalTriggers.refreshment}/10`)],
-                ['The Melt', ...experiences.map(exp => `${exp.emotionalTriggers.melt}/10`)],
-                ['Crunch', ...experiences.map(exp => `${exp.emotionalTriggers.crunch}/10`)]
+                ['Emotion', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
+                ...(emotionKeys.length ? emotionKeys.map(k => [
+                    k.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    ...experiences.map(exp => `${getMaxEmotion(exp, k)}/10`)
+                ]) : [['No emotion data', ...experiences.map(() => '—')]])
             ];
 
             doc.autoTable({

@@ -6,6 +6,35 @@ let totalStages = 9; // updated dynamically by regenerateTasteForm()
 let firestoreManager = null;
 let isCloudSyncEnabled = false;
 
+// ===== BACKWARD-COMPATIBLE SENSORY HELPERS =====
+// Works for both old (flat keys) and new (kebab-case) evaluation data.
+
+function stageIntensity(exp, stageId) {
+    const stage = exp?.stages?.[stageId];
+    if (!stage) return 0;
+    const candidates = [
+        'overallIntensity',              // legacy
+        'overall-mid-palate-intensity',  // midRearMouth
+        'overall-initial-impact',        // frontMouth
+        'overall-textural-complexity',   // texture
+        'overall-quality',               // overallAssessment
+        'visual-appeal',                 // appearance
+        'smell-strength',                // aroma
+        'finish-quality',                // aftertaste
+    ];
+    for (const k of candidates) {
+        if (typeof stage[k] === 'number') return stage[k];
+    }
+    const nums = Object.entries(stage)
+        .filter(([k, v]) => k !== 'emotions' && typeof v === 'number')
+        .map(([, v]) => v);
+    return nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : 0;
+}
+
+function stageEmotion(exp, stageId, key) {
+    return exp?.stages?.[stageId]?.emotions?.[key] ?? 0;
+}
+
 // Sample flavor concepts data
 const SAMPLE_FLAVOR_CONCEPTS = [{"Concept_ID":"1","Flavor_Name":"Mango Chili Lime Burst","Primary_Ingredients":"Mango, Chili, Lime","Taste_Profile":"Sweet, spicy, citrus","Emotional_Resonance":"Excitement, Adventure","Target_Product_Category":"Snack","Market_Trend_Alignment":"Spicy tropical snacks trending"},{"Concept_ID":"2","Flavor_Name":"Gingered Peach Blossom","Primary_Ingredients":"Peach, Ginger, Floral Notes","Taste_Profile":"Sweet, spicy, floral","Emotional_Resonance":"Comfort, Joy","Target_Product_Category":"Beverage","Market_Trend_Alignment":"Botanical infusions rising"},{"Concept_ID":"3","Flavor_Name":"Vanilla Chai Almond","Primary_Ingredients":"Vanilla, Chai, Almond","Taste_Profile":"Creamy, spicy, nutty","Emotional_Resonance":"Warmth, Nostalgia","Target_Product_Category":"Snack","Market_Trend_Alignment":"Premium nutty snacks popular"},{"Concept_ID":"4","Flavor_Name":"Blueberry Lavender Dream","Primary_Ingredients":"Blueberry, Lavender, Cream","Taste_Profile":"Fruity, floral, creamy","Emotional_Resonance":"Relaxation, Indulgence","Target_Product_Category":"Confectionery","Market_Trend_Alignment":"Floral and fruity desserts gaining popularity"},{"Concept_ID":"5","Flavor_Name":"Smoked Paprika Honey","Primary_Ingredients":"Paprika, Honey, Smoked Notes","Taste_Profile":"Smoky, sweet, spicy","Emotional_Resonance":"Curiosity, Comfort","Target_Product_Category":"Snack","Market_Trend_Alignment":"Smoked savory-sweet combinations popular"},{"Concept_ID":"6","Flavor_Name":"Matcha Coconut Bliss","Primary_Ingredients":"Matcha, Coconut, Vanilla","Taste_Profile":"Earthy, creamy, sweet","Emotional_Resonance":"Calm, Indulgence","Target_Product_Category":"Beverage","Market_Trend_Alignment":"Growing matcha and coconut trends"},{"Concept_ID":"7","Flavor_Name":"Lemon Basil Sorbet","Primary_Ingredients":"Lemon, Basil, Sugar Syrup","Taste_Profile":"Citrusy, herbal, refreshing","Emotional_Resonance":"Refreshing, Energizing","Target_Product_Category":"Dessert","Market_Trend_Alignment":"Herbal-refreshing desserts trending"},{"Concept_ID":"8","Flavor_Name":"Dark Chocolate Orange Zest","Primary_Ingredients":"Dark Chocolate, Orange Peel","Taste_Profile":"Rich, citrusy, bitter-sweet","Emotional_Resonance":"Comfort, Luxury","Target_Product_Category":"Confectionery","Market_Trend_Alignment":"Dark chocolate indulgence increasing"},{"Concept_ID":"9","Flavor_Name":"Apple Cinnamon Maple Crunch","Primary_Ingredients":"Apple, Cinnamon, Maple Syrup","Taste_Profile":"Sweet, spicy, crunchy","Emotional_Resonance":"Comfort, Nostalgia","Target_Product_Category":"Cereal Snack","Market_Trend_Alignment":"Breakfast-inspired snacks rising"},{"Concept_ID":"10","Flavor_Name":"Yuzu Raspberry Spark","Primary_Ingredients":"Yuzu, Raspberry, Sparkling Essence","Taste_Profile":"Citrusy, tart, sparkling","Emotional_Resonance":"Excitement, Freshness","Target_Product_Category":"Beverage","Market_Trend_Alignment":"Citrus-flavored sparkling beverages popular"},{"Concept_ID":"11","Flavor_Name":"Rosemary Caramel Apple","Primary_Ingredients":"Rosemary, Caramel, Apple","Taste_Profile":"Herbal, sweet, fruity","Emotional_Resonance":"Comfort, Warmth","Target_Product_Category":"Dessert","Market_Trend_Alignment":"Savory-herbal sweet snacks emerging"},{"Concept_ID":"12","Flavor_Name":"Espresso Hazelnut Praline","Primary_Ingredients":"Espresso, Hazelnut, Chocolate","Taste_Profile":"Rich, nutty, robust","Emotional_Resonance":"Comfort, Energy","Target_Product_Category":"Snack","Market_Trend_Alignment":"Coffee-flavored indulgence rising"},{"Concept_ID":"13","Flavor_Name":"Watermelon Mint Refresh","Primary_Ingredients":"Watermelon, Mint, Lime","Taste_Profile":"Refreshing, sweet, herbal","Emotional_Resonance":"Freshness, Energizing","Target_Product_Category":"Beverage","Market_Trend_Alignment":"Mint-infused beverages popular"},{"Concept_ID":"14","Flavor_Name":"Cucumber Melon Cooler","Primary_Ingredients":"Cucumber, Melon, Lemon","Taste_Profile":"Cooling, refreshing, citrus","Emotional_Resonance":"Cooling, Refreshing","Target_Product_Category":"Beverage","Market_Trend_Alignment":"Light and hydrating beverages trending"},{"Concept_ID":"15","Flavor_Name":"Passionfruit Hibiscus Tango","Primary_Ingredients":"Passionfruit, Hibiscus, Citrus","Taste_Profile":"Tangy, floral, tropical","Emotional_Resonance":"Adventure, Excitement","Target_Product_Category":"Confectionery","Market_Trend_Alignment":"Tropical floral combinations trending"}];
 
@@ -994,14 +1023,14 @@ function renderShapeOfTaste(exp) {
 
     destroyChart('shape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
-    const intensities = [
-        exp.stages.appearance?.overallIntensity ?? 0,
-        exp.stages.aroma?.overallIntensity ?? 0,
-        exp.stages.frontMouth?.overallIntensity ?? 0,
-        exp.stages.midRearMouth?.overallIntensity ?? 0,
-        exp.stages.aftertaste?.overallIntensity ?? 0
+    const lexicon = (typeof getActiveLexicon === 'function') ? getActiveLexicon() : null;
+    const stageList = lexicon ? lexicon.stages : [
+        { id: 'appearance', name: 'Appearance' }, { id: 'aroma', name: 'Aroma' },
+        { id: 'frontMouth', name: 'Front' }, { id: 'midRearMouth', name: 'Mid/Rear' },
+        { id: 'aftertaste', name: 'Aftertaste' }
     ];
+    const stages = stageList.map(s => s.name);
+    const intensities = stageList.map(s => stageIntensity(exp, s.id));
 
     charts.shape = new Chart(ctx, {
         type: 'line',
@@ -1375,18 +1404,18 @@ function renderComparisonShapeChart(products) {
 
     destroyChart('comparisonShape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const lexiconForComp = (typeof getActiveLexicon === 'function') ? getActiveLexicon() : null;
+    const compStageList = lexiconForComp ? lexiconForComp.stages : [
+        { id: 'appearance', name: 'Appearance' }, { id: 'aroma', name: 'Aroma' },
+        { id: 'frontMouth', name: 'Front' }, { id: 'midRearMouth', name: 'Mid/Rear' },
+        { id: 'aftertaste', name: 'Aftertaste' }
+    ];
+    const stages = compStageList.map(s => s.name);
     const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
 
     const datasets = products.map((exp, idx) => ({
         label: exp.productInfo.name,
-        data: [
-            exp.stages.appearance.overallIntensity,
-            exp.stages.aroma.overallIntensity,
-            exp.stages.frontMouth.overallIntensity,
-            exp.stages.midRearMouth.overallIntensity,
-            exp.stages.aftertaste.overallIntensity
-        ],
+        data: compStageList.map(s => stageIntensity(exp, s.id)),
         borderColor: colors[idx],
         backgroundColor: colors[idx] + '20',
         borderWidth: 3,
@@ -1436,10 +1465,10 @@ function renderComparisonTriggers(products) {
     const datasets = products.map((p, idx) => ({
         label: p.productInfo.name,
         data: [
-            p.emotionalTriggers.moreishness,
-            p.emotionalTriggers.refreshment,
-            p.emotionalTriggers.melt,
-            p.emotionalTriggers.crunch
+            p.emotionalTriggers?.moreishness ?? 0,
+            p.emotionalTriggers?.refreshment ?? 0,
+            p.emotionalTriggers?.melt ?? 0,
+            p.emotionalTriggers?.crunch ?? 0
         ],
         backgroundColor: colors[idx]
     }));
@@ -1527,60 +1556,32 @@ function renderComparisonSummaryCards(products) {
 function renderComparisonAttributeMatrix(products) {
     const container = document.getElementById('comparison-attribute-matrix');
 
-    // Define all attributes by stage
-    const attributeStructure = [
-        {
-            stage: 'Appearance',
-            attributes: [
-                { key: 'visualAppeal', label: 'Visual Appeal' },
-                { key: 'colorIntensity', label: 'Color Intensity' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
-            ],
-            stageKey: 'appearance'
-        },
-        {
-            stage: 'Aroma',
-            attributes: [
-                { key: 'intensity', label: 'Intensity' },
-                { key: 'sweetness', label: 'Sweet Notes' },
-                { key: 'complexity', label: 'Complexity' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
-            ],
-            stageKey: 'aroma'
-        },
-        {
-            stage: 'Front of Mouth',
-            attributes: [
-                { key: 'sweetness', label: 'Sweetness' },
-                { key: 'sourness', label: 'Sourness' },
-                { key: 'saltiness', label: 'Saltiness' },
-                { key: 'texture', label: 'Texture Impact' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
-            ],
-            stageKey: 'frontMouth'
-        },
-        {
-            stage: 'Mid/Rear Mouth',
-            attributes: [
-                { key: 'bitterness', label: 'Bitterness' },
-                { key: 'umami', label: 'Umami' },
-                { key: 'richness', label: 'Richness' },
-                { key: 'creaminess', label: 'Creaminess' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
-            ],
-            stageKey: 'midRearMouth'
-        },
-        {
-            stage: 'Aftertaste',
-            attributes: [
-                { key: 'duration', label: 'Duration' },
-                { key: 'pleasantness', label: 'Pleasantness' },
-                { key: 'cleanness', label: 'Palate Cleanness' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
-            ],
-            stageKey: 'aftertaste'
-        }
-    ];
+    // Build attribute structure dynamically from active lexicon
+    const matrixLexicon = (typeof getActiveLexicon === 'function') ? getActiveLexicon() : null;
+    const attributeStructure = matrixLexicon
+        ? matrixLexicon.stages.map(stage => ({
+            stage: stage.name,
+            stageKey: stage.id,
+            // Show first 5 attributes per stage to keep matrix readable
+            attributes: stage.attributes.slice(0, 5).map(attr => ({ key: attr.id, label: attr.label }))
+        }))
+        : [
+            { stage: 'Appearance', stageKey: 'appearance', attributes: [
+                { key: 'visualAppeal', label: 'Visual Appeal' }, { key: 'colorIntensity', label: 'Color Intensity' }
+            ]},
+            { stage: 'Aroma', stageKey: 'aroma', attributes: [
+                { key: 'intensity', label: 'Intensity' }, { key: 'complexity', label: 'Complexity' }
+            ]},
+            { stage: 'Front of Mouth', stageKey: 'frontMouth', attributes: [
+                { key: 'sweetness', label: 'Sweetness' }, { key: 'sourness', label: 'Sourness' }
+            ]},
+            { stage: 'Mid/Rear Mouth', stageKey: 'midRearMouth', attributes: [
+                { key: 'bitterness', label: 'Bitterness' }, { key: 'richness', label: 'Richness' }
+            ]},
+            { stage: 'Aftertaste', stageKey: 'aftertaste', attributes: [
+                { key: 'duration', label: 'Duration' }, { key: 'pleasantness', label: 'Pleasantness' }
+            ]}
+        ];
 
     // Build table header
     let tableHTML = '<table class="comparison-table"><thead><tr>';
@@ -1852,10 +1853,10 @@ function generateProfessionalInsights() {
 
     // Emotional Trigger Analysis
     const avgTriggers = {
-        moreishness: experiences.reduce((sum, e) => sum + e.emotionalTriggers.moreishness, 0) / experiences.length,
-        refreshment: experiences.reduce((sum, e) => sum + e.emotionalTriggers.refreshment, 0) / experiences.length,
-        melt: experiences.reduce((sum, e) => sum + e.emotionalTriggers.melt, 0) / experiences.length,
-        crunch: experiences.reduce((sum, e) => sum + e.emotionalTriggers.crunch, 0) / experiences.length
+        moreishness: experiences.reduce((sum, e) => sum + (e.emotionalTriggers?.moreishness ?? 0), 0) / experiences.length,
+        refreshment: experiences.reduce((sum, e) => sum + (e.emotionalTriggers?.refreshment ?? 0), 0) / experiences.length,
+        melt: experiences.reduce((sum, e) => sum + (e.emotionalTriggers?.melt ?? 0), 0) / experiences.length,
+        crunch: experiences.reduce((sum, e) => sum + (e.emotionalTriggers?.crunch ?? 0), 0) / experiences.length
     };
     const topTrigger = Object.keys(avgTriggers).reduce((a, b) =>
         avgTriggers[a] > avgTriggers[b] ? a : b);
@@ -1866,11 +1867,11 @@ function generateProfessionalInsights() {
 
     // Journey Pattern
     const avgJourney = {
-        appearance: experiences.reduce((sum, e) => sum + e.stages.appearance.overallIntensity, 0) / experiences.length,
-        aroma: experiences.reduce((sum, e) => sum + e.stages.aroma.overallIntensity, 0) / experiences.length,
-        front: experiences.reduce((sum, e) => sum + e.stages.frontMouth.overallIntensity, 0) / experiences.length,
-        mid: experiences.reduce((sum, e) => sum + e.stages.midRearMouth.overallIntensity, 0) / experiences.length,
-        after: experiences.reduce((sum, e) => sum + e.stages.aftertaste.overallIntensity, 0) / experiences.length
+        appearance: experiences.reduce((sum, e) => sum + stageIntensity(e, 'appearance'), 0) / experiences.length,
+        aroma: experiences.reduce((sum, e) => sum + stageIntensity(e, 'aroma'), 0) / experiences.length,
+        front: experiences.reduce((sum, e) => sum + stageIntensity(e, 'frontMouth'), 0) / experiences.length,
+        mid: experiences.reduce((sum, e) => sum + stageIntensity(e, 'midRearMouth'), 0) / experiences.length,
+        after: experiences.reduce((sum, e) => sum + stageIntensity(e, 'aftertaste'), 0) / experiences.length
     };
     const peakStage = Object.keys(avgJourney).reduce((a, b) =>
         avgJourney[a] > avgJourney[b] ? a : b);
@@ -1888,10 +1889,10 @@ function generateProfessionalInsights() {
 
     // Top Performer
     const topProduct = experiences.reduce((max, e) =>
-        e.stages.aftertaste.emotions.satisfaction > max.stages.aftertaste.emotions.satisfaction ? e : max);
+        stageEmotion(e, 'aftertaste', 'satisfaction') > stageEmotion(max, 'aftertaste', 'satisfaction') ? e : max);
     insights.push({
         title: 'Top Performer',
-        description: `<strong>${topProduct.productInfo.name}</strong> by ${topProduct.productInfo.brand} achieves the highest satisfaction (${topProduct.stages.aftertaste.emotions.satisfaction}/10).`
+        description: `<strong>${topProduct.productInfo.name}</strong> by ${topProduct.productInfo.brand} achieves the highest satisfaction (${stageEmotion(topProduct, 'aftertaste', 'satisfaction')}/10).`
     });
 
     return insights;
@@ -1923,7 +1924,7 @@ function updateHistory() {
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem;">
                     <strong>Need State:</strong> ${e.needState.charAt(0).toUpperCase() + e.needState.slice(1)}<br>
-                    <strong>Satisfaction:</strong> ${e.stages.aftertaste.emotions.satisfaction}/10
+                    <strong>Satisfaction:</strong> ${stageEmotion(e, 'aftertaste', 'satisfaction')}/10
                     ${e.productInfo.occasion && e.productInfo.occasion !== 'Not specified' ? `<br><strong>Occasion:</strong> ${e.productInfo.occasion.replace('-', ' ')}` : ''}
                     ${e.productInfo.temperature && e.productInfo.temperature !== 'Not specified' ? `<br><strong>Temperature:</strong> ${e.productInfo.temperature.replace('-', ' ')}` : ''}
                 </div>
@@ -2096,7 +2097,7 @@ function processImportedData(importedExperiences) {
             <div class="preview-item-details">
                 <strong>${exp.productInfo.name}</strong>
                 <small>Type: ${exp.productInfo.type} | Need State: ${exp.needState}</small>
-                <small>Triggers: Moreishness ${exp.emotionalTriggers.moreishness}/10, Refreshment ${exp.emotionalTriggers.refreshment}/10</small>
+                <small>Satisfaction: ${stageEmotion(exp, 'aftertaste', 'satisfaction')}/10${exp.emotionalTriggers ? ` | Moreishness: ${exp.emotionalTriggers.moreishness}/10` : ''}</small>
             </div>
         </div>
     `).join('');
@@ -2360,25 +2361,23 @@ function renderEmotionalProfileRadar(exp) {
 function renderCorrelationHeatmap(exp) {
     const container = document.getElementById('correlation-heatmap');
 
-    // Get all sensory attributes (including new ones)
-    const sensoryAttributes = {
-        'Visual Appeal': exp.stages.appearance.visualAppeal,
-        'Color Intensity': exp.stages.appearance.colorIntensity,
-        'Carbonation': exp.stages.appearance.carbonation || 5,
-        'Aroma Intensity': exp.stages.aroma.intensity,
-        'Aroma Persistence': exp.stages.aroma.persistence || 5,
-        'Sweetness': exp.stages.frontMouth.sweetness,
-        'Sourness': exp.stages.frontMouth.sourness,
-        'Saltiness': exp.stages.frontMouth.saltiness,
-        'Acidity': exp.stages.frontMouth.acidity || 5,
-        'Spiciness': exp.stages.frontMouth.spiciness || 5,
-        'Bitterness': exp.stages.midRearMouth.bitterness,
-        'Umami': exp.stages.midRearMouth.umami,
-        'Richness': exp.stages.midRearMouth.richness,
-        'Astringency': exp.stages.midRearMouth.astringency || 5,
-        'Mouthfeel': exp.stages.midRearMouth.mouthfeel || 5,
-        'Texture': exp.stages.frontMouth.texture
-    };
+    // Build sensory attributes dynamically from stored experience data
+    const sensoryAttributes = {};
+    const heatmapLexicon = (typeof getActiveLexicon === 'function') ? getActiveLexicon() : null;
+    if (heatmapLexicon) {
+        heatmapLexicon.stages.forEach(stage => {
+            stage.attributes.slice(0, 6).forEach(attr => {
+                const val = exp?.stages?.[stage.id]?.[attr.id];
+                if (typeof val === 'number') sensoryAttributes[attr.label] = val;
+            });
+        });
+    } else {
+        Object.entries(exp?.stages || {}).forEach(([stageId, stageData]) => {
+            Object.entries(stageData).forEach(([key, val]) => {
+                if (key !== 'emotions' && typeof val === 'number') sensoryAttributes[`${stageId}_${key}`] = val;
+            });
+        });
+    }
 
     // Get all emotional outcomes
     const emotions = {};
@@ -2501,19 +2500,23 @@ function renderCorrelationInsights(exp) {
     const container = document.getElementById('correlation-insights');
     if (!container) return;
 
-    // Get all sensory attributes
-    const sensoryAttributes = {
-        'Visual Appeal': exp.stages.appearance.visualAppeal,
-        'Color Intensity': exp.stages.appearance.colorIntensity,
-        'Aroma Intensity': exp.stages.aroma.intensity,
-        'Sweetness': exp.stages.frontMouth.sweetness,
-        'Sourness': exp.stages.frontMouth.sourness,
-        'Saltiness': exp.stages.frontMouth.saltiness,
-        'Bitterness': exp.stages.midRearMouth.bitterness,
-        'Umami': exp.stages.midRearMouth.umami,
-        'Richness': exp.stages.midRearMouth.richness,
-        'Texture': exp.stages.frontMouth.texture
-    };
+    // Build sensory attributes dynamically from stored experience data
+    const sensoryAttributes = {};
+    const insightsLexicon = (typeof getActiveLexicon === 'function') ? getActiveLexicon() : null;
+    if (insightsLexicon) {
+        insightsLexicon.stages.forEach(stage => {
+            stage.attributes.slice(0, 4).forEach(attr => {
+                const val = exp?.stages?.[stage.id]?.[attr.id];
+                if (typeof val === 'number') sensoryAttributes[attr.label] = val;
+            });
+        });
+    } else {
+        Object.entries(exp?.stages || {}).forEach(([stageId, stageData]) => {
+            Object.entries(stageData).forEach(([key, val]) => {
+                if (key !== 'emotions' && typeof val === 'number') sensoryAttributes[`${stageId}_${key}`] = val;
+            });
+        });
+    }
 
     // Get all emotional outcomes
     const emotions = {};
@@ -3157,7 +3160,7 @@ async function compareProducts() {
     try {
         // Compare top 3 products by satisfaction
         const topProducts = experiences
-            .sort((a, b) => b.stages.aftertaste.emotions.satisfaction - a.stages.aftertaste.emotions.satisfaction)
+            .sort((a, b) => stageEmotion(b, 'aftertaste', 'satisfaction') - stageEmotion(a, 'aftertaste', 'satisfaction'))
             .slice(0, 3);
 
         const response = await claudeAI.compareProducts(topProducts);
@@ -3460,12 +3463,7 @@ function createSampleExperience(config) {
                 }
             }
         },
-        emotionalTriggers: {
-            moreishness: 6 + Math.floor(Math.random() * 4),
-            refreshment: config.needState === 'Refreshment' ? 8 + Math.floor(Math.random() * 2) : 4,
-            melt: config.profile.creaminess || 5,
-            crunch: config.type === 'Snack' ? 7 + Math.floor(Math.random() * 3) : 2
-        },
+        emotionalTriggers: null,
         overall: {
             overallLiking: 7 + Math.floor(Math.random() * 3),
             purchaseIntent: 7 + Math.floor(Math.random() * 3),
