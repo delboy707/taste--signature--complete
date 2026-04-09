@@ -8,11 +8,13 @@
  * Includes new emotions: surprise, intrigue, disappointment, sophistication, craving
  */
 const STAGE_EMOTIONS = {
-    appearance: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise'],
-    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
-    frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
-    midRearMouth: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication'],
-    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving']
+    appearance: ['anticipation', 'curiosity', 'desire', 'excitement', 'happiness', 'interest', 'pleased', 'surprise', 'disappointed', 'disgusted'],
+    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'disappointed'],
+    frontMouth: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'disappointed', 'disgusted'],
+    midRearMouth: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'adventurous', 'energized', 'nostalgic', 'disappointed', 'dissatisfied'],
+    texture: ['satisfied', 'pleased', 'comforted', 'indulged', 'excited', 'energized', 'delighted', 'refreshed', 'interested', 'playful', 'disappointed', 'frustrated'],
+    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving-want-more', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'disappointed', 'dissatisfied'],
+    overallAssessment: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'adventurous', 'indulgent', 'interested', 'desire', 'disappointed', 'dissatisfied']
 };
 
 /**
@@ -24,15 +26,17 @@ const STAGE_EMOTIONS = {
 const SENSORY_EMOTION_RULES = {
     // Appearance stage rules
     appearance: {
-        visualAppeal: {
+        'visual-appeal': {
             anticipation: 0.9,
             desire: 0.85,
             excitement: 0.7,
             happiness: 0.6,
+            pleased: 0.7,
             curiosity: 0.5,
-            surprise: 0.3
+            surprise: 0.3,
+            disappointed: -0.4
         },
-        colorIntensity: {
+        'color-richness': {
             anticipation: 0.7,
             excitement: 0.8,
             curiosity: 0.6,
@@ -40,50 +44,80 @@ const SENSORY_EMOTION_RULES = {
             happiness: 0.4,
             surprise: 0.5
         },
-        carbonation: {
+        'bubble-activity': {
             excitement: 0.8,
             anticipation: 0.7,
             surprise: 0.6,
             curiosity: 0.5,
             happiness: 0.4
+        },
+        'visual-complexity': {
+            curiosity: 0.8,
+            interest: 0.8,
+            surprise: 0.5,
+            excitement: 0.4,
+            pleased: 0.3
         }
     },
     // Aroma stage rules
     aroma: {
-        intensity: {
+        'smell-strength': {
             pleasure: 0.8,
-            energy: 0.6,
+            energized: 0.6,
             happiness: 0.5,
-            relaxation: 0.3,
+            relaxed: 0.3,
             comfort: 0.4,
             nostalgia: 0.3,
-            intrigue: 0.5
+            intrigued: 0.5
         },
-        sweetness: {
+        'caramel-toffee-notes': {
             pleasure: 0.9,
             comfort: 0.8,
             happiness: 0.7,
             nostalgia: 0.6,
-            relaxation: 0.5,
-            energy: 0.3,
-            intrigue: 0.3
+            relaxed: 0.5,
+            warm: 0.6,
+            soothed: 0.4
         },
-        complexity: {
-            curiosity: 0.8,
+        'fruity-notes': {
+            pleasure: 0.85,
+            energized: 0.7,
+            happiness: 0.7,
+            refreshed: 0.6,
+            desire: 0.5,
+            intrigued: 0.4
+        },
+        'flower-like-notes': {
+            pleasure: 0.8,
+            happiness: 0.7,
+            soothed: 0.6,
+            relaxed: 0.6,
+            intrigued: 0.5,
+            desire: 0.4
+        },
+        'toasted-roasted-notes': {
+            comfort: 0.8,
+            nostalgia: 0.7,
+            warm: 0.8,
+            soothed: 0.5,
+            pleasure: 0.6
+        },
+        'smell-complexity': {
+            intrigued: 0.9,
+            interested: 0.8,
             pleasure: 0.7,
             nostalgia: 0.5,
-            energy: 0.4,
+            energized: 0.4,
             happiness: 0.5,
-            comfort: 0.3,
-            intrigue: 0.85
+            comfort: 0.3
         },
-        persistence: {
+        'smell-duration': {
             pleasure: 0.7,
-            intrigue: 0.8,
+            intrigued: 0.8,
             nostalgia: 0.6,
             comfort: 0.5,
             happiness: 0.4,
-            relaxation: 0.4
+            relaxed: 0.4
         }
     },
     // Front mouth stage rules
@@ -93,108 +127,259 @@ const SENSORY_EMOTION_RULES = {
             pleasure: 0.85,
             satisfaction: 0.7,
             excitement: 0.5,
-            disappointment: -0.3  // Negative weight - high sweetness reduces disappointment
+            delighted: 0.6,
+            disappointed: -0.3
         },
-        sourness: {
+        'sourness-tartness': {
             excitement: 0.8,
+            energized: 0.7,
             satisfaction: 0.5,
             pleasure: 0.4,
             happiness: 0.3,
-            disappointment: 0.2  // High sourness can lead to mild disappointment
+            surprised: 0.5,
+            disappointed: 0.2
         },
         saltiness: {
             satisfaction: 0.7,
             pleasure: 0.6,
             happiness: 0.4,
             excitement: 0.3,
-            disappointment: 0.1
+            disappointed: 0.1
         },
-        texture: {
+        'first-bite-texture': {
             satisfaction: 0.8,
             pleasure: 0.7,
             excitement: 0.6,
             happiness: 0.5,
-            disappointment: -0.4  // Good texture reduces disappointment
+            delighted: 0.5,
+            disappointed: -0.4
         },
-        acidity: {
-            excitement: 0.7,
-            satisfaction: 0.4,
-            pleasure: 0.5,
-            happiness: 0.3,
-            disappointment: 0.3  // High acidity can cause disappointment
-        },
-        spiciness: {
+        'spicy-heat': {
             excitement: 0.9,
+            energized: 0.7,
             satisfaction: 0.5,
             pleasure: 0.4,
             happiness: 0.3,
-            disappointment: 0.4  // Unexpected spiciness can cause disappointment
+            surprised: 0.6,
+            disappointed: 0.4
+        },
+        'carbonation-bite': {
+            excitement: 0.8,
+            energized: 0.7,
+            surprised: 0.5,
+            happiness: 0.4,
+            pleasure: 0.4
+        },
+        'overall-initial-impact': {
+            excitement: 0.85,
+            pleasure: 0.7,
+            delighted: 0.6,
+            happiness: 0.6,
+            satisfaction: 0.5
         }
     },
     // Mid/rear mouth stage rules
     midRearMouth: {
-        bitterness: {
+        'bitterness-development': {
             indulgence: 0.8,
             satisfaction: 0.6,
             pleasure: 0.5,
             comfort: 0.4,
-            sophistication: 0.7  // Controlled bitterness signals sophistication
+            adventurous: 0.6
         },
-        umami: {
+        'umami-savoury-depth': {
             satisfaction: 0.9,
             indulgence: 0.8,
             comfort: 0.7,
             pleasure: 0.6,
-            sophistication: 0.6
+            warmth: 0.5
         },
-        richness: {
+        'richness-fullness': {
             indulgence: 0.95,
             satisfaction: 0.85,
             comfort: 0.8,
             pleasure: 0.7,
-            sophistication: 0.5
+            warmth: 0.6,
+            joy: 0.5
         },
-        creaminess: {
-            comfort: 0.95,
-            indulgence: 0.9,
-            pleasure: 0.8,
-            satisfaction: 0.7,
-            sophistication: 0.4
+        'flavour-complexity': {
+            indulgence: 0.7,
+            satisfaction: 0.8,
+            adventurous: 0.7,
+            pleasure: 0.75,
+            energized: 0.4
         },
-        astringency: {
-            sophistication: 0.85,  // Astringency (wine, tea, chocolate) signals sophistication
-            indulgence: 0.5,
-            satisfaction: 0.4,
-            pleasure: 0.3,
-            comfort: 0.2
+        'flavour-harmony': {
+            satisfaction: 0.9,
+            comfort: 0.8,
+            pleasure: 0.85,
+            calm: 0.6,
+            warmth: 0.5,
+            joy: 0.6
         },
-        mouthfeel: {
+        'flavour-depth': {
+            indulgence: 0.85,
+            satisfaction: 0.75,
+            pleasure: 0.7,
+            nostalgic: 0.5,
+            adventurous: 0.6
+        },
+        'overall-mid-palate-intensity': {
             satisfaction: 0.8,
             indulgence: 0.7,
             comfort: 0.75,
             pleasure: 0.65,
-            sophistication: 0.5
+            energized: 0.4
+        },
+        'taste-balance': {
+            satisfaction: 0.85,
+            pleasure: 0.7,
+            comfort: 0.65,
+            calm: 0.5,
+            joy: 0.4
+        }
+    },
+    // Texture stage rules
+    texture: {
+        smoothness: {
+            satisfied: 0.8,
+            pleased: 0.75,
+            comforted: 0.7,
+            indulged: 0.6
+        },
+        creaminess: {
+            comforted: 0.9,
+            indulged: 0.9,
+            pleased: 0.8,
+            satisfied: 0.7,
+            excited: 0.3
+        },
+        crunchiness: {
+            excited: 0.85,
+            delighted: 0.7,
+            satisfied: 0.7,
+            energized: 0.65,
+            playful: 0.6,
+            interested: 0.5
+        },
+        'melt-rate': {
+            indulged: 0.85,
+            comforted: 0.8,
+            pleased: 0.75,
+            satisfied: 0.6
+        },
+        softness: {
+            comforted: 0.85,
+            pleased: 0.7,
+            satisfied: 0.65,
+            indulged: 0.5
+        },
+        'overall-textural-complexity': {
+            interested: 0.8,
+            excited: 0.65,
+            delighted: 0.6,
+            playful: 0.55,
+            satisfied: 0.5
+        },
+        astringency: {
+            disappointed: 0.4,
+            frustrated: 0.3,
+            interested: 0.3
+        },
+        'mouth-coating': {
+            indulged: 0.8,
+            comforted: 0.75,
+            satisfied: 0.65,
+            pleased: 0.6
         }
     },
     // Aftertaste stage rules
     aftertaste: {
-        duration: {
+        'finish-length': {
             satisfaction: 0.8,
             completeness: 0.7,
             happiness: 0.5,
-            craving: 0.7  // Long pleasant aftertaste leads to craving
+            'craving-want-more': 0.7
         },
-        pleasantness: {
+        'finish-quality': {
             satisfaction: 0.95,
             happiness: 0.9,
             completeness: 0.8,
-            craving: 0.85  // Pleasant aftertaste strongly linked to craving
+            'craving-want-more': 0.85,
+            pleased: 0.8,
+            comforted: 0.6
         },
-        cleanness: {
+        'finish-cleanness': {
             completeness: 0.9,
             satisfaction: 0.7,
             happiness: 0.6,
-            craving: 0.5  // Clean finish leaves you wanting more
+            refreshed: 0.7,
+            'craving-want-more': 0.5
+        },
+        'flavour-linger': {
+            satisfaction: 0.75,
+            completeness: 0.65,
+            nostalgic: 0.55,
+            'craving-want-more': 0.75,
+            pleased: 0.6
+        }
+    },
+    // Overall Assessment stage rules
+    overallAssessment: {
+        'overall-quality': {
+            satisfaction: 0.95,
+            happiness: 0.9,
+            pleasure: 0.85,
+            enjoyment: 0.9,
+            comfort: 0.6,
+            disappointed: -0.5
+        },
+        balance: {
+            satisfaction: 0.85,
+            comfort: 0.8,
+            calm: 0.7,
+            pleasure: 0.75,
+            joy: 0.5
+        },
+        harmony: {
+            joy: 0.85,
+            warmth: 0.8,
+            pleasure: 0.8,
+            satisfaction: 0.75,
+            calm: 0.65
+        },
+        craveability: {
+            desire: 0.9,
+            adventurous: 0.7,
+            indulgent: 0.75,
+            happiness: 0.6,
+            satisfaction: 0.5
+        },
+        'satisfaction-overall': {
+            satisfaction: 0.95,
+            happiness: 0.9,
+            enjoyment: 0.85,
+            comfort: 0.65,
+            pleasure: 0.7
+        },
+        'want-more-quality': {
+            desire: 0.9,
+            adventurous: 0.65,
+            indulgent: 0.7,
+            satisfaction: 0.55
+        },
+        memorability: {
+            nostalgia: 0.7,
+            adventurous: 0.65,
+            interested: 0.6,
+            joy: 0.5
+        },
+        'flavour-richness': {
+            indulgent: 0.85,
+            warmth: 0.7,
+            comfort: 0.65,
+            pleasure: 0.75,
+            satisfaction: 0.7
         }
     }
 };
@@ -238,35 +423,31 @@ const NEED_STATE_EMOTION_WEIGHTS = {
  */
 const TRIGGER_RULES = {
     moreishness: {
-        // High moreishness from: sweetness, richness, umami, saltiness, pleasant aftertaste
-        // Formula: (sweetness * 0.25) + (richness * 0.25) + (umami * 0.2) + (saltiness * 0.15) + (pleasantness * 0.15)
-        attributes: ['sweetness', 'richness', 'umami', 'saltiness', 'pleasantness'],
+        // High moreishness from: sweetness, richness-fullness, umami-savoury-depth, saltiness, finish-quality
+        attributes: ['sweetness', 'richness-fullness', 'umami-savoury-depth', 'saltiness', 'finish-quality'],
         weights: [0.25, 0.25, 0.2, 0.15, 0.15]
     },
     refreshment: {
-        // High refreshment from: sourness, acidity, cleanness, carbonation
-        // Low refreshment from: richness, creaminess
-        // Formula: (sourness * 0.2) + (acidity * 0.2) + (cleanness * 0.25) + (carbonation * 0.2) - (richness * 0.15)
-        attributes: ['sourness', 'acidity', 'cleanness', 'carbonation'],
-        weights: [0.2, 0.2, 0.25, 0.2],
-        inverseAttributes: ['richness', 'creaminess'],
+        // High refreshment from: sourness-tartness, finish-cleanness, bubble-activity
+        // Low refreshment from: richness-fullness, creaminess
+        attributes: ['sourness-tartness', 'finish-cleanness', 'bubble-activity'],
+        weights: [0.3, 0.35, 0.2],
+        inverseAttributes: ['richness-fullness', 'creaminess'],
         inverseWeights: [0.15, 0.1]
     },
     melt: {
-        // High melt from: creaminess, richness, mouthfeel
-        // Low melt from: astringency (drying sensation is opposite of melt)
-        // Formula: (creaminess * 0.35) + (richness * 0.3) + (mouthfeel * 0.2) - (astringency * 0.15)
-        attributes: ['creaminess', 'richness', 'mouthfeel'],
+        // High melt from: creaminess, richness-fullness, overall-mid-palate-intensity
+        // Low melt from: astringency
+        attributes: ['creaminess', 'richness-fullness', 'overall-mid-palate-intensity'],
         weights: [0.35, 0.3, 0.2],
         inverseAttributes: ['astringency'],
         inverseWeights: [0.15]
     },
     crunch: {
-        // High crunch from: texture, low creaminess
-        // Formula: (texture * 0.6) + (10 - creaminess) * 0.25 + (10 - mouthfeel) * 0.15
-        attributes: ['texture'],
-        weights: [0.6],
-        inverseAttributes: ['creaminess', 'mouthfeel'],
+        // High crunch from: first-bite-texture, crunchiness; low crunch from: creaminess
+        attributes: ['first-bite-texture', 'crunchiness'],
+        weights: [0.4, 0.5],
+        inverseAttributes: ['creaminess', 'overall-mid-palate-intensity'],
         inverseWeights: [0.25, 0.15]
     }
 };
@@ -324,43 +505,59 @@ class EmotionInference {
             aroma: {},
             frontMouth: {},
             midRearMouth: {},
-            aftertaste: {}
+            texture: {},
+            aftertaste: {},
+            overallAssessment: {}
         };
 
         // Handle flat structure (e.g., from CSV import)
-        if (data.visualAppeal !== undefined || data.appearance_visualAppeal !== undefined || data.sweetness !== undefined) {
-            // Flat structure - map to nested
+        if (data['visual-appeal'] !== undefined || data.visualAppeal !== undefined || data.sweetness !== undefined) {
+            // Flat structure - map to nested using new kebab-case IDs
             normalized.appearance = {
-                visualAppeal: this.getNumericValue(data.visualAppeal || data.appearance_visualAppeal || data.visual_appeal),
-                colorIntensity: this.getNumericValue(data.colorIntensity || data.appearance_colorIntensity || data.color_intensity),
-                carbonation: this.getNumericValue(data.carbonation || data.fizz, 5)
+                'visual-appeal': this.getNumericValue(data['visual-appeal'] || data.visualAppeal || data.visual_appeal),
+                'color-richness': this.getNumericValue(data['color-richness'] || data.colorIntensity || data.color_intensity),
+                'bubble-activity': this.getNumericValue(data['bubble-activity'] || data.carbonation || data.fizz)
             };
             normalized.aroma = {
-                intensity: this.getNumericValue(data.aromaIntensity || data.aroma_intensity),
-                sweetness: this.getNumericValue(data.aromaSweetness || data.aroma_sweetness),
-                complexity: this.getNumericValue(data.aromaComplexity || data.aroma_complexity),
-                persistence: this.getNumericValue(data.persistence || data.aroma_persistence || data.linger, 5)
+                'smell-strength': this.getNumericValue(data['smell-strength'] || data.aromaIntensity || data.aroma_intensity),
+                'caramel-toffee-notes': this.getNumericValue(data['caramel-toffee-notes'] || data.aromaSweetness || data.aroma_sweetness),
+                'smell-complexity': this.getNumericValue(data['smell-complexity'] || data.aromaComplexity || data.aroma_complexity),
+                'smell-duration': this.getNumericValue(data['smell-duration'] || data.persistence || data.aroma_persistence || data.linger)
             };
             normalized.frontMouth = {
                 sweetness: this.getNumericValue(data.sweetness || data.taste_sweetness || data.front_sweetness),
-                sourness: this.getNumericValue(data.sourness || data.taste_sourness || data.front_sourness),
+                'sourness-tartness': this.getNumericValue(data['sourness-tartness'] || data.sourness || data.acidity || data.taste_sourness),
                 saltiness: this.getNumericValue(data.saltiness || data.taste_saltiness || data.front_saltiness),
-                texture: this.getNumericValue(data.texture || data.front_texture),
-                acidity: this.getNumericValue(data.acidity || data.acid, 5),
-                spiciness: this.getNumericValue(data.spiciness || data.heat || data.pungency, 3)
+                'first-bite-texture': this.getNumericValue(data['first-bite-texture'] || data.texture || data.front_texture),
+                'spicy-heat': this.getNumericValue(data['spicy-heat'] || data.spiciness || data.heat || data.pungency),
+                'carbonation-bite': this.getNumericValue(data['carbonation-bite'] || data.carbonation_bite)
             };
             normalized.midRearMouth = {
-                bitterness: this.getNumericValue(data.bitterness || data.mid_bitterness),
-                umami: this.getNumericValue(data.umami || data.mid_umami),
-                richness: this.getNumericValue(data.richness || data.mid_richness),
+                'bitterness-development': this.getNumericValue(data['bitterness-development'] || data.bitterness || data.mid_bitterness),
+                'umami-savoury-depth': this.getNumericValue(data['umami-savoury-depth'] || data.umami || data.mid_umami),
+                'richness-fullness': this.getNumericValue(data['richness-fullness'] || data.richness || data.mid_richness),
+                'overall-mid-palate-intensity': this.getNumericValue(data['overall-mid-palate-intensity'] || data.mouthfeel || data.body),
+                'flavour-harmony': this.getNumericValue(data['flavour-harmony'] || data.flavourHarmony),
+                'taste-balance': this.getNumericValue(data['taste-balance'] || data.tasteBalance)
+            };
+            normalized.texture = {
                 creaminess: this.getNumericValue(data.creaminess || data.mid_creaminess),
-                astringency: this.getNumericValue(data.astringency || data.dryness || data.tannin, 3),
-                mouthfeel: this.getNumericValue(data.mouthfeel || data.mouth_feel || data.weight || data.body, 5)
+                smoothness: this.getNumericValue(data.smoothness),
+                crunchiness: this.getNumericValue(data.crunchiness || data.crunch),
+                astringency: this.getNumericValue(data.astringency || data.dryness || data.tannin),
+                'melt-rate': this.getNumericValue(data['melt-rate'] || data.melt)
             };
             normalized.aftertaste = {
-                duration: this.getNumericValue(data.aftertasteDuration || data.aftertaste_duration || data.duration),
-                pleasantness: this.getNumericValue(data.aftertastePleasantness || data.aftertaste_pleasantness || data.pleasantness),
-                cleanness: this.getNumericValue(data.aftertasteCleanness || data.aftertaste_cleanness || data.cleanness)
+                'finish-length': this.getNumericValue(data['finish-length'] || data.aftertasteDuration || data.duration),
+                'finish-quality': this.getNumericValue(data['finish-quality'] || data.aftertastePleasantness || data.pleasantness),
+                'finish-cleanness': this.getNumericValue(data['finish-cleanness'] || data.aftertasteCleanness || data.cleanness),
+                'flavour-linger': this.getNumericValue(data['flavour-linger'] || data.linger)
+            };
+            normalized.overallAssessment = {
+                'overall-quality': this.getNumericValue(data['overall-quality'] || data.overallQuality || data.quality),
+                'satisfaction-overall': this.getNumericValue(data['satisfaction-overall'] || data.satisfaction),
+                craveability: this.getNumericValue(data.craveability || data.moreishness),
+                balance: this.getNumericValue(data.balance)
             };
         } else if (data.stages) {
             // Already nested in stages
@@ -583,7 +780,9 @@ class EmotionInference {
             aroma: 'Aroma',
             frontMouth: 'Front Mouth',
             midRearMouth: 'Mid/Rear Mouth',
-            aftertaste: 'Aftertaste'
+            texture: 'Texture',
+            aftertaste: 'Aftertaste',
+            overallAssessment: 'Overall Assessment'
         };
 
         for (const [stage, name] of Object.entries(stageNames)) {
@@ -693,42 +892,44 @@ function calculateEmotionalTriggers(experience) {
         return stages[stage]?.[attr] ?? defaultVal;
     };
 
-    // Moreishness = f(sweetness, richness, umami, saltiness, pleasantness)
+    // Moreishness = f(sweetness, richness-fullness, umami-savoury-depth, saltiness, finish-quality)
     const moreishness = (
         getSensoryValue('frontMouth', 'sweetness') * 0.25 +
-        getSensoryValue('midRearMouth', 'richness') * 0.25 +
-        getSensoryValue('midRearMouth', 'umami') * 0.2 +
+        getSensoryValue('midRearMouth', 'richness-fullness') * 0.25 +
+        getSensoryValue('midRearMouth', 'umami-savoury-depth') * 0.2 +
         getSensoryValue('frontMouth', 'saltiness') * 0.15 +
-        getSensoryValue('aftertaste', 'pleasantness') * 0.15
+        getSensoryValue('aftertaste', 'finish-quality') * 0.15
     );
 
-    // Refreshment = f(sourness, acidity, cleanness, carbonation) - f(richness, creaminess)
+    // Refreshment = f(sourness-tartness, finish-cleanness, bubble-activity) - f(richness-fullness, creaminess)
     const refreshmentPositive = (
-        getSensoryValue('frontMouth', 'sourness') * 0.2 +
-        getSensoryValue('frontMouth', 'acidity', 5) * 0.2 +
-        getSensoryValue('aftertaste', 'cleanness') * 0.25 +
-        getSensoryValue('appearance', 'carbonation', 5) * 0.2
+        getSensoryValue('frontMouth', 'sourness-tartness') * 0.3 +
+        getSensoryValue('aftertaste', 'finish-cleanness') * 0.35 +
+        getSensoryValue('appearance', 'bubble-activity') * 0.2
     );
     const refreshmentNegative = (
-        (10 - getSensoryValue('midRearMouth', 'richness')) * 0.15 +
-        (10 - getSensoryValue('midRearMouth', 'creaminess')) * 0.1
+        (10 - getSensoryValue('midRearMouth', 'richness-fullness')) * 0.15 +
+        (10 - getSensoryValue('texture', 'creaminess')) * 0.1
     );
     const refreshment = Math.min(10, refreshmentPositive + refreshmentNegative * 0.5);
 
-    // Melt = f(creaminess, richness, mouthfeel) - f(astringency)
+    // Melt = f(creaminess, richness-fullness, overall-mid-palate-intensity) - f(astringency)
     const meltPositive = (
-        getSensoryValue('midRearMouth', 'creaminess') * 0.35 +
-        getSensoryValue('midRearMouth', 'richness') * 0.3 +
-        getSensoryValue('midRearMouth', 'mouthfeel', 5) * 0.2
+        getSensoryValue('texture', 'creaminess') * 0.35 +
+        getSensoryValue('midRearMouth', 'richness-fullness') * 0.3 +
+        getSensoryValue('midRearMouth', 'overall-mid-palate-intensity') * 0.2
     );
-    const meltNegative = (10 - getSensoryValue('midRearMouth', 'astringency', 3)) * 0.15;
+    const meltNegative = (10 - getSensoryValue('texture', 'astringency')) * 0.15;
     const melt = Math.min(10, meltPositive + meltNegative);
 
-    // Crunch = f(texture) - f(creaminess, mouthfeel)
-    const crunchPositive = getSensoryValue('frontMouth', 'texture') * 0.6;
+    // Crunch = f(first-bite-texture, crunchiness) - f(creaminess, overall-mid-palate-intensity)
+    const crunchPositive = (
+        getSensoryValue('frontMouth', 'first-bite-texture') * 0.4 +
+        getSensoryValue('texture', 'crunchiness') * 0.5
+    );
     const crunchNegative = (
-        (10 - getSensoryValue('midRearMouth', 'creaminess')) * 0.25 +
-        (10 - getSensoryValue('midRearMouth', 'mouthfeel', 5)) * 0.15
+        (10 - getSensoryValue('texture', 'creaminess')) * 0.25 +
+        (10 - getSensoryValue('midRearMouth', 'overall-mid-palate-intensity')) * 0.15
     );
     const crunch = Math.min(10, crunchPositive + crunchNegative);
 
