@@ -141,15 +141,59 @@ function renderFileUploadSection() {
 }
 
 /**
- * Render column mapping section
+ * Render column mapping section — built dynamically from the active lexicon
  */
 function renderColumnMappingSection() {
-    const suggestedMapping = suggestColumnMapping(batchImportData.headers);
+    const lexicon = typeof getActiveLexicon === 'function' ? getActiveLexicon() : null;
+    const stageIcons = {
+        appearance: '👁️', aroma: '👃', frontMouth: '👅',
+        midRearMouth: '🫦', texture: '✋', aftertaste: '🔄', overallAssessment: '⭐'
+    };
+
+    const headerOptions = batchImportData.headers.map(h =>
+        `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`
+    ).join('');
+
+    const buildSelect = (category, field) => `
+        <select class="column-select" data-category="${category}" data-field="${escapeHtml(field)}">
+            <option value="">-- Skip --</option>
+            ${headerOptions}
+        </select>`;
+
+    // Product info fields
+    const productFields = [
+        { field: 'name', label: 'Product Name', required: true },
+        { field: 'brand', label: 'Brand' },
+        { field: 'category', label: 'Category' },
+        { field: 'variant', label: 'Variant / Flavor' },
+        { field: 'needState', label: 'Need State (occasion)' },
+        { field: 'notes', label: 'Notes' }
+    ];
+
+    // Sensory attribute sections from lexicon
+    let attributeSections = '';
+    if (lexicon) {
+        attributeSections = lexicon.stages.map(stage => {
+            const icon = stageIcons[stage.id] || '📊';
+            // Show up to 8 key attributes per stage to keep the UI manageable
+            const attrs = stage.attributes.slice(0, 8);
+            const fields = attrs.map(attr => `
+                <div class="mapping-field">
+                    <label>${escapeHtml(attr.label)}:</label>
+                    ${buildSelect('attributes', `${stage.id}.${attr.id}`)}
+                </div>`).join('');
+            return `
+                <div class="mapping-category">
+                    <h5>${icon} ${escapeHtml(stage.name)}</h5>
+                    <div class="mapping-fields">${fields}</div>
+                </div>`;
+        }).join('');
+    }
 
     return `
         <div class="analytics-section">
             <h4>Step 2: Map Columns</h4>
-            <p class="section-description">Map your file columns to Taste Signature fields</p>
+            <p class="section-description">Map your file columns to Taste Signature fields. Unmapped attributes default to 0.</p>
 
             <div class="mapping-controls">
                 <button class="btn-secondary" onclick="applyAutomaticMapping()">
@@ -164,96 +208,14 @@ function renderColumnMappingSection() {
                 <div class="mapping-category">
                     <h5>📋 Product Information</h5>
                     <div class="mapping-fields">
-                        <div class="mapping-field">
-                            <label>Product Name (Required):</label>
-                            <select class="column-select" data-category="productInfo" data-field="name">
-                                <option value="">-- Select Column --</option>
-                                ${batchImportData.headers.map(h => `
-                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="mapping-field">
-                            <label>Brand:</label>
-                            <select class="column-select" data-category="productInfo" data-field="brand">
-                                <option value="">-- Select Column --</option>
-                                ${batchImportData.headers.map(h => `
-                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="mapping-field">
-                            <label>Category:</label>
-                            <select class="column-select" data-category="productInfo" data-field="category">
-                                <option value="">-- Select Column --</option>
-                                ${batchImportData.headers.map(h => `
-                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="mapping-field">
-                            <label>Variant/Flavor:</label>
-                            <select class="column-select" data-category="productInfo" data-field="variant">
-                                <option value="">-- Select Column --</option>
-                                ${batchImportData.headers.map(h => `
-                                    <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
-                                `).join('')}
-                            </select>
-                        </div>
+                        ${productFields.map(f => `
+                            <div class="mapping-field">
+                                <label>${f.label}${f.required ? ' <span style="color:red">*</span>' : ''}:</label>
+                                ${buildSelect('productInfo', f.field)}
+                            </div>`).join('')}
                     </div>
                 </div>
-
-                <div class="mapping-category">
-                    <h5>👁️ Appearance Attributes</h5>
-                    <div class="mapping-fields">
-                        ${renderAttributeMappingFields('appearance', [
-                            { id: 'visualAppeal', label: 'Visual Appeal' },
-                            { id: 'color', label: 'Color' },
-                            { id: 'clarity', label: 'Clarity' },
-                            { id: 'gloss', label: 'Gloss' }
-                        ])}
-                    </div>
-                </div>
-
-                <div class="mapping-category">
-                    <h5>👃 Aroma Attributes</h5>
-                    <div class="mapping-fields">
-                        ${renderAttributeMappingFields('aroma', [
-                            { id: 'aromaIntensity', label: 'Aroma Intensity' },
-                            { id: 'complexity', label: 'Complexity' },
-                            { id: 'pleasantness', label: 'Pleasantness' }
-                        ])}
-                    </div>
-                </div>
-
-                <div class="mapping-category">
-                    <h5>👅 Taste Attributes</h5>
-                    <div class="mapping-fields">
-                        ${renderAttributeMappingFields('frontMouth', [
-                            { id: 'initialTaste', label: 'Initial Taste' },
-                            { id: 'sweetness', label: 'Sweetness' },
-                            { id: 'sourness', label: 'Sourness' },
-                            { id: 'saltiness', label: 'Saltiness' },
-                            { id: 'bitterness', label: 'Bitterness' }
-                        ])}
-                        ${renderAttributeMappingFields('midMouth', [
-                            { id: 'flavorDevelopment', label: 'Flavor Development' },
-                            { id: 'texture', label: 'Texture' },
-                            { id: 'richness', label: 'Richness' }
-                        ])}
-                    </div>
-                </div>
-
-                <div class="mapping-category">
-                    <h5>🎯 Overall Attributes</h5>
-                    <div class="mapping-fields">
-                        ${renderAttributeMappingFields('overall', [
-                            { id: 'overallSatisfaction', label: 'Overall Satisfaction' },
-                            { id: 'purchaseIntent', label: 'Purchase Intent' },
-                            { id: 'uniqueness', label: 'Uniqueness' }
-                        ])}
-                    </div>
-                </div>
+                ${attributeSections}
             </div>
 
             <button class="btn-primary btn-large" onclick="proceedToPreview()">
@@ -264,14 +226,14 @@ function renderColumnMappingSection() {
 }
 
 /**
- * Render attribute mapping fields helper
+ * Render attribute mapping fields helper (kept for any remaining external callers)
  */
 function renderAttributeMappingFields(stage, attributes) {
     return attributes.map(attr => `
         <div class="mapping-field">
             <label>${attr.label}:</label>
             <select class="column-select" data-category="attributes" data-field="${stage}.${attr.id}">
-                <option value="">-- Select Column --</option>
+                <option value="">-- Skip --</option>
                 ${batchImportData.headers.map(h => `
                     <option value="${escapeHtml(h)}">${escapeHtml(h)}</option>
                 `).join('')}
@@ -583,34 +545,86 @@ function goBackToMapping() {
 }
 
 /**
- * Execute import
+ * Execute import with duplicate detection and per-row status reporting
  */
 function executeImport() {
-    if (!confirm(`Import ${batchImportData.rows.length} products? This will add them to your portfolio.`)) {
-        return;
+    // Check for duplicates first
+    const dupes = typeof detectDuplicates === 'function'
+        ? detectDuplicates(batchImportData.rows, batchImportData.columnMapping)
+        : [];
+
+    if (dupes.length > 0) {
+        const dupeNames = dupes.slice(0, 5).map(d => `• ${d.name}${d.brand ? ` (${d.brand})` : ''}`).join('\n');
+        const more = dupes.length > 5 ? `\n... and ${dupes.length - 5} more` : '';
+        if (!confirm(`⚠️ ${dupes.length} product${dupes.length > 1 ? 's' : ''} already exist in your portfolio:\n\n${dupeNames}${more}\n\nImport anyway? Duplicates will be added as additional entries.`)) {
+            return;
+        }
+    } else {
+        if (!confirm(`Import ${batchImportData.rows.length} product${batchImportData.rows.length !== 1 ? 's' : ''}? This will add them to your portfolio.`)) {
+            return;
+        }
     }
 
     const results = executeBatchImport(batchImportData.rows, batchImportData.columnMapping);
 
-    let message = `Import completed!\n\n`;
-    message += `✅ Successfully imported: ${results.success}\n`;
-    message += `❌ Failed: ${results.failed}\n`;
+    // Show result summary in the UI (not just alert)
+    const container = document.getElementById('batch-import-container');
+    const avgMapped = results.rowResults.filter(r => r.status === 'ok').length > 0
+        ? Math.round(results.rowResults.filter(r => r.status === 'ok').reduce((s, r) => s + (r.mappedCount || 0), 0) / results.rowResults.filter(r => r.status === 'ok').length)
+        : 0;
+    const totalAttrs = results.rowResults.find(r => r.totalAttributes > 0)?.totalAttributes || 0;
 
-    if (results.errors.length > 0) {
-        message += `\nErrors:\n`;
-        results.errors.slice(0, 5).forEach(err => {
-            message += `Row ${err.row}: ${err.error}\n`;
-        });
-        if (results.errors.length > 5) {
-            message += `... and ${results.errors.length - 5} more errors\n`;
-        }
+    const errorRows = results.rowResults.filter(r => r.status === 'error');
+    const errorHtml = errorRows.length > 0 ? `
+        <div style="margin-top:12px;">
+            <strong>Rows with errors:</strong>
+            <ul style="margin:8px 0 0 16px;">
+                ${errorRows.slice(0, 10).map(r => `<li>Row ${r.row}: ${escapeHtml(r.error)}</li>`).join('')}
+                ${errorRows.length > 10 ? `<li>... and ${errorRows.length - 10} more</li>` : ''}
+            </ul>
+        </div>` : '';
+
+    const undoHtml = results.success > 0 ? `
+        <button class="btn-secondary" onclick="undoLastBatchImport()" style="margin-top:12px;">
+            ↩️ Undo This Import
+        </button>` : '';
+
+    if (container) {
+        container.innerHTML = `
+            <div class="analytics-section">
+                <h4>✅ Import Complete</h4>
+                <div class="validation-summary">
+                    <div class="validation-stat valid">
+                        <div class="validation-icon">✅</div>
+                        <div class="validation-count">${results.success}</div>
+                        <div class="validation-label">Imported</div>
+                    </div>
+                    <div class="validation-stat invalid">
+                        <div class="validation-icon">❌</div>
+                        <div class="validation-count">${results.failed}</div>
+                        <div class="validation-label">Failed</div>
+                    </div>
+                    <div class="validation-stat warning">
+                        <div class="validation-icon">📊</div>
+                        <div class="validation-count">${avgMapped}${totalAttrs ? `/${totalAttrs}` : ''}</div>
+                        <div class="validation-label">Avg Attrs Mapped</div>
+                    </div>
+                </div>
+                ${totalAttrs > 0 && avgMapped < totalAttrs ? `
+                    <p style="color:#92400e; background:#fef3c7; padding:10px; border-radius:6px; margin-top:12px;">
+                        ℹ️ ${totalAttrs - avgMapped} attributes per product were not in your file and defaulted to 0.
+                        <a href="#" onclick="downloadBatchImportTemplate(); return false;">Download the template</a> to see all available columns.
+                    </p>` : ''}
+                ${errorHtml}
+                ${undoHtml}
+                <div style="margin-top:16px; display:flex; gap:12px;">
+                    <button class="btn-primary" onclick="resetBatchImport()">Import Another File</button>
+                    <button class="btn-secondary" onclick="navigateToView('history')">View Portfolio</button>
+                </div>
+            </div>`;
     }
 
-    alert(message);
-
-    if (results.success > 0) {
-        // Reset and refresh dashboard
-        resetBatchImport();
+    if (results.success > 0 && typeof updateDashboard === 'function') {
         updateDashboard();
     }
 }
@@ -648,16 +662,14 @@ BATCH IMPORT GUIDE
    - Other fields are optional
 
 3. ATTRIBUTE VALUES
-   - Use numbers between 1-10
+   - Use numbers between 0-10
    - Decimal values are supported (e.g., 7.5)
-   - Leave blank for default value (5.0)
+   - Leave blank or omit — missing attributes default to 0
 
 4. COLUMN NAMING
-   - Use clear, descriptive column names
-   - Auto-mapping works best with standard names like:
-     * Product_Name, Brand, Category
-     * Visual_Appeal, Aroma_Intensity
-     * Overall_Satisfaction, etc.
+   - Download the template for exact column names (stage.attribute format)
+   - Auto-mapping matches your headers against the active lexicon labels
+   - Standard names also work: Product_Name, Brand, sweetness, etc.
 
 5. AUTO-EVALUATION
    - Emotions are automatically inferred from sensory data

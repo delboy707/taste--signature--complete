@@ -150,105 +150,67 @@ async function parseExcelFile(file) {
 // ===== COLUMN MAPPING =====
 
 /**
- * Suggest automatic column mapping based on header names
+ * Suggest automatic column mapping based on header names.
+ * Matches against active lexicon attribute IDs and labels, so it stays
+ * in sync regardless of which lexicon is active.
  */
 function suggestColumnMapping(headers) {
-    const mapping = {
-        productInfo: {},
-        attributes: {},
-        emotions: {}
-    };
+    const mapping = { productInfo: {}, attributes: {}, emotions: {} };
 
-    // Product info mappings
     const productMappings = {
-        'product_name': 'name',
-        'productname': 'name',
-        'name': 'name',
-        'product': 'name',
-        'brand': 'brand',
-        'manufacturer': 'brand',
-        'category': 'category',
-        'type': 'category',
-        'variant': 'variant',
-        'flavor': 'variant',
-        'flavour': 'variant',
-        'price': 'price',
-        'origin': 'origin',
-        'country': 'origin'
+        'product_name': 'name', 'productname': 'name', 'name': 'name', 'product': 'name',
+        'brand': 'brand', 'manufacturer': 'brand', 'company': 'brand',
+        'category': 'category', 'type': 'category', 'producttype': 'category',
+        'variant': 'variant', 'flavor': 'variant', 'flavour': 'variant', 'sku': 'variant',
+        'need_state': 'needState', 'needstate': 'needState', 'occasion': 'needState',
+        'notes': 'notes', 'comments': 'notes', 'observations': 'notes'
     };
 
-    // Attribute mappings (sensory attributes)
-    const attributeMappings = {
-        // Appearance
-        'visual_appeal': 'appearance.visualAppeal',
-        'visualappeal': 'appearance.visualAppeal',
-        'appearance': 'appearance.visualAppeal',
-        'color': 'appearance.color',
-        'colour': 'appearance.color',
-        'clarity': 'appearance.clarity',
-        'gloss': 'appearance.gloss',
-        'shine': 'appearance.gloss',
-
-        // Aroma
-        'aroma_intensity': 'aroma.aromaIntensity',
-        'aromaintensity': 'aroma.aromaIntensity',
-        'aroma': 'aroma.aromaIntensity',
-        'smell': 'aroma.aromaIntensity',
-        'complexity': 'aroma.complexity',
-        'pleasantness': 'aroma.pleasantness',
-
-        // Front of Mouth
-        'initial_taste': 'frontMouth.initialTaste',
-        'initialtaste': 'frontMouth.initialTaste',
-        'first_impression': 'frontMouth.initialTaste',
-        'sweetness': 'frontMouth.sweetness',
-        'sourness': 'frontMouth.sourness',
-        'saltiness': 'frontMouth.saltiness',
-        'bitterness': 'frontMouth.bitterness',
-        'umami': 'frontMouth.umami',
-
-        // Mid/Rear Mouth
-        'flavor_development': 'midMouth.flavorDevelopment',
-        'flavordevelopment': 'midMouth.flavorDevelopment',
-        'flavor': 'midMouth.flavorDevelopment',
-        'flavour': 'midMouth.flavorDevelopment',
-        'texture': 'midMouth.texture',
-        'mouthfeel': 'midMouth.texture',
-        'richness': 'midMouth.richness',
-
-        // Aftertaste
-        'aftertaste': 'aftertaste.aftertasteQuality',
-        'finish': 'aftertaste.aftertasteQuality',
-        'aftertaste_length': 'aftertaste.aftertasteLength',
-        'aftertastelength': 'aftertaste.aftertasteLength',
-        'persistence': 'aftertaste.aftertasteLength',
-
-        // Overall
-        'overall_satisfaction': 'overall.overallSatisfaction',
-        'overallsatisfaction': 'overall.overallSatisfaction',
-        'overall': 'overall.overallSatisfaction',
-        'rating': 'overall.overallSatisfaction',
-        'score': 'overall.overallSatisfaction',
-        'purchase_intent': 'overall.purchaseIntent',
-        'purchaseintent': 'overall.purchaseIntent',
-        'uniqueness': 'overall.uniqueness'
-    };
+    // Build lookup map from active lexicon (id and label → stage.attrId path)
+    const lexiconAttrMap = {};
+    if (typeof getActiveLexicon === 'function') {
+        const lexicon = getActiveLexicon();
+        lexicon.stages.forEach(stage => {
+            stage.attributes.forEach(attr => {
+                const idKey = attr.id.toLowerCase().replace(/-/g, '');
+                const labelKey = attr.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const path = `${stage.id}.${attr.id}`;
+                lexiconAttrMap[idKey] = path;
+                lexiconAttrMap[labelKey] = path;
+                // Also map the dotted stage.attr format from the template
+                const templateKey = `${stage.id.toLowerCase()}.${attr.id.replace(/-/g, '')}`;
+                lexiconAttrMap[templateKey] = path;
+            });
+        });
+    }
 
     headers.forEach(header => {
-        const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normalizedSimple = header.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        // Check product info mappings
-        if (productMappings[normalized]) {
-            mapping.productInfo[header] = productMappings[normalized];
+        // Handle stage.attrId format produced by downloadBatchImportTemplate
+        if (header.includes('.')) {
+            const [stagePart, attrPart] = header.split('.');
+            const lookupKey = `${stagePart.toLowerCase()}.${attrPart.toLowerCase().replace(/-/g, '')}`;
+            if (lexiconAttrMap[lookupKey]) {
+                mapping.attributes[header] = lexiconAttrMap[lookupKey];
+                return;
+            }
         }
 
-        // Check attribute mappings
-        if (attributeMappings[normalized]) {
-            mapping.attributes[header] = attributeMappings[normalized];
+        // Product info
+        if (productMappings[normalizedSimple]) {
+            mapping.productInfo[header] = productMappings[normalizedSimple];
+            return;
         }
 
-        // Check for emotion columns (columns containing 'emotion' or 'feeling')
-        if (normalized.includes('emotion') || normalized.includes('feeling')) {
+        // Lexicon attribute (by id or label)
+        if (lexiconAttrMap[normalizedSimple]) {
+            mapping.attributes[header] = lexiconAttrMap[normalizedSimple];
+            return;
+        }
+
+        // Emotion columns
+        if (normalizedSimple.includes('emotion') || normalizedSimple.includes('feeling')) {
             mapping.emotions[header] = 'emotions';
         }
     });
@@ -311,8 +273,8 @@ function validateBatchData(rows, columnMapping) {
                 const numValue = parseFloat(value);
                 if (isNaN(numValue)) {
                     result.warnings.push(`${column}: "${value}" is not a valid number`);
-                } else if (numValue < 1 || numValue > 10) {
-                    result.warnings.push(`${column}: ${numValue} is outside valid range (1-10)`);
+                } else if (numValue < 0 || numValue > 10) {
+                    result.warnings.push(`${column}: ${numValue} is outside valid range (0-10)`);
                 }
             }
         });
@@ -326,244 +288,203 @@ function validateBatchData(rows, columnMapping) {
 // ===== BATCH IMPORT EXECUTION =====
 
 /**
+ * Detect rows that would duplicate an existing experience (same name + brand)
+ */
+function detectDuplicates(rows, columnMapping) {
+    if (typeof experiences === 'undefined') return [];
+    const nameCol = Object.keys(columnMapping.productInfo).find(c => columnMapping.productInfo[c] === 'name');
+    const brandCol = Object.keys(columnMapping.productInfo).find(c => columnMapping.productInfo[c] === 'brand');
+    return rows.reduce((dupes, row, index) => {
+        const name = (nameCol ? row[nameCol] : '').toString().toLowerCase().trim();
+        const brand = (brandCol ? row[brandCol] : '').toString().toLowerCase().trim();
+        if (name && experiences.some(e =>
+            e.productInfo.name.toLowerCase().trim() === name &&
+            (!brand || e.productInfo.brand.toLowerCase().trim() === brand)
+        )) {
+            dupes.push({ rowIndex: index, name: nameCol ? row[nameCol] : '', brand: brandCol ? row[brandCol] : '' });
+        }
+        return dupes;
+    }, []);
+}
+
+/**
+ * Undo the last batch import (removes all experiences added in that session)
+ */
+function undoLastBatchImport() {
+    const lastIds = JSON.parse(localStorage.getItem('lastBatchImportIds') || '[]');
+    if (lastIds.length === 0) { alert('No recent batch import to undo.'); return; }
+    const idSet = new Set(lastIds.map(String));
+    const before = experiences.length;
+    experiences = experiences.filter(exp => !idSet.has(String(exp.id)));
+    const removed = before - experiences.length;
+    localStorage.removeItem('lastBatchImportIds');
+    saveData();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    if (typeof renderBatchImportDashboard === 'function') renderBatchImportDashboard();
+    alert(`Undone: ${removed} imported product${removed !== 1 ? 's' : ''} removed.`);
+}
+
+/**
  * Import batch data and create experiences
  */
 function executeBatchImport(rows, columnMapping) {
-    const results = {
-        success: 0,
-        failed: 0,
-        errors: []
-    };
+    const results = { success: 0, failed: 0, errors: [], importedIds: [], rowResults: [] };
 
     rows.forEach((row, index) => {
         try {
             const experience = createExperienceFromRow(row, columnMapping);
             if (experience) {
                 experiences.push(experience);
+                results.importedIds.push(experience.id);
                 results.success++;
+                results.rowResults.push({ row: index + 1, status: 'ok', name: experience.productInfo.name,
+                    mappedCount: experience._importMeta?.mappedCount || 0,
+                    totalAttributes: experience._importMeta?.totalAttributes || 0 });
             } else {
                 results.failed++;
-                results.errors.push({ row: index + 1, error: 'Failed to create experience' });
+                results.errors.push({ row: index + 1, error: 'Missing product name' });
+                results.rowResults.push({ row: index + 1, status: 'error', error: 'Missing product name' });
             }
         } catch (error) {
             results.failed++;
             results.errors.push({ row: index + 1, error: error.message });
+            results.rowResults.push({ row: index + 1, status: 'error', error: error.message });
         }
     });
 
-    // Save data after batch import
     if (results.success > 0) {
         saveData();
+        // Store IDs so undo is possible
+        localStorage.setItem('lastBatchImportIds', JSON.stringify(results.importedIds));
     }
 
     return results;
 }
 
 /**
- * Create experience object from row data
+ * Create experience object from a row using the active lexicon structure.
+ * All attributes default to 0; only mapped columns overwrite with real values.
  */
 function createExperienceFromRow(row, columnMapping) {
     // Extract product info
     const productInfo = {};
+    let needState = 'reward';
+
     Object.keys(columnMapping.productInfo).forEach(column => {
         const field = columnMapping.productInfo[column];
-        productInfo[field] = row[column] || '';
+        if (field === 'needState') {
+            needState = (row[column] || 'reward').toLowerCase();
+        } else {
+            productInfo[field] = row[column] || '';
+        }
     });
 
-    // Ensure required fields
     if (!productInfo.name) return null;
     if (!productInfo.brand) productInfo.brand = 'Unknown';
     if (!productInfo.category) productInfo.category = 'food';
 
-    // Create experience object
-    const experience = {
+    // Build stages from active lexicon (all attributes initialised to 0)
+    const stages = {};
+    const lexicon = typeof getActiveLexicon === 'function' ? getActiveLexicon() : null;
+
+    if (lexicon) {
+        lexicon.stages.forEach(stage => {
+            stages[stage.id] = { emotions: {} };
+            stage.attributes.forEach(attr => {
+                stages[stage.id][attr.id] = attr.defaultValue ?? 0;
+            });
+            stage.emotions.forEach(emotion => {
+                stages[stage.id].emotions[emotion] = 0;
+            });
+        });
+    } else {
+        // Minimal fallback when lexicon is unavailable
+        ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overallAssessment']
+            .forEach(stageId => { stages[stageId] = { emotions: {} }; });
+    }
+
+    // Apply mapped attribute values
+    const mappedAttributes = [];
+    Object.keys(columnMapping.attributes).forEach(column => {
+        const path = columnMapping.attributes[column]; // e.g. "frontMouth.sweetness"
+        const dotIdx = path.indexOf('.');
+        if (dotIdx === -1) return;
+        const stageId = path.substring(0, dotIdx);
+        const attrId = path.substring(dotIdx + 1);
+        if (stages[stageId] === undefined) return;
+        const raw = row[column];
+        if (raw !== undefined && raw !== '') {
+            const value = parseFloat(raw);
+            if (!isNaN(value)) {
+                stages[stageId][attrId] = Math.max(0, Math.min(10, value));
+                mappedAttributes.push(path);
+            }
+        }
+    });
+
+    const totalAttrs = lexicon
+        ? lexicon.stages.reduce((sum, s) => sum + s.attributes.length, 0)
+        : 0;
+
+    return {
         id: Date.now() + Math.random(),
         timestamp: new Date().toISOString(),
-        productInfo: productInfo,
-        stages: [
-            {
-                name: 'Appearance',
-                attributes: [
-                    { label: 'Visual Appeal', value: 5 },
-                    { label: 'Color', value: 5 },
-                    { label: 'Clarity', value: 5 },
-                    { label: 'Gloss', value: 5 }
-                ],
-                emotions: []
-            },
-            {
-                name: 'Aroma',
-                attributes: [
-                    { label: 'Aroma Intensity', value: 5 },
-                    { label: 'Complexity', value: 5 },
-                    { label: 'Pleasantness', value: 5 }
-                ],
-                emotions: []
-            },
-            {
-                name: 'Front of Mouth',
-                attributes: [
-                    { label: 'Initial Taste', value: 5 },
-                    { label: 'Sweetness', value: 5 },
-                    { label: 'Sourness', value: 5 },
-                    { label: 'Saltiness', value: 5 },
-                    { label: 'Bitterness', value: 5 },
-                    { label: 'Umami', value: 5 }
-                ],
-                emotions: []
-            },
-            {
-                name: 'Mid/Rear Mouth',
-                attributes: [
-                    { label: 'Flavor Development', value: 5 },
-                    { label: 'Texture', value: 5 },
-                    { label: 'Richness', value: 5 }
-                ],
-                emotions: []
-            },
-            {
-                name: 'Aftertaste',
-                attributes: [
-                    { label: 'Aftertaste Quality', value: 5 },
-                    { label: 'Aftertaste Length', value: 5 }
-                ],
-                emotions: []
-            },
-            {
-                name: 'Overall',
-                attributes: [
-                    { label: 'Overall Satisfaction', value: 5 },
-                    { label: 'Purchase Intent', value: 5 },
-                    { label: 'Uniqueness', value: 5 }
-                ],
-                emotions: []
-            }
-        ],
-        notes: ''
+        productInfo,
+        stages,
+        needState,
+        notes: columnMapping.productInfo.notes
+            ? (row[Object.keys(columnMapping.productInfo).find(c => columnMapping.productInfo[c] === 'notes')] || '')
+            : '',
+        _importMeta: {
+            importedAt: new Date().toISOString(),
+            mappedAttributes,
+            mappedCount: mappedAttributes.length,
+            totalAttributes: totalAttrs
+        }
     };
-
-    // Map attribute values from row data
-    Object.keys(columnMapping.attributes).forEach(column => {
-        const path = columnMapping.attributes[column];
-        const parsedPath = parseAttributePath(path);
-
-        if (parsedPath) {
-            const stage = experience.stages.find(s => s.name === parsedPath.stageName);
-            if (stage) {
-                // Find attribute by ID (convert label to camelCase for matching)
-                const attr = stage.attributes.find(a => {
-                    const attrId = a.label.replace(/\s+/g, '');
-                    return attrId.toLowerCase() === parsedPath.attributeId.toLowerCase();
-                });
-
-                if (attr) {
-                    const value = parseFloat(row[column]);
-                    if (!isNaN(value)) {
-                        attr.value = Math.max(1, Math.min(10, value)); // Clamp to 1-10
-                    }
-                }
-            }
-        }
-    });
-
-    // Map emotions if available
-    Object.keys(columnMapping.emotions).forEach(column => {
-        const emotionsText = row[column];
-        if (emotionsText) {
-            // Split by comma and distribute across stages
-            const emotions = emotionsText.split(',').map(e => e.trim()).filter(e => e);
-            if (emotions.length > 0) {
-                // Add to overall stage by default
-                const overallStage = experience.stages.find(s => s.name === 'Overall');
-                if (overallStage) {
-                    overallStage.emotions = emotions;
-                }
-            }
-        }
-    });
-
-    return experience;
 }
 
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Get sample template for batch import
- * Includes all sensory attributes including new ones (acidity, spiciness, astringency, mouthfeel, persistence, carbonation)
+ * Generate import template from the active lexicon.
+ * Headers use stage.attrId format so auto-mapping works perfectly on re-import.
+ * Includes one representative attribute per sub-category to keep the file manageable.
  */
 function generateBatchImportTemplate() {
-    const headers = [
-        'Product_Name',
-        'Brand',
-        'Category',
-        'Variant',
-        // Appearance
-        'visualAppeal',
-        'colorIntensity',
-        'carbonation',
-        // Aroma
-        'aromaIntensity',
-        'aromaSweetness',
-        'aromaComplexity',
-        'persistence',
-        // Front Mouth
-        'sweetness',
-        'sourness',
-        'saltiness',
-        'texture',
-        'acidity',
-        'spiciness',
-        // Mid/Rear Mouth
-        'bitterness',
-        'umami',
-        'richness',
-        'creaminess',
-        'astringency',
-        'mouthfeel',
-        // Aftertaste
-        'duration',
-        'pleasantness',
-        'cleanness'
-    ];
+    const productHeaders = ['Product_Name', 'Brand', 'Category', 'Variant', 'Need_State'];
+    const attributeHeaders = [];
 
-    const sampleRow = [
-        'Sample Product',
-        'Sample Brand',
-        'food',
-        'Original',
-        // Appearance
-        '8',
-        '7',
-        '5',
-        // Aroma
-        '7',
-        '6',
-        '8',
-        '6',
-        // Front Mouth
-        '6',
-        '4',
-        '3',
-        '7',
-        '3',
-        '2',
-        // Mid/Rear Mouth
-        '3',
-        '4',
-        '7',
-        '6',
-        '2',
-        '6',
-        // Aftertaste
-        '6',
-        '8',
-        '7'
-    ];
+    const lexicon = typeof getActiveLexicon === 'function' ? getActiveLexicon() : null;
 
-    let csv = headers.join(',') + '\n';
-    csv += sampleRow.join(',') + '\n';
+    if (lexicon) {
+        lexicon.stages.forEach(stage => {
+            // Include up to 6 attributes per stage (first + key ones by position)
+            const attrs = stage.attributes.length <= 6
+                ? stage.attributes
+                : [stage.attributes[0], ...stage.attributes.slice(-5)];
+            attrs.forEach(attr => {
+                attributeHeaders.push(`${stage.id}.${attr.id}`);
+            });
+        });
+    } else {
+        // Fallback using current lexicon attribute IDs
+        [
+            'appearance.visual-appeal', 'appearance.color-richness',
+            'aroma.smell-strength', 'aroma.smell-complexity',
+            'frontMouth.sweetness', 'frontMouth.sourness-tartness', 'frontMouth.saltiness', 'frontMouth.overall-initial-impact',
+            'midRearMouth.richness-fullness', 'midRearMouth.umami-savoury-depth', 'midRearMouth.overall-mid-palate-intensity',
+            'texture.smoothness', 'texture.creaminess', 'texture.crunchiness', 'texture.overall-textural-complexity',
+            'aftertaste.finish-length', 'aftertaste.finish-quality', 'aftertaste.finish-cleanness',
+            'overallAssessment.overall-quality', 'overallAssessment.satisfaction-overall'
+        ].forEach(h => attributeHeaders.push(h));
+    }
 
-    return csv;
+    const headers = [...productHeaders, ...attributeHeaders];
+    const sampleRow = ['Sample Product', 'Sample Brand', 'food', 'Original', 'reward',
+        ...attributeHeaders.map(() => '0')];
+
+    return headers.join(',') + '\n' + sampleRow.join(',') + '\n';
 }
 
 /**
@@ -766,6 +687,9 @@ if (typeof window !== 'undefined') {
         previewAutoEvaluation,
         generateBatchImportTemplate,
         downloadBatchImportTemplate,
+        detectDuplicates,
+        undoLastBatchImport,
         getConfidenceLabel
     };
+    window.undoLastBatchImport = undoLastBatchImport;
 }

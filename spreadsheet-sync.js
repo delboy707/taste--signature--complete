@@ -452,15 +452,21 @@ function showColumnMapping(headers) {
         { id: 'brand', label: 'Brand' },
         { id: 'category', label: 'Category' },
         { id: 'variant', label: 'Variant/Flavor' },
-        { id: 'appearance', label: 'Appearance (1-10)' },
-        { id: 'aroma', label: 'Aroma (1-10)' },
-        { id: 'sweetness', label: 'Sweetness (1-10)' },
-        { id: 'sourness', label: 'Sourness (1-10)' },
-        { id: 'bitterness', label: 'Bitterness (1-10)' },
-        { id: 'saltiness', label: 'Saltiness (1-10)' },
-        { id: 'texture', label: 'Texture (1-10)' },
-        { id: 'aftertaste', label: 'Aftertaste (1-10)' },
-        { id: 'overall', label: 'Overall Score (1-10)' },
+        // Appearance
+        { id: 'appearance', label: 'Visual Appeal (0-10)' },
+        // Aroma
+        { id: 'aroma', label: 'Aroma Strength (0-10)' },
+        // Front Mouth
+        { id: 'sweetness', label: 'Sweetness (0-10)' },
+        { id: 'sourness', label: 'Sourness/Tartness (0-10)' },
+        { id: 'saltiness', label: 'Saltiness (0-10)' },
+        { id: 'bitterness', label: 'Bitterness (0-10)' },
+        // Texture
+        { id: 'texture', label: 'Texture Complexity (0-10)' },
+        // Aftertaste
+        { id: 'aftertaste', label: 'Finish Quality (0-10)' },
+        // Overall
+        { id: 'overall', label: 'Overall Quality (0-10)' },
         { id: 'notes', label: 'Notes' }
     ];
 
@@ -571,6 +577,36 @@ function importMappedData(rows, mapping) {
                 return; // Skip empty rows
             }
 
+            // Build stages from active lexicon (all attributes default to 0)
+            const stages = {};
+            if (typeof getActiveLexicon === 'function') {
+                const lex = getActiveLexicon();
+                lex.stages.forEach(stage => {
+                    stages[stage.id] = { emotions: {} };
+                    stage.attributes.forEach(attr => { stages[stage.id][attr.id] = attr.defaultValue ?? 0; });
+                    stage.emotions.forEach(emotion => { stages[stage.id].emotions[emotion] = 0; });
+                });
+            } else {
+                ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overallAssessment']
+                    .forEach(id => { stages[id] = { emotions: {} }; });
+            }
+
+            // Apply the mapped sensory columns using new attribute IDs
+            if (mapping.appearance !== undefined) stages.appearance['visual-appeal'] = parseScore(row[mapping.appearance]) ?? 0;
+            if (mapping.aroma !== undefined) stages.aroma['smell-strength'] = parseScore(row[mapping.aroma]) ?? 0;
+            if (mapping.sweetness !== undefined) {
+                stages.frontMouth['sweetness'] = parseScore(row[mapping.sweetness]) ?? 0;
+            }
+            if (mapping.sourness !== undefined) stages.frontMouth['sourness-tartness'] = parseScore(row[mapping.sourness]) ?? 0;
+            if (mapping.saltiness !== undefined) stages.frontMouth['saltiness'] = parseScore(row[mapping.saltiness]) ?? 0;
+            if (mapping.bitterness !== undefined) stages.midRearMouth['bitterness-development'] = parseScore(row[mapping.bitterness]) ?? 0;
+            if (mapping.texture !== undefined) stages.texture['overall-textural-complexity'] = parseScore(row[mapping.texture]) ?? 0;
+            if (mapping.aftertaste !== undefined) {
+                stages.aftertaste['finish-quality'] = parseScore(row[mapping.aftertaste]) ?? 0;
+                stages.aftertaste['finish-length'] = parseScore(row[mapping.aftertaste]) ?? 0;
+            }
+            if (mapping.overall !== undefined) stages.overallAssessment['overall-quality'] = parseScore(row[mapping.overall]) ?? 0;
+
             const experience = {
                 id: Date.now() + index,
                 timestamp: new Date().toISOString(),
@@ -581,47 +617,8 @@ function importMappedData(rows, mapping) {
                     type: mapping.category !== undefined ? row[mapping.category] || 'food' : 'food',
                     variant: mapping.variant !== undefined ? row[mapping.variant] || '' : ''
                 },
-                stages: {
-                    appearance: {
-                        visualAppeal: parseScore(row[mapping.appearance]) || 5,
-                        colorIntensity: 5,
-                        overallIntensity: parseScore(row[mapping.appearance]) || 5,
-                        emotions: {}
-                    },
-                    aroma: {
-                        intensity: parseScore(row[mapping.aroma]) || 5,
-                        sweetness: parseScore(row[mapping.sweetness]) || 5,
-                        complexity: 5,
-                        overallIntensity: parseScore(row[mapping.aroma]) || 5,
-                        emotions: {}
-                    },
-                    frontMouth: {
-                        sweetness: parseScore(row[mapping.sweetness]) || 5,
-                        sourness: parseScore(row[mapping.sourness]) || 5,
-                        saltiness: parseScore(row[mapping.saltiness]) || 5,
-                        texture: parseScore(row[mapping.texture]) || 5,
-                        overallIntensity: 5,
-                        emotions: {}
-                    },
-                    midRearMouth: {
-                        bitterness: parseScore(row[mapping.bitterness]) || 5,
-                        umami: 5,
-                        richness: 5,
-                        creaminess: 5,
-                        overallIntensity: 5,
-                        emotions: {}
-                    },
-                    aftertaste: {
-                        duration: parseScore(row[mapping.aftertaste]) || 5,
-                        pleasantness: parseScore(row[mapping.aftertaste]) || 5,
-                        cleanness: 5,
-                        overallIntensity: parseScore(row[mapping.aftertaste]) || 5,
-                        emotions: {}
-                    }
-                },
+                stages,
                 needState: 'reward',
-                emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
-                overallSatisfaction: parseScore(row[mapping.overall]) || 5,
                 notes: mapping.notes !== undefined ? row[mapping.notes] || '' : ''
             };
 

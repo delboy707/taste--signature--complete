@@ -100,9 +100,9 @@ function mapFlavorConceptToExperience(concept) {
         },
         stages: {
             appearance: {
-                visualAppeal: intensityProfile.appearance,
-                colorIntensity: intensityProfile.appearance,
-                overallIntensity: intensityProfile.appearance,
+                'visual-appeal': intensityProfile.appearance,
+                'color-richness': intensityProfile.appearance,
+                'bubble-activity': tasteAttributes.some(t => ['sparkling', 'carbonated', 'fizzy'].includes(t)) ? 8 : 0,
                 emotions: {
                     anticipation: Math.min(10, intensityProfile.appearance + 1),
                     desire: intensityProfile.appearance,
@@ -112,54 +112,62 @@ function mapFlavorConceptToExperience(concept) {
                 }
             },
             aroma: {
-                intensity: intensityProfile.aroma,
-                sweetness: tasteAttributes.includes('sweet') ? 8 : 5,
-                complexity: tasteAttributes.length >= 3 ? 8 : 6,
-                overallIntensity: intensityProfile.aroma,
+                'smell-strength': intensityProfile.aroma,
+                'caramel-toffee-notes': tasteAttributes.includes('sweet') ? 8 : 0,
+                'fruity-notes': tasteAttributes.some(t => ['fruity', 'citrus', 'citrusy', 'tropical'].includes(t)) ? 8 : 0,
+                'smell-complexity': tasteAttributes.length >= 3 ? 8 : 5,
+                'smell-duration': intensityProfile.aroma,
                 emotions: {
                     pleasure: intensityProfile.aroma,
                     comfort: emotionalProfile.triggers.melt,
-                    nostalgia: emotions.includes('nostalgia') ? 8 : 4,
+                    nostalgia: emotions.includes('nostalgia') ? 8 : 0,
                     happiness: 6,
-                    energy: emotionalProfile.needState === 'rejuvenation' ? 7 : 5,
-                    relaxation: emotionalProfile.needState === 'escape' ? 7 : 4
+                    energized: emotionalProfile.needState === 'rejuvenation' ? 7 : 0,
+                    relaxed: emotionalProfile.needState === 'escape' ? 7 : 0
                 }
             },
             frontMouth: {
-                sweetness: tasteAttributes.includes('sweet') ? 8 : 5,
-                sourness: tasteAttributes.some(t => ['sour', 'tart', 'citrus', 'citrusy', 'tangy'].includes(t)) ? 7 : 3,
-                saltiness: tasteAttributes.includes('salty') || tasteAttributes.includes('savory') ? 7 : 3,
-                texture: emotionalProfile.triggers.crunch,
-                overallIntensity: intensityProfile.front,
+                sweetness: tasteAttributes.includes('sweet') ? 8 : 0,
+                'sourness-tartness': tasteAttributes.some(t => ['sour', 'tart', 'citrus', 'citrusy', 'tangy'].includes(t)) ? 7 : 0,
+                saltiness: tasteAttributes.includes('salty') || tasteAttributes.includes('savory') ? 7 : 0,
+                'spicy-heat': tasteAttributes.some(t => ['spicy', 'hot', 'fiery'].includes(t)) ? 7 : 0,
+                'overall-initial-impact': intensityProfile.front,
                 emotions: {
                     excitement: emotionalProfile.needState === 'reward' ? 8 : 6,
                     satisfaction: 7
                 }
             },
             midRearMouth: {
-                bitterness: tasteAttributes.some(t => ['bitter', 'bitter-sweet'].includes(t)) ? 7 : 3,
-                umami: tasteAttributes.includes('umami') || tasteAttributes.includes('savory') ? 8 : 4,
-                richness: tasteAttributes.some(t => ['rich', 'creamy', 'robust'].includes(t)) ? 8 : 5,
-                creaminess: tasteAttributes.includes('creamy') ? 9 : 4,
-                overallIntensity: intensityProfile.mid,
+                'bitterness-development': tasteAttributes.some(t => ['bitter', 'bitter-sweet'].includes(t)) ? 7 : 0,
+                'umami-savoury-depth': tasteAttributes.includes('umami') || tasteAttributes.includes('savory') ? 8 : 0,
+                'richness-fullness': tasteAttributes.some(t => ['rich', 'creamy', 'robust'].includes(t)) ? 8 : 5,
+                'overall-mid-palate-intensity': intensityProfile.mid,
                 emotions: {
                     indulgence: emotionalProfile.triggers.melt,
                     comfort: emotionalProfile.triggers.melt
                 }
             },
+            texture: {
+                creaminess: tasteAttributes.includes('creamy') ? 9 : 0,
+                crunchiness: tasteAttributes.includes('crunchy') ? 8 : 0,
+                smoothness: tasteAttributes.some(t => ['creamy', 'smooth'].includes(t)) ? 7 : 0,
+                'overall-textural-complexity': 5,
+                emotions: { satisfied: 7, pleased: 6 }
+            },
             aftertaste: {
-                duration: intensityProfile.after >= 7 ? 8 : 6,
-                pleasantness: 8,
-                cleanness: emotionalProfile.triggers.refreshment,
-                overallIntensity: intensityProfile.after,
-                emotions: {
-                    satisfaction: 8,
-                    completeness: 7
-                }
+                'finish-length': intensityProfile.after >= 7 ? 8 : 6,
+                'finish-quality': 8,
+                'finish-cleanness': emotionalProfile.triggers.refreshment,
+                emotions: { satisfaction: 8, completeness: 7, 'craving-want-more': emotionalProfile.triggers.moreishness }
+            },
+            overallAssessment: {
+                'overall-quality': Math.round((intensityProfile.appearance + intensityProfile.aroma + intensityProfile.front + intensityProfile.mid + intensityProfile.after) / 5),
+                'satisfaction-overall': 7,
+                craveability: emotionalProfile.triggers.moreishness,
+                emotions: { satisfaction: 8, happiness: 7, enjoyment: 7 }
             }
         },
         needState: emotionalProfile.needState,
-        emotionalTriggers: emotionalProfile.triggers,
         notes: `Imported from TasteAI. Market trend: ${concept.Market_Trend_Alignment}`
     };
 
@@ -253,85 +261,57 @@ function parseCSVLine(line) {
 }
 
 /**
- * Create default stages structure for imported products
- * Includes new sensory attributes: carbonation, persistence, acidity, spiciness, astringency, mouthfeel
- * Includes new emotions: surprise, intrigue, disappointment, sophistication, craving
+ * Create default stages structure from the active lexicon.
+ * All attributes default to 0. Falls back to a minimal structure if lexicon unavailable.
  */
 function createDefaultStages() {
+    if (typeof getActiveLexicon === 'function') {
+        const lexicon = getActiveLexicon();
+        const stages = {};
+        lexicon.stages.forEach(stage => {
+            stages[stage.id] = { emotions: {} };
+            stage.attributes.forEach(attr => {
+                stages[stage.id][attr.id] = attr.defaultValue ?? 0;
+            });
+            stage.emotions.forEach(emotion => {
+                stages[stage.id].emotions[emotion] = 0;
+            });
+        });
+        return stages;
+    }
+
+    // Minimal fallback using current lexicon attribute IDs
     return {
         appearance: {
-            visualAppeal: 5,
-            colorIntensity: 5,
-            carbonation: 5,
-            overallIntensity: 5,
-            emotions: {
-                anticipation: 5,
-                desire: 5,
-                excitement: 5,
-                happiness: 5,
-                curiosity: 5,
-                surprise: 5
-            }
+            'visual-appeal': 0, 'color-richness': 0, 'bubble-activity': 0,
+            emotions: { anticipation: 0, curiosity: 0, desire: 0, excitement: 0 }
         },
         aroma: {
-            intensity: 5,
-            sweetness: 5,
-            complexity: 5,
-            persistence: 5,
-            overallIntensity: 5,
-            emotions: {
-                pleasure: 5,
-                comfort: 5,
-                nostalgia: 5,
-                happiness: 5,
-                energy: 5,
-                relaxation: 5,
-                intrigue: 5
-            }
+            'smell-strength': 0, 'smell-complexity': 0, 'caramel-toffee-notes': 0,
+            emotions: { pleasure: 0, comfort: 0, nostalgia: 0, intrigued: 0 }
         },
         frontMouth: {
-            sweetness: 5,
-            sourness: 5,
-            saltiness: 5,
-            texture: 5,
-            acidity: 5,
-            spiciness: 3,
-            overallIntensity: 5,
-            emotions: {
-                excitement: 5,
-                satisfaction: 5,
-                happiness: 5,
-                pleasure: 5,
-                disappointment: 3
-            }
+            'sweetness': 0, 'sourness-tartness': 0, 'saltiness': 0,
+            'spicy-heat': 0, 'overall-initial-impact': 0,
+            emotions: { excitement: 0, satisfaction: 0, happiness: 0, pleasure: 0 }
         },
         midRearMouth: {
-            bitterness: 5,
-            umami: 5,
-            richness: 5,
-            creaminess: 5,
-            astringency: 3,
-            mouthfeel: 5,
-            overallIntensity: 5,
-            emotions: {
-                indulgence: 5,
-                comfort: 5,
-                satisfaction: 5,
-                pleasure: 5,
-                sophistication: 5
-            }
+            'bitterness-development': 0, 'umami-savoury-depth': 0,
+            'richness-fullness': 0, 'overall-mid-palate-intensity': 0,
+            emotions: { indulgence: 0, comfort: 0, satisfaction: 0, pleasure: 0 }
+        },
+        texture: {
+            'smoothness': 0, 'creaminess': 0, 'crunchiness': 0,
+            'overall-textural-complexity': 0,
+            emotions: { satisfied: 0, pleased: 0, comforted: 0, excited: 0 }
         },
         aftertaste: {
-            duration: 5,
-            pleasantness: 5,
-            cleanness: 5,
-            overallIntensity: 5,
-            emotions: {
-                satisfaction: 5,
-                completeness: 5,
-                happiness: 5,
-                craving: 5
-            }
+            'finish-length': 0, 'finish-quality': 0, 'finish-cleanness': 0,
+            emotions: { satisfaction: 0, completeness: 0, happiness: 0, 'craving-want-more': 0 }
+        },
+        overallAssessment: {
+            'overall-quality': 0, 'satisfaction-overall': 0, 'balance': 0, 'craveability': 0,
+            emotions: { satisfaction: 0, happiness: 0, pleasure: 0, enjoyment: 0 }
         }
     };
 }
@@ -373,7 +353,6 @@ function createBasicExperience(item) {
         },
         stages: createDefaultStages(),
         needState: 'reward',
-        emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
         notes: 'Imported - requires evaluation'
     };
 }
