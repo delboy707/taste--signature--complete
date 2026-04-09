@@ -7676,3 +7676,98 @@ textarea:focus {
         width: 100%;
     }
 }
+
+/* ===== DYNAMIC FORM: SUBCATEGORY GROUPS & TOOLTIPS ===== */
+.subcategory-group {
+    margin-bottom: 6px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.subcategory-toggle {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--card-bg, #f8fafc);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary, #1a202c);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.subcategory-toggle:hover {
+    background: var(--hover-bg, #f1f5f9);
+}
+
+.subcategory-count {
+    font-weight: 400;
+    color: var(--text-light, #64748b);
+    font-size: 0.8rem;
+    margin-right: auto;
+}
+
+.toggle-arrow {
+    display: inline-block;
+    font-size: 0.65rem;
+    transition: transform 0.2s;
+    color: var(--text-light, #64748b);
+}
+
+.toggle-arrow.open {
+    transform: rotate(90deg);
+}
+
+.subcategory-content {
+    padding: 8px 14px;
+    background: white;
+}
+
+.subcategory-content.collapsed {
+    display: none;
+}
+
+/* Technical term tooltip */
+.attr-info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--primary, #667eea);
+    color: white;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 700;
+    cursor: help;
+    margin-left: 3px;
+    position: relative;
+    vertical-align: middle;
+}
+
+.attr-info-icon:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 200;
+    pointer-events: none;
+    font-style: normal;
+    font-weight: 400;
+    max-width: 260px;
+    white-space: normal;
+    text-align: center;
+}

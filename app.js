@@ -2,7 +2,7 @@
 let experiences = [];
 let charts = {};
 let currentStage = 1;
-const totalStages = 7;
+let totalStages = 9; // updated dynamically by regenerateTasteForm()
 let firestoreManager = null;
 let isCloudSyncEnabled = false;
 
@@ -180,6 +180,8 @@ window.toggleNavGroup = toggleNavGroup;
 
 // ===== FORM MANAGEMENT =====
 function initForm() {
+    regenerateTasteForm();
+
     const form = document.getElementById('taste-form');
     const btnNext = document.getElementById('btn-next-stage');
     const btnPrev = document.getElementById('btn-prev-stage');
@@ -383,6 +385,165 @@ function initSliders() {
     });
 }
 
+// ===== DYNAMIC FORM GENERATION =====
+const TEXTURE_SUBCATEGORY_LABELS = {
+    'mechanical-primary': 'Mechanical Primary',
+    'mechanical-secondary': 'Mechanical Secondary',
+    'elasticity-recovery': 'Elasticity & Recovery',
+    'viscosity-flow': 'Viscosity & Flow',
+    'particle-related': 'Particle Related',
+    'shape-conformation': 'Shape & Conformation',
+    'density-homogeneity': 'Density & Homogeneity',
+    'surface-oral': 'Surface & Oral',
+    'moisture': 'Moisture',
+    'fat-related': 'Fat Related',
+    'thermal': 'Thermal',
+    'carbonation-foam': 'Carbonation & Foam',
+    'trigeminal-chemesthetic': 'Trigeminal & Chemesthetic',
+    'dynamic-texture': 'Dynamic Texture',
+    'integrated': 'Integrated'
+};
+
+const TEXTURE_SUBCATEGORY_ORDER = [
+    'mechanical-primary', 'mechanical-secondary', 'elasticity-recovery',
+    'viscosity-flow', 'particle-related', 'shape-conformation',
+    'density-homogeneity', 'surface-oral', 'moisture', 'fat-related',
+    'thermal', 'carbonation-foam', 'trigeminal-chemesthetic',
+    'dynamic-texture', 'integrated'
+];
+
+function buildSliderHTML(stageId, attr) {
+    const id = `${stageId}-${attr.id}`;
+    const defaultVal = attr.defaultValue ?? 0;
+    const tooltipHTML = attr.technicalTerm
+        ? ` <span class="attr-info-icon" title="${attr.technicalTerm}">i</span>`
+        : '';
+    return `
+                <div class="slider-group">
+                    <label for="${id}">${attr.label}${tooltipHTML}: <span id="${id}-val">${defaultVal}</span></label>
+                    <input type="range" id="${id}" class="stage-slider" min="${attr.min}" max="${attr.max}" value="${defaultVal}">
+                </div>`;
+}
+
+function buildStageHTML(stage, stageNum) {
+    const isTexture = stage.id === 'texture';
+    let attrsHTML = '';
+
+    if (isTexture) {
+        const grouped = {};
+        stage.attributes.forEach(attr => {
+            const sub = attr.subCategory || 'integrated';
+            if (!grouped[sub]) grouped[sub] = [];
+            grouped[sub].push(attr);
+        });
+        TEXTURE_SUBCATEGORY_ORDER.forEach(sub => {
+            if (!grouped[sub]) return;
+            const label = TEXTURE_SUBCATEGORY_LABELS[sub] || sub;
+            const attrs = grouped[sub];
+            attrsHTML += `
+                <div class="subcategory-group">
+                    <button type="button" class="subcategory-toggle" onclick="this.nextElementSibling.classList.toggle('collapsed');this.querySelector('.toggle-arrow').classList.toggle('open')">
+                        ${label} <span class="subcategory-count">(${attrs.length})</span> <span class="toggle-arrow">&#9654;</span>
+                    </button>
+                    <div class="subcategory-content collapsed">
+                        ${attrs.map(a => buildSliderHTML(stage.id, a)).join('')}
+                    </div>
+                </div>`;
+        });
+    } else {
+        attrsHTML = stage.attributes.map(a => buildSliderHTML(stage.id, a)).join('');
+    }
+
+    const emotionsHTML = stage.emotions.map(emotion => {
+        const id = `${stage.id}-emotion-${emotion}`;
+        const label = emotion.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `
+                    <div class="slider-group">
+                        <label for="${id}">${label}: <span id="${id}-val">0</span></label>
+                        <input type="range" id="${id}" class="stage-slider emotion-slider" min="0" max="10" value="0">
+                    </div>`;
+    }).join('');
+
+    return `
+            <div class="form-stage" data-stage="${stageNum}">
+                <h4>Stage ${stageNum - 1}: ${stage.name}</h4>
+                <h5 class="section-heading">Sensory Attributes</h5>
+                ${attrsHTML}
+                <h5 class="section-heading">Emotional Outcomes (What You Feel)</h5>
+                <div class="emotion-grid">
+                    ${emotionsHTML}
+                </div>
+            </div>`;
+}
+
+function regenerateTasteForm() {
+    if (typeof getActiveLexicon !== 'function') return;
+    const lexicon = getActiveLexicon();
+    const stages = lexicon.stages;
+
+    // totalStages = 1 (product info) + N sensory stages + 1 (final/need-state)
+    totalStages = stages.length + 2;
+
+    // Rebuild stage indicators
+    const progressContainer = document.getElementById('stage-progress-container');
+    if (progressContainer) {
+        let html = `
+                                <div class="stage-indicator active" data-stage="1">
+                                    <div class="stage-number">1</div>
+                                    <div class="stage-name">Product Info</div>
+                                </div>`;
+        stages.forEach((stage, i) => {
+            const n = i + 2;
+            html += `
+                                <div class="stage-indicator" data-stage="${n}">
+                                    <div class="stage-number">${n}</div>
+                                    <div class="stage-name">${stage.name}</div>
+                                </div>`;
+        });
+        html += `
+                                <div class="stage-indicator" data-stage="${totalStages}">
+                                    <div class="stage-number">${totalStages}</div>
+                                    <div class="stage-name">Complete</div>
+                                </div>`;
+        progressContainer.innerHTML = html;
+    }
+
+    // Rebuild sensory stages
+    const stagesContainer = document.getElementById('sensory-stages-container');
+    if (stagesContainer) {
+        stagesContainer.innerHTML = stages.map((stage, i) => buildStageHTML(stage, i + 2)).join('');
+    }
+
+    // Update final stage data-stage number
+    const finalStage = document.getElementById('final-stage');
+    if (finalStage) finalStage.setAttribute('data-stage', totalStages);
+
+    // Re-attach slider listeners
+    initSliders();
+}
+
+function collectSensoryData() {
+    if (typeof getActiveLexicon !== 'function') return {};
+    const lexicon = getActiveLexicon();
+    const stages = {};
+    lexicon.stages.forEach(stage => {
+        const stageData = {};
+        stage.attributes.forEach(attr => {
+            const el = document.getElementById(`${stage.id}-${attr.id}`);
+            stageData[attr.id] = el ? (parseInt(el.value) || 0) : 0;
+        });
+        stageData.emotions = {};
+        stage.emotions.forEach(emotion => {
+            const el = document.getElementById(`${stage.id}-emotion-${emotion}`);
+            stageData.emotions[emotion] = el ? (parseInt(el.value) || 0) : 0;
+        });
+        stages[stage.id] = stageData;
+    });
+    return stages;
+}
+
+window.regenerateTasteForm = regenerateTasteForm;
+
 function autoSaveFormProgress() {
     const form = document.getElementById('taste-form');
     const formData = new FormData(form);
@@ -533,89 +694,8 @@ function handleFormSubmit(e) {
         originalTestId: originalTestId,
         isRetest: originalTestId !== null,
         reformulationStatus: document.getElementById('reformulation-status')?.value || '',
-        stages: {
-            appearance: {
-                visualAppeal: parseInt(document.getElementById('appearance-visual-appeal').value),
-                colorIntensity: parseInt(document.getElementById('appearance-color-intensity').value),
-                overallIntensity: parseInt(document.getElementById('appearance-overall-intensity').value),
-                carbonation: parseInt(document.getElementById('appearance-carbonation')?.value || 0),
-                emotions: {
-                    anticipation: parseInt(document.getElementById('appearance-anticipation').value),
-                    desire: parseInt(document.getElementById('appearance-desire').value),
-                    excitement: parseInt(document.getElementById('appearance-excitement').value),
-                    happiness: parseInt(document.getElementById('appearance-happiness').value),
-                    curiosity: parseInt(document.getElementById('appearance-curiosity').value),
-                    surprise: parseInt(document.getElementById('appearance-surprise')?.value || 0)
-                }
-            },
-            aroma: {
-                intensity: parseInt(document.getElementById('aroma-intensity').value),
-                sweetness: parseInt(document.getElementById('aroma-sweetness').value),
-                complexity: parseInt(document.getElementById('aroma-complexity').value),
-                overallIntensity: parseInt(document.getElementById('aroma-overall-intensity').value),
-                persistence: parseInt(document.getElementById('aroma-persistence')?.value || 0),
-                emotions: {
-                    pleasure: parseInt(document.getElementById('aroma-pleasure').value),
-                    comfort: parseInt(document.getElementById('aroma-comfort').value),
-                    nostalgia: parseInt(document.getElementById('aroma-nostalgia').value),
-                    happiness: parseInt(document.getElementById('aroma-happiness').value),
-                    energy: parseInt(document.getElementById('aroma-energy').value),
-                    relaxation: parseInt(document.getElementById('aroma-relaxation').value),
-                    intrigue: parseInt(document.getElementById('aroma-intrigue')?.value || 0)
-                }
-            },
-            frontMouth: {
-                sweetness: parseInt(document.getElementById('front-sweetness').value),
-                sourness: parseInt(document.getElementById('front-sourness').value),
-                saltiness: parseInt(document.getElementById('front-saltiness').value),
-                texture: parseInt(document.getElementById('front-texture').value),
-                overallIntensity: parseInt(document.getElementById('front-overall-intensity').value),
-                acidity: parseInt(document.getElementById('front-acidity')?.value || 0),
-                spiciness: parseInt(document.getElementById('front-spiciness')?.value || 0),
-                emotions: {
-                    excitement: parseInt(document.getElementById('front-excitement').value),
-                    satisfaction: parseInt(document.getElementById('front-satisfaction').value),
-                    happiness: parseInt(document.getElementById('front-happiness').value),
-                    pleasure: parseInt(document.getElementById('front-pleasure').value),
-                    disappointment: parseInt(document.getElementById('front-disappointment')?.value || 0)
-                }
-            },
-            midRearMouth: {
-                bitterness: parseInt(document.getElementById('mid-bitterness').value),
-                umami: parseInt(document.getElementById('mid-umami').value),
-                richness: parseInt(document.getElementById('mid-richness').value),
-                creaminess: parseInt(document.getElementById('mid-creaminess').value),
-                overallIntensity: parseInt(document.getElementById('mid-overall-intensity').value),
-                astringency: parseInt(document.getElementById('mid-astringency')?.value || 0),
-                mouthfeel: parseInt(document.getElementById('mid-mouthfeel')?.value || 0),
-                emotions: {
-                    indulgence: parseInt(document.getElementById('mid-indulgence').value),
-                    comfort: parseInt(document.getElementById('mid-comfort').value),
-                    satisfaction: parseInt(document.getElementById('mid-satisfaction').value),
-                    pleasure: parseInt(document.getElementById('mid-pleasure').value),
-                    sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 0)
-                }
-            },
-            aftertaste: {
-                duration: parseInt(document.getElementById('after-duration').value),
-                pleasantness: parseInt(document.getElementById('after-pleasantness').value),
-                cleanness: parseInt(document.getElementById('after-cleanness').value),
-                overallIntensity: parseInt(document.getElementById('after-overall-intensity').value),
-                emotions: {
-                    satisfaction: parseInt(document.getElementById('after-satisfaction').value),
-                    completeness: parseInt(document.getElementById('after-completeness').value),
-                    happiness: parseInt(document.getElementById('after-happiness').value),
-                    craving: parseInt(document.getElementById('after-craving')?.value || 0)
-                }
-            }
-        },
+        stages: collectSensoryData(),
         needState: document.querySelector('input[name="need-state"]:checked').value,
-        emotionalTriggers: {
-            moreishness: parseInt(document.getElementById('trigger-moreishness').value),
-            refreshment: parseInt(document.getElementById('trigger-refreshment').value),
-            melt: parseInt(document.getElementById('trigger-melt').value),
-            crunch: parseInt(document.getElementById('trigger-crunch').value)
-        },
         notes: document.getElementById('notes').value
     };
 
