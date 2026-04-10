@@ -278,7 +278,6 @@ class ExcelImporter {
      */
     extractStageData(row, stageName, subStage = null) {
         const stageData = {
-            overallIntensity: 5,
             emotions: {}
         };
 
@@ -403,10 +402,10 @@ class ExcelImporter {
             'Brand': exp.productInfo?.brand || '',
             'Type': exp.productInfo?.type || '',
             'Timestamp': exp.timestamp || '',
-            'Visual Appeal': exp.stages?.appearance?.visualAppeal || '',
-            'Aroma Intensity': exp.stages?.aroma?.intensity || '',
+            'Visual Appeal': exp.stages?.appearance?.['visual-appeal'] || '',
+            'Aroma Intensity': exp.stages?.aroma?.['smell-strength'] || '',
             'Sweetness': exp.stages?.frontMouth?.sweetness || '',
-            'Overall Satisfaction': exp.stages?.aftertaste?.satisfaction || ''
+            'Overall Satisfaction': exp.stages?.overallAssessment?.['satisfaction-overall'] || ''
             // Add more columns as needed
         }));
 

@@ -8,9 +8,13 @@
 const DATA_TYPE_INDICATORS = {
     sensory_scores: [
         'sweetness', 'sourness', 'bitterness', 'saltiness', 'umami',
-        'visualAppeal', 'visual_appeal', 'colorIntensity', 'color_intensity',
-        'aromaIntensity', 'aroma_intensity', 'richness', 'creaminess',
-        'texture', 'aftertaste', 'duration', 'pleasantness'
+        'visualAppeal', 'visual_appeal', 'visual-appeal',
+        'colorIntensity', 'color_intensity', 'color-richness',
+        'aromaIntensity', 'aroma_intensity', 'smell-strength',
+        'richness', 'richness-fullness', 'creaminess',
+        'texture', 'first-bite-texture',
+        'sourness-tartness', 'bitterness-development', 'umami-savoury-depth',
+        'aftertaste', 'duration', 'finish-length', 'pleasantness', 'finish-quality'
     ],
     consumer_feedback: [
         'feedback', 'comments', 'review', 'rating', 'overall_rating',
@@ -307,15 +311,30 @@ class AutoProcessor {
                 type: row.category || row.Category || row.type || row.Type || 'food',
                 variant: row.variant || row.Variant || row.description || row.Description || ''
             },
-            stages: {
-                appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 5, emotions: {} },
-                aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
-                frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3, emotions: {} },
-                midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5, emotions: {} },
-                aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
-            },
+            stages: (() => {
+                const lexicon = (typeof getActiveLexicon !== 'undefined' ? getActiveLexicon() : null)
+                    || (typeof window !== 'undefined' && window.getActiveLexicon ? window.getActiveLexicon() : null);
+                if (lexicon && lexicon.stages) {
+                    const s = {};
+                    for (const stage of lexicon.stages) {
+                        s[stage.id] = { emotions: {} };
+                        for (const attr of stage.attributes) {
+                            s[stage.id][attr.id] = attr.defaultValue ?? 0;
+                        }
+                    }
+                    return s;
+                }
+                return {
+                    appearance: { 'visual-appeal': 0, 'color-richness': 0, 'bubble-activity': 0, emotions: {} },
+                    aroma: { 'smell-strength': 0, 'smell-complexity': 0, 'caramel-toffee-notes': 0, emotions: {} },
+                    frontMouth: { sweetness: 0, 'sourness-tartness': 0, saltiness: 0, 'first-bite-texture': 0, 'spicy-heat': 0, emotions: {} },
+                    midRearMouth: { 'bitterness-development': 0, 'umami-savoury-depth': 0, 'richness-fullness': 0, 'overall-mid-palate-intensity': 0, emotions: {} },
+                    texture: { creaminess: 0, astringency: 0, smoothness: 0, emotions: {} },
+                    aftertaste: { 'finish-length': 0, 'finish-quality': 0, 'finish-cleanness': 0, emotions: {} },
+                    overallAssessment: { 'overall-quality': 0, 'satisfaction-overall': 0, emotions: {} }
+                };
+            })(),
             needState: '',
-            emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
             notes: row.notes || row.comments || '',
             _autoProcessed: true
         };
@@ -330,7 +349,9 @@ class AutoProcessor {
             aroma: {},
             frontMouth: {},
             midRearMouth: {},
-            aftertaste: {}
+            texture: {},
+            aftertaste: {},
+            overallAssessment: {}
         };
 
         // Normalize row first if SchemaValidation available
@@ -338,74 +359,100 @@ class AutoProcessor {
             ? window.SchemaValidation.normalizeRow(row)
             : row;
 
-        // Map of column names to stage.attribute
+        // Map of column names to stage.attribute (supports both old and new key names)
         const columnMappings = {
             // Appearance
-            'visualAppeal': 'appearance.visualAppeal',
-            'visual_appeal': 'appearance.visualAppeal',
-            'appearance_visual': 'appearance.visualAppeal',
-            'colorIntensity': 'appearance.colorIntensity',
-            'color_intensity': 'appearance.colorIntensity',
-            'appearance_color': 'appearance.colorIntensity',
-            'carbonation': 'appearance.carbonation',
-            'fizz': 'appearance.carbonation',
+            'visualAppeal': 'appearance.visual-appeal',
+            'visual_appeal': 'appearance.visual-appeal',
+            'visual-appeal': 'appearance.visual-appeal',
+            'appearance_visual': 'appearance.visual-appeal',
+            'colorIntensity': 'appearance.color-richness',
+            'color_intensity': 'appearance.color-richness',
+            'color-richness': 'appearance.color-richness',
+            'appearance_color': 'appearance.color-richness',
+            'carbonation': 'appearance.bubble-activity',
+            'bubble_activity': 'appearance.bubble-activity',
+            'bubble-activity': 'appearance.bubble-activity',
+            'fizz': 'appearance.bubble-activity',
 
             // Aroma
-            'aromaIntensity': 'aroma.intensity',
-            'aroma_intensity': 'aroma.intensity',
-            'aromaSweetness': 'aroma.sweetness',
-            'aroma_sweetness': 'aroma.sweetness',
-            'aromaComplexity': 'aroma.complexity',
-            'aroma_complexity': 'aroma.complexity',
-            'persistence': 'aroma.persistence',
-            'aroma_persistence': 'aroma.persistence',
-            'linger': 'aroma.persistence',
+            'aromaIntensity': 'aroma.smell-strength',
+            'aroma_intensity': 'aroma.smell-strength',
+            'smell-strength': 'aroma.smell-strength',
+            'aromaComplexity': 'aroma.smell-complexity',
+            'aroma_complexity': 'aroma.smell-complexity',
+            'smell-complexity': 'aroma.smell-complexity',
+            'persistence': 'aroma.smell-duration',
+            'aroma_persistence': 'aroma.smell-duration',
+            'smell-duration': 'aroma.smell-duration',
+            'linger': 'aroma.smell-duration',
 
             // Front mouth
             'sweetness': 'frontMouth.sweetness',
             'taste_sweetness': 'frontMouth.sweetness',
             'front_sweetness': 'frontMouth.sweetness',
-            'sourness': 'frontMouth.sourness',
-            'taste_sourness': 'frontMouth.sourness',
+            'sourness': 'frontMouth.sourness-tartness',
+            'sourness-tartness': 'frontMouth.sourness-tartness',
+            'taste_sourness': 'frontMouth.sourness-tartness',
+            'acidity': 'frontMouth.sourness-tartness',
+            'acid': 'frontMouth.sourness-tartness',
             'saltiness': 'frontMouth.saltiness',
             'taste_saltiness': 'frontMouth.saltiness',
-            'texture': 'frontMouth.texture',
-            'front_texture': 'frontMouth.texture',
-            'acidity': 'frontMouth.acidity',
-            'acid': 'frontMouth.acidity',
-            'spiciness': 'frontMouth.spiciness',
-            'heat': 'frontMouth.spiciness',
-            'pungency': 'frontMouth.spiciness',
+            'texture': 'frontMouth.first-bite-texture',
+            'first-bite-texture': 'frontMouth.first-bite-texture',
+            'front_texture': 'frontMouth.first-bite-texture',
+            'spiciness': 'frontMouth.spicy-heat',
+            'spicy-heat': 'frontMouth.spicy-heat',
+            'heat': 'frontMouth.spicy-heat',
+            'pungency': 'frontMouth.spicy-heat',
 
             // Mid/rear mouth
-            'bitterness': 'midRearMouth.bitterness',
-            'mid_bitterness': 'midRearMouth.bitterness',
-            'umami': 'midRearMouth.umami',
-            'mid_umami': 'midRearMouth.umami',
-            'savory': 'midRearMouth.umami',
-            'richness': 'midRearMouth.richness',
-            'mid_richness': 'midRearMouth.richness',
-            'creaminess': 'midRearMouth.creaminess',
-            'mid_creaminess': 'midRearMouth.creaminess',
-            'astringency': 'midRearMouth.astringency',
-            'dryness': 'midRearMouth.astringency',
-            'tannin': 'midRearMouth.astringency',
-            'mouthfeel': 'midRearMouth.mouthfeel',
-            'mouth_feel': 'midRearMouth.mouthfeel',
-            'weight': 'midRearMouth.mouthfeel',
-            'body': 'midRearMouth.mouthfeel',
+            'bitterness': 'midRearMouth.bitterness-development',
+            'bitterness-development': 'midRearMouth.bitterness-development',
+            'mid_bitterness': 'midRearMouth.bitterness-development',
+            'umami': 'midRearMouth.umami-savoury-depth',
+            'umami-savoury-depth': 'midRearMouth.umami-savoury-depth',
+            'mid_umami': 'midRearMouth.umami-savoury-depth',
+            'savory': 'midRearMouth.umami-savoury-depth',
+            'richness': 'midRearMouth.richness-fullness',
+            'richness-fullness': 'midRearMouth.richness-fullness',
+            'mid_richness': 'midRearMouth.richness-fullness',
+            'mouthfeel': 'midRearMouth.overall-mid-palate-intensity',
+            'overall-mid-palate-intensity': 'midRearMouth.overall-mid-palate-intensity',
+            'mouth_feel': 'midRearMouth.overall-mid-palate-intensity',
+            'weight': 'midRearMouth.overall-mid-palate-intensity',
+            'body': 'midRearMouth.overall-mid-palate-intensity',
+
+            // Texture
+            'creaminess': 'texture.creaminess',
+            'mid_creaminess': 'texture.creaminess',
+            'astringency': 'texture.astringency',
+            'dryness': 'texture.astringency',
+            'tannin': 'texture.astringency',
+            'smoothness': 'texture.smoothness',
+            'chewiness': 'texture.chewiness',
+            'crunchiness': 'texture.crunchiness',
 
             // Aftertaste
-            'aftertasteDuration': 'aftertaste.duration',
-            'aftertaste_duration': 'aftertaste.duration',
-            'duration': 'aftertaste.duration',
-            'finish_length': 'aftertaste.duration',
-            'aftertastePleasantness': 'aftertaste.pleasantness',
-            'aftertaste_pleasantness': 'aftertaste.pleasantness',
-            'pleasantness': 'aftertaste.pleasantness',
-            'aftertasteCleanness': 'aftertaste.cleanness',
-            'aftertaste_cleanness': 'aftertaste.cleanness',
-            'cleanness': 'aftertaste.cleanness'
+            'aftertasteDuration': 'aftertaste.finish-length',
+            'aftertaste_duration': 'aftertaste.finish-length',
+            'duration': 'aftertaste.finish-length',
+            'finish_length': 'aftertaste.finish-length',
+            'finish-length': 'aftertaste.finish-length',
+            'aftertastePleasantness': 'aftertaste.finish-quality',
+            'aftertaste_pleasantness': 'aftertaste.finish-quality',
+            'pleasantness': 'aftertaste.finish-quality',
+            'finish-quality': 'aftertaste.finish-quality',
+            'aftertasteCleanness': 'aftertaste.finish-cleanness',
+            'aftertaste_cleanness': 'aftertaste.finish-cleanness',
+            'cleanness': 'aftertaste.finish-cleanness',
+            'finish-cleanness': 'aftertaste.finish-cleanness',
+
+            // Overall Assessment
+            'overall-quality': 'overallAssessment.overall-quality',
+            'overall_quality': 'overallAssessment.overall-quality',
+            'satisfaction-overall': 'overallAssessment.satisfaction-overall',
+            'overall_satisfaction': 'overallAssessment.satisfaction-overall'
         };
 
         // Extract values based on column mappings
@@ -430,7 +477,7 @@ class AutoProcessor {
         let validCount = 0;
         for (const stage of Object.values(sensoryData)) {
             for (const value of Object.values(stage)) {
-                if (value !== 5 && value !== undefined) { // 5 is default
+                if (value !== 0 && value !== undefined) { // 0 is default
                     validCount++;
                 }
             }
@@ -472,11 +519,6 @@ class AutoProcessor {
             experience.needState = emotionalData.needState;
         }
 
-        // Set emotional triggers
-        if (emotionalData.emotionalTriggers) {
-            experience.emotionalTriggers = emotionalData.emotionalTriggers;
-        }
-
         return experience;
     }
 
@@ -501,23 +543,17 @@ class AutoProcessor {
      */
     static fallbackEmotionInference(sensoryData) {
         // Basic emotion inference based on key sensory attributes
-        // Use calculateEmotionalTriggers if available
-        const triggers = window.calculateEmotionalTriggers
-            ? window.calculateEmotionalTriggers({ stages: sensoryData })
-            : { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 };
-
         const emotions = {
             stages: {},
             needState: 'reward',
-            emotionalTriggers: triggers,
             confidence: 0.4,
             warnings: [{ type: 'fallback', message: 'Using basic emotion inference' }]
         };
 
-        // Simple mappings
-        const sweetness = sensoryData.frontMouth?.sweetness || 5;
-        const richness = sensoryData.midRearMouth?.richness || 5;
-        const creaminess = sensoryData.midRearMouth?.creaminess || 5;
+        // Simple mappings using new attribute keys
+        const sweetness = sensoryData.frontMouth?.sweetness || 0;
+        const richness = sensoryData.midRearMouth?.['richness-fullness'] || 0;
+        const creaminess = sensoryData.texture?.creaminess || 0;
 
         emotions.stages = {
             appearance: { emotions: { anticipation: 6, desire: 5, excitement: 5 } },
@@ -569,7 +605,7 @@ class AutoProcessor {
             for (const [key, value] of Object.entries(stage)) {
                 if (key !== 'emotions' && typeof value === 'number') {
                     totalCount++;
-                    if (value === 5) defaultCount++;
+                    if (value === 0) defaultCount++;
                 }
             }
         }

@@ -23,36 +23,42 @@ IMPORTANT: Return ONLY valid JSON, no additional text or explanation.`;
  */
 const SENSORY_INFERENCE_TEMPLATE = {
     appearance: {
-        visualAppeal: 5,
-        colorIntensity: 5,
-        carbonation: 5
+        'visual-appeal': 0,
+        'color-richness': 0,
+        'bubble-activity': 0
     },
     aroma: {
-        intensity: 5,
-        sweetness: 5,
-        complexity: 5,
-        persistence: 5
+        'smell-strength': 0,
+        'smell-complexity': 0,
+        'caramel-toffee-notes': 0,
+        'smell-duration': 0
     },
     frontMouth: {
-        sweetness: 5,
-        sourness: 3,
-        saltiness: 3,
-        texture: 5,
-        acidity: 3,
-        spiciness: 3
+        sweetness: 0,
+        'sourness-tartness': 0,
+        saltiness: 0,
+        'first-bite-texture': 0,
+        'spicy-heat': 0
     },
     midRearMouth: {
-        bitterness: 3,
-        umami: 3,
-        richness: 5,
-        creaminess: 5,
-        astringency: 3,
-        mouthfeel: 5
+        'bitterness-development': 0,
+        'umami-savoury-depth': 0,
+        'richness-fullness': 0,
+        'overall-mid-palate-intensity': 0
+    },
+    texture: {
+        creaminess: 0,
+        astringency: 0,
+        smoothness: 0
     },
     aftertaste: {
-        duration: 5,
-        pleasantness: 5,
-        cleanness: 5
+        'finish-length': 0,
+        'finish-quality': 0,
+        'finish-cleanness': 0
+    },
+    overallAssessment: {
+        'overall-quality': 0,
+        'satisfaction-overall': 0
     }
 };
 
@@ -61,69 +67,69 @@ const SENSORY_INFERENCE_TEMPLATE = {
  */
 const KEYWORD_SENSORY_RULES = {
     // Sweetness indicators
-    sweet: { 'frontMouth.sweetness': 8, 'aroma.sweetness': 7 },
-    sugary: { 'frontMouth.sweetness': 9, 'aroma.sweetness': 6 },
-    honey: { 'frontMouth.sweetness': 7, 'aroma.sweetness': 8, 'midRearMouth.richness': 6 },
-    caramel: { 'frontMouth.sweetness': 8, 'midRearMouth.richness': 7, 'aroma.sweetness': 8 },
+    sweet: { 'frontMouth.sweetness': 8, 'aroma.caramel-toffee-notes': 7 },
+    sugary: { 'frontMouth.sweetness': 9, 'aroma.caramel-toffee-notes': 6 },
+    honey: { 'frontMouth.sweetness': 7, 'aroma.caramel-toffee-notes': 8, 'midRearMouth.richness-fullness': 6 },
+    caramel: { 'frontMouth.sweetness': 8, 'midRearMouth.richness-fullness': 7, 'aroma.caramel-toffee-notes': 8 },
 
     // Sourness/acidity indicators
-    sour: { 'frontMouth.sourness': 8 },
-    tart: { 'frontMouth.sourness': 7, 'aftertaste.cleanness': 7 },
-    tangy: { 'frontMouth.sourness': 6, 'aroma.intensity': 6 },
-    acidic: { 'frontMouth.sourness': 8, 'aftertaste.cleanness': 6 },
-    citrus: { 'frontMouth.sourness': 6, 'aroma.intensity': 8, 'aftertaste.cleanness': 7 },
-    lemon: { 'frontMouth.sourness': 7, 'aroma.intensity': 8, 'aftertaste.cleanness': 8 },
+    sour: { 'frontMouth.sourness-tartness': 8 },
+    tart: { 'frontMouth.sourness-tartness': 7, 'aftertaste.finish-cleanness': 7 },
+    tangy: { 'frontMouth.sourness-tartness': 6, 'aroma.smell-strength': 6 },
+    acidic: { 'frontMouth.sourness-tartness': 8, 'aftertaste.finish-cleanness': 6 },
+    citrus: { 'frontMouth.sourness-tartness': 6, 'aroma.smell-strength': 8, 'aftertaste.finish-cleanness': 7 },
+    lemon: { 'frontMouth.sourness-tartness': 7, 'aroma.smell-strength': 8, 'aftertaste.finish-cleanness': 8 },
 
     // Bitterness indicators
-    bitter: { 'midRearMouth.bitterness': 8 },
-    dark: { 'midRearMouth.bitterness': 6, 'midRearMouth.richness': 7 },
-    coffee: { 'midRearMouth.bitterness': 7, 'aroma.intensity': 8, 'aroma.complexity': 7 },
-    espresso: { 'midRearMouth.bitterness': 8, 'aroma.intensity': 9 },
+    bitter: { 'midRearMouth.bitterness-development': 8 },
+    dark: { 'midRearMouth.bitterness-development': 6, 'midRearMouth.richness-fullness': 7 },
+    coffee: { 'midRearMouth.bitterness-development': 7, 'aroma.smell-strength': 8, 'aroma.smell-complexity': 7 },
+    espresso: { 'midRearMouth.bitterness-development': 8, 'aroma.smell-strength': 9 },
 
     // Richness/creaminess indicators
-    rich: { 'midRearMouth.richness': 8, 'midRearMouth.creaminess': 6 },
-    creamy: { 'midRearMouth.creaminess': 9, 'midRearMouth.richness': 7, 'frontMouth.texture': 8 },
-    smooth: { 'midRearMouth.creaminess': 7, 'frontMouth.texture': 8 },
-    velvety: { 'midRearMouth.creaminess': 9, 'frontMouth.texture': 9 },
-    buttery: { 'midRearMouth.richness': 8, 'midRearMouth.creaminess': 7 },
+    rich: { 'midRearMouth.richness-fullness': 8, 'texture.creaminess': 6 },
+    creamy: { 'texture.creaminess': 9, 'midRearMouth.richness-fullness': 7, 'frontMouth.first-bite-texture': 8 },
+    smooth: { 'texture.creaminess': 7, 'texture.smoothness': 8, 'frontMouth.first-bite-texture': 7 },
+    velvety: { 'texture.creaminess': 9, 'texture.smoothness': 9, 'frontMouth.first-bite-texture': 8 },
+    buttery: { 'midRearMouth.richness-fullness': 8, 'texture.creaminess': 7 },
 
     // Texture indicators
-    crunchy: { 'frontMouth.texture': 8 },
-    crispy: { 'frontMouth.texture': 9 },
-    chewy: { 'frontMouth.texture': 6, 'aftertaste.duration': 7 },
-    soft: { 'frontMouth.texture': 4, 'midRearMouth.creaminess': 6 },
+    crunchy: { 'frontMouth.first-bite-texture': 8, 'texture.crunchiness': 8 },
+    crispy: { 'frontMouth.first-bite-texture': 9, 'texture.crunchiness': 9 },
+    chewy: { 'frontMouth.first-bite-texture': 6, 'texture.chewiness': 8, 'aftertaste.finish-length': 7 },
+    soft: { 'frontMouth.first-bite-texture': 3, 'texture.creaminess': 6 },
 
     // Savory/umami indicators
-    savory: { 'midRearMouth.umami': 7, 'frontMouth.saltiness': 5 },
-    umami: { 'midRearMouth.umami': 9 },
-    meaty: { 'midRearMouth.umami': 8, 'midRearMouth.richness': 7 },
+    savory: { 'midRearMouth.umami-savoury-depth': 7, 'frontMouth.saltiness': 5 },
+    umami: { 'midRearMouth.umami-savoury-depth': 9 },
+    meaty: { 'midRearMouth.umami-savoury-depth': 8, 'midRearMouth.richness-fullness': 7 },
     salty: { 'frontMouth.saltiness': 8 },
 
     // Aroma indicators
-    fragrant: { 'aroma.intensity': 8, 'aroma.complexity': 7 },
-    aromatic: { 'aroma.intensity': 8, 'aroma.complexity': 8 },
-    floral: { 'aroma.intensity': 7, 'aroma.complexity': 8, 'aroma.sweetness': 6 },
-    herbal: { 'aroma.intensity': 7, 'aroma.complexity': 7, 'midRearMouth.bitterness': 4 },
-    spicy: { 'aroma.intensity': 8, 'frontMouth.texture': 6 },
+    fragrant: { 'aroma.smell-strength': 8, 'aroma.smell-complexity': 7 },
+    aromatic: { 'aroma.smell-strength': 8, 'aroma.smell-complexity': 8 },
+    floral: { 'aroma.smell-strength': 7, 'aroma.smell-complexity': 8 },
+    herbal: { 'aroma.smell-strength': 7, 'aroma.smell-complexity': 7, 'midRearMouth.bitterness-development': 4 },
+    spicy: { 'aroma.smell-strength': 8, 'frontMouth.spicy-heat': 6 },
 
     // Quality indicators
-    fresh: { 'aftertaste.cleanness': 8, 'appearance.visualAppeal': 7 },
-    premium: { 'appearance.visualAppeal': 8, 'midRearMouth.richness': 7 },
-    artisan: { 'aroma.complexity': 8, 'midRearMouth.richness': 7 },
-    'high quality': { 'appearance.visualAppeal': 8, 'aroma.complexity': 7 },
+    fresh: { 'aftertaste.finish-cleanness': 8, 'appearance.visual-appeal': 7 },
+    premium: { 'appearance.visual-appeal': 8, 'midRearMouth.richness-fullness': 7 },
+    artisan: { 'aroma.smell-complexity': 8, 'midRearMouth.richness-fullness': 7 },
+    'high quality': { 'appearance.visual-appeal': 8, 'aroma.smell-complexity': 7 },
 
     // Aftertaste indicators
-    lingering: { 'aftertaste.duration': 8 },
-    'long finish': { 'aftertaste.duration': 9, 'aftertaste.pleasantness': 7 },
-    clean: { 'aftertaste.cleanness': 9, 'aftertaste.duration': 4 },
-    'short finish': { 'aftertaste.duration': 3 },
+    lingering: { 'aftertaste.finish-length': 8 },
+    'long finish': { 'aftertaste.finish-length': 9, 'aftertaste.finish-quality': 7 },
+    clean: { 'aftertaste.finish-cleanness': 9, 'aftertaste.finish-length': 4 },
+    'short finish': { 'aftertaste.finish-length': 3 },
 
     // Intensity indicators
-    intense: { 'aroma.intensity': 8, 'frontMouth.texture': 7 },
-    mild: { 'aroma.intensity': 4, 'frontMouth.sweetness': 4 },
-    bold: { 'aroma.intensity': 9, 'midRearMouth.richness': 8 },
-    subtle: { 'aroma.intensity': 4, 'aroma.complexity': 6 },
-    delicate: { 'aroma.intensity': 4, 'aroma.complexity': 7, 'appearance.visualAppeal': 7 }
+    intense: { 'aroma.smell-strength': 8, 'frontMouth.first-bite-texture': 7 },
+    mild: { 'aroma.smell-strength': 4, 'frontMouth.sweetness': 4 },
+    bold: { 'aroma.smell-strength': 9, 'midRearMouth.richness-fullness': 8 },
+    subtle: { 'aroma.smell-strength': 4, 'aroma.smell-complexity': 6 },
+    delicate: { 'aroma.smell-strength': 4, 'aroma.smell-complexity': 7, 'appearance.visual-appeal': 7 }
 };
 
 /**
@@ -131,46 +137,58 @@ const KEYWORD_SENSORY_RULES = {
  */
 const CATEGORY_BASELINES = {
     chocolate: {
-        appearance: { visualAppeal: 7, colorIntensity: 7, carbonation: 0 },
-        aroma: { intensity: 7, sweetness: 6, complexity: 6, persistence: 6 },
-        frontMouth: { sweetness: 6, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
-        midRearMouth: { bitterness: 5, umami: 2, richness: 7, creaminess: 6, astringency: 3, mouthfeel: 7 },
-        aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
+        appearance: { 'visual-appeal': 7, 'color-richness': 7, 'bubble-activity': 0 },
+        aroma: { 'smell-strength': 7, 'smell-complexity': 6, 'caramel-toffee-notes': 6, 'smell-duration': 6 },
+        frontMouth: { sweetness: 6, 'sourness-tartness': 2, saltiness: 2, 'first-bite-texture': 6, 'spicy-heat': 1 },
+        midRearMouth: { 'bitterness-development': 5, 'umami-savoury-depth': 2, 'richness-fullness': 7, 'overall-mid-palate-intensity': 7 },
+        texture: { creaminess: 6, astringency: 3, smoothness: 6 },
+        aftertaste: { 'finish-length': 6, 'finish-quality': 7, 'finish-cleanness': 5 },
+        overallAssessment: { 'overall-quality': 7, 'satisfaction-overall': 7 }
     },
     beverage: {
-        appearance: { visualAppeal: 6, colorIntensity: 5, carbonation: 5 },
-        aroma: { intensity: 6, sweetness: 5, complexity: 5, persistence: 5 },
-        frontMouth: { sweetness: 5, sourness: 4, saltiness: 2, texture: 4, acidity: 4, spiciness: 2 },
-        midRearMouth: { bitterness: 3, umami: 2, richness: 4, creaminess: 3, astringency: 3, mouthfeel: 5 },
-        aftertaste: { duration: 5, pleasantness: 6, cleanness: 7 }
+        appearance: { 'visual-appeal': 6, 'color-richness': 5, 'bubble-activity': 5 },
+        aroma: { 'smell-strength': 6, 'smell-complexity': 5, 'caramel-toffee-notes': 3, 'smell-duration': 5 },
+        frontMouth: { sweetness: 5, 'sourness-tartness': 4, saltiness: 2, 'first-bite-texture': 4, 'spicy-heat': 2 },
+        midRearMouth: { 'bitterness-development': 3, 'umami-savoury-depth': 2, 'richness-fullness': 4, 'overall-mid-palate-intensity': 5 },
+        texture: { creaminess: 3, astringency: 3, smoothness: 5 },
+        aftertaste: { 'finish-length': 5, 'finish-quality': 6, 'finish-cleanness': 7 },
+        overallAssessment: { 'overall-quality': 6, 'satisfaction-overall': 6 }
     },
     snack: {
-        appearance: { visualAppeal: 6, colorIntensity: 6, carbonation: 0 },
-        aroma: { intensity: 5, sweetness: 4, complexity: 5, persistence: 4 },
-        frontMouth: { sweetness: 4, sourness: 3, saltiness: 5, texture: 7, acidity: 3, spiciness: 4 },
-        midRearMouth: { bitterness: 2, umami: 5, richness: 5, creaminess: 4, astringency: 2, mouthfeel: 6 },
-        aftertaste: { duration: 4, pleasantness: 6, cleanness: 6 }
+        appearance: { 'visual-appeal': 6, 'color-richness': 6, 'bubble-activity': 0 },
+        aroma: { 'smell-strength': 5, 'smell-complexity': 5, 'caramel-toffee-notes': 3, 'smell-duration': 4 },
+        frontMouth: { sweetness: 4, 'sourness-tartness': 3, saltiness: 5, 'first-bite-texture': 7, 'spicy-heat': 4 },
+        midRearMouth: { 'bitterness-development': 2, 'umami-savoury-depth': 5, 'richness-fullness': 5, 'overall-mid-palate-intensity': 6 },
+        texture: { creaminess: 4, astringency: 2, smoothness: 4 },
+        aftertaste: { 'finish-length': 4, 'finish-quality': 6, 'finish-cleanness': 6 },
+        overallAssessment: { 'overall-quality': 6, 'satisfaction-overall': 6 }
     },
     dairy: {
-        appearance: { visualAppeal: 6, colorIntensity: 4, carbonation: 0 },
-        aroma: { intensity: 5, sweetness: 5, complexity: 4, persistence: 4 },
-        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 6, acidity: 3, spiciness: 1 },
-        midRearMouth: { bitterness: 2, umami: 4, richness: 6, creaminess: 8, astringency: 1, mouthfeel: 7 },
-        aftertaste: { duration: 5, pleasantness: 6, cleanness: 5 }
+        appearance: { 'visual-appeal': 6, 'color-richness': 4, 'bubble-activity': 0 },
+        aroma: { 'smell-strength': 5, 'smell-complexity': 4, 'caramel-toffee-notes': 4, 'smell-duration': 4 },
+        frontMouth: { sweetness: 5, 'sourness-tartness': 3, saltiness: 3, 'first-bite-texture': 6, 'spicy-heat': 1 },
+        midRearMouth: { 'bitterness-development': 2, 'umami-savoury-depth': 4, 'richness-fullness': 6, 'overall-mid-palate-intensity': 7 },
+        texture: { creaminess: 8, astringency: 1, smoothness: 7 },
+        aftertaste: { 'finish-length': 5, 'finish-quality': 6, 'finish-cleanness': 5 },
+        overallAssessment: { 'overall-quality': 6, 'satisfaction-overall': 6 }
     },
     dessert: {
-        appearance: { visualAppeal: 8, colorIntensity: 6, carbonation: 0 },
-        aroma: { intensity: 7, sweetness: 8, complexity: 6, persistence: 6 },
-        frontMouth: { sweetness: 8, sourness: 2, saltiness: 2, texture: 6, acidity: 2, spiciness: 1 },
-        midRearMouth: { bitterness: 2, umami: 2, richness: 7, creaminess: 6, astringency: 2, mouthfeel: 6 },
-        aftertaste: { duration: 6, pleasantness: 7, cleanness: 5 }
+        appearance: { 'visual-appeal': 8, 'color-richness': 6, 'bubble-activity': 0 },
+        aroma: { 'smell-strength': 7, 'smell-complexity': 6, 'caramel-toffee-notes': 8, 'smell-duration': 6 },
+        frontMouth: { sweetness: 8, 'sourness-tartness': 2, saltiness: 2, 'first-bite-texture': 6, 'spicy-heat': 1 },
+        midRearMouth: { 'bitterness-development': 2, 'umami-savoury-depth': 2, 'richness-fullness': 7, 'overall-mid-palate-intensity': 7 },
+        texture: { creaminess: 6, astringency: 2, smoothness: 6 },
+        aftertaste: { 'finish-length': 6, 'finish-quality': 7, 'finish-cleanness': 5 },
+        overallAssessment: { 'overall-quality': 7, 'satisfaction-overall': 7 }
     },
     default: {
-        appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 3 },
-        aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5 },
-        frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3 },
-        midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5 },
-        aftertaste: { duration: 5, pleasantness: 5, cleanness: 5 }
+        appearance: { 'visual-appeal': 5, 'color-richness': 5, 'bubble-activity': 0 },
+        aroma: { 'smell-strength': 5, 'smell-complexity': 5, 'caramel-toffee-notes': 3, 'smell-duration': 5 },
+        frontMouth: { sweetness: 5, 'sourness-tartness': 3, saltiness: 3, 'first-bite-texture': 5, 'spicy-heat': 3 },
+        midRearMouth: { 'bitterness-development': 3, 'umami-savoury-depth': 3, 'richness-fullness': 5, 'overall-mid-palate-intensity': 5 },
+        texture: { creaminess: 5, astringency: 3, smoothness: 5 },
+        aftertaste: { 'finish-length': 5, 'finish-quality': 5, 'finish-cleanness': 5 },
+        overallAssessment: { 'overall-quality': 5, 'satisfaction-overall': 5 }
     }
 };
 
@@ -322,11 +340,13 @@ class SensoryInference {
 
         prompt += `\nReturn a JSON object with this exact structure:
 {
-  "appearance": { "visualAppeal": 0-10, "colorIntensity": 0-10 },
-  "aroma": { "intensity": 0-10, "sweetness": 0-10, "complexity": 0-10 },
-  "frontMouth": { "sweetness": 0-10, "sourness": 0-10, "saltiness": 0-10, "texture": 0-10 },
-  "midRearMouth": { "bitterness": 0-10, "umami": 0-10, "richness": 0-10, "creaminess": 0-10 },
-  "aftertaste": { "duration": 0-10, "pleasantness": 0-10, "cleanness": 0-10 },
+  "appearance": { "visual-appeal": 0-10, "color-richness": 0-10, "bubble-activity": 0-10 },
+  "aroma": { "smell-strength": 0-10, "smell-complexity": 0-10, "caramel-toffee-notes": 0-10 },
+  "frontMouth": { "sweetness": 0-10, "sourness-tartness": 0-10, "saltiness": 0-10, "first-bite-texture": 0-10, "spicy-heat": 0-10 },
+  "midRearMouth": { "bitterness-development": 0-10, "umami-savoury-depth": 0-10, "richness-fullness": 0-10, "overall-mid-palate-intensity": 0-10 },
+  "texture": { "creaminess": 0-10, "astringency": 0-10, "smoothness": 0-10 },
+  "aftertaste": { "finish-length": 0-10, "finish-quality": 0-10, "finish-cleanness": 0-10 },
+  "overallAssessment": { "overall-quality": 0-10, "satisfaction-overall": 0-10 },
   "confidence": 0-1,
   "inferenceNotes": "Brief explanation of key inferences"
 }`;
@@ -432,8 +452,10 @@ class SensoryInference {
             appearance: ['appearance', 'visual', 'looks'],
             aroma: ['aroma', 'smell', 'nose', 'scent'],
             frontMouth: ['frontMouth', 'front_mouth', 'taste', 'initial_taste', 'first_taste'],
-            midRearMouth: ['midRearMouth', 'mid_rear_mouth', 'midmouth', 'mid_mouth', 'body', 'mouthfeel'],
-            aftertaste: ['aftertaste', 'after_taste', 'finish', 'ending']
+            midRearMouth: ['midRearMouth', 'mid_rear_mouth', 'midmouth', 'mid_mouth'],
+            texture: ['texture', 'mouthfeel', 'body'],
+            aftertaste: ['aftertaste', 'after_taste', 'finish', 'ending'],
+            overallAssessment: ['overallAssessment', 'overall', 'overall_assessment']
         };
 
         for (const [targetStage, sourceNames] of Object.entries(stageMapping)) {
@@ -527,7 +549,7 @@ class SensoryInference {
 
             for (const [attr, value] of Object.entries(attributes)) {
                 // Only set if not already present or is default value
-                if (merged.stages[stage][attr] === undefined || merged.stages[stage][attr] === 5) {
+                if (merged.stages[stage][attr] === undefined || merged.stages[stage][attr] === 0) {
                     merged.stages[stage][attr] = value;
                 }
             }
