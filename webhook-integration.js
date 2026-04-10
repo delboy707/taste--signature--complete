@@ -1022,11 +1022,13 @@ X-API-Key: your_api_key
       "variant": "Original"
     },
     "stages": {
-      "appearance": { "visualAppeal": 7 },
-      "aroma": { "intensity": 6 },
+      "appearance": { "visual-appeal": 7 },
+      "aroma": { "smell-strength": 6 },
       "frontMouth": { "sweetness": 5 },
-      "midRearMouth": { "bitterness": 4 },
-      "aftertaste": { "pleasantness": 6 }
+      "midRearMouth": { "bitterness-development": 4 },
+      "texture": { "creaminess": 5 },
+      "aftertaste": { "finish-quality": 6 },
+      "overallAssessment": { "satisfaction-overall": 7 }
     },
     "needState": "reward",
     "overallSatisfaction": 7,

@@ -673,14 +673,14 @@ function selectCategory(categoryKey) {
  */
 function applyTemplateDefaults(defaults) {
     const mappings = {
-        'quick-visual': defaults.appearance?.visualAppeal,
-        'quick-aroma': defaults.aroma?.intensity,
+        'quick-visual': defaults.appearance?.['visual-appeal'],
+        'quick-aroma': defaults.aroma?.['smell-strength'],
         'quick-sweetness': defaults.taste?.sweetness,
-        'quick-sourness': defaults.taste?.sourness || 5,
-        'quick-bitterness': defaults.taste?.bitterness || 5,
-        'quick-salty': defaults.taste?.saltiness || defaults.taste?.umami || 5,
+        'quick-sourness': defaults.taste?.['sourness-tartness'] || 0,
+        'quick-bitterness': defaults.taste?.['bitterness-development'] || 0,
+        'quick-salty': defaults.taste?.saltiness || defaults.taste?.['umami-savoury-depth'] || 0,
         'quick-texture': defaults.texture,
-        'quick-aftertaste': defaults.aftertaste?.pleasantness
+        'quick-aftertaste': defaults.aftertaste?.['finish-quality']
     };
 
     Object.entries(mappings).forEach(([sliderId, value]) => {
@@ -769,49 +769,51 @@ function submitQuickEntry() {
         },
         stages: {
             appearance: {
-                visualAppeal: parseInt(document.getElementById('quick-visual').value),
-                colorIntensity: parseInt(document.getElementById('quick-visual').value),
-                overallIntensity: parseInt(document.getElementById('quick-visual').value),
+                'visual-appeal': parseInt(document.getElementById('quick-visual').value),
+                'color-richness': parseInt(document.getElementById('quick-visual').value),
+                'bubble-activity': 0,
                 emotions: buildEmotionObject(['anticipation', 'desire', 'excitement'])
             },
             aroma: {
-                intensity: parseInt(document.getElementById('quick-aroma').value),
-                sweetness: parseInt(document.getElementById('quick-sweetness').value),
-                complexity: parseInt(document.getElementById('quick-aroma').value),
-                overallIntensity: parseInt(document.getElementById('quick-aroma').value),
+                'smell-strength': parseInt(document.getElementById('quick-aroma').value),
+                'smell-complexity': parseInt(document.getElementById('quick-aroma').value),
+                'caramel-toffee-notes': parseInt(document.getElementById('quick-sweetness').value),
                 emotions: buildEmotionObject(['pleasure', 'comfort', 'nostalgia'])
             },
             frontMouth: {
                 sweetness: parseInt(document.getElementById('quick-sweetness').value),
-                sourness: parseInt(document.getElementById('quick-sourness').value),
+                'sourness-tartness': parseInt(document.getElementById('quick-sourness').value),
                 saltiness: parseInt(document.getElementById('quick-salty').value),
-                texture: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                'first-bite-texture': parseInt(document.getElementById('quick-texture').value),
+                'spicy-heat': 0,
                 emotions: buildEmotionObject(['excitement', 'satisfaction'])
             },
             midRearMouth: {
-                bitterness: parseInt(document.getElementById('quick-bitterness').value),
-                umami: parseInt(document.getElementById('quick-salty').value),
-                richness: parseInt(document.getElementById('quick-texture').value),
-                creaminess: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                'bitterness-development': parseInt(document.getElementById('quick-bitterness').value),
+                'umami-savoury-depth': parseInt(document.getElementById('quick-salty').value),
+                'richness-fullness': parseInt(document.getElementById('quick-texture').value),
+                'overall-mid-palate-intensity': parseInt(document.getElementById('quick-texture').value),
                 emotions: buildEmotionObject(['indulgence', 'comfort', 'satisfaction'])
             },
+            texture: {
+                creaminess: parseInt(document.getElementById('quick-texture').value),
+                astringency: 0,
+                smoothness: parseInt(document.getElementById('quick-texture').value),
+                emotions: buildEmotionObject(['satisfied', 'pleased'])
+            },
             aftertaste: {
-                duration: parseInt(document.getElementById('quick-aftertaste').value),
-                pleasantness: parseInt(document.getElementById('quick-aftertaste').value),
-                cleanness: 5,
-                overallIntensity: parseInt(document.getElementById('quick-aftertaste').value),
+                'finish-length': parseInt(document.getElementById('quick-aftertaste').value),
+                'finish-quality': parseInt(document.getElementById('quick-aftertaste').value),
+                'finish-cleanness': 0,
                 emotions: buildEmotionObject(['satisfaction', 'completeness'])
+            },
+            overallAssessment: {
+                'overall-quality': parseInt(document.getElementById('quick-satisfaction').value),
+                'satisfaction-overall': parseInt(document.getElementById('quick-satisfaction').value),
+                emotions: buildEmotionObject(['satisfaction'])
             }
         },
         needState: quickEntryState.selectedNeedState,
-        emotionalTriggers: {
-            moreishness: quickEntryState.selectedEmotions.includes('moreishness') ? 7 : 5,
-            refreshment: quickEntryState.selectedEmotions.includes('refreshment') ? 7 : 5,
-            melt: 5,
-            crunch: 5
-        },
         quickEmotions: quickEntryState.selectedEmotions,
         overallSatisfaction: parseInt(document.getElementById('quick-satisfaction').value),
         purchaseIntent: parseInt(document.getElementById('quick-purchase').value),

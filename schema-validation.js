@@ -33,44 +33,47 @@ const ATTRIBUTE_ALIASES = {
     'Type': 'type',
 
     // Appearance stage
-    'visual_appeal': 'visualAppeal',
-    'Visual_Appeal': 'visualAppeal',
-    'VisualAppeal': 'visualAppeal',
-    'appearance_visual': 'visualAppeal',
-    'appearance_visual_appeal': 'visualAppeal',
+    'visual_appeal': 'visual-appeal',
+    'Visual_Appeal': 'visual-appeal',
+    'VisualAppeal': 'visual-appeal',
+    'visualAppeal': 'visual-appeal',
+    'appearance_visual': 'visual-appeal',
+    'appearance_visual_appeal': 'visual-appeal',
 
-    'color_intensity': 'colorIntensity',
-    'Color_Intensity': 'colorIntensity',
-    'ColorIntensity': 'colorIntensity',
-    'appearance_color': 'colorIntensity',
-    'appearance_color_intensity': 'colorIntensity',
+    'color_intensity': 'color-richness',
+    'Color_Intensity': 'color-richness',
+    'ColorIntensity': 'color-richness',
+    'colorIntensity': 'color-richness',
+    'appearance_color': 'color-richness',
+    'appearance_color_intensity': 'color-richness',
 
-    'carbonation': 'carbonation',
-    'Carbonation': 'carbonation',
-    'fizz': 'carbonation',
-    'Fizz': 'carbonation',
+    'carbonation': 'bubble-activity',
+    'Carbonation': 'bubble-activity',
+    'fizz': 'bubble-activity',
+    'Fizz': 'bubble-activity',
+    'bubble_activity': 'bubble-activity',
 
     // Aroma stage
-    'aroma_intensity': 'intensity',
-    'Aroma_Intensity': 'intensity',
-    'aromaIntensity': 'intensity',
-    'AromaIntensity': 'intensity',
-    'smell_intensity': 'intensity',
+    'aroma_intensity': 'smell-strength',
+    'Aroma_Intensity': 'smell-strength',
+    'aromaIntensity': 'smell-strength',
+    'AromaIntensity': 'smell-strength',
+    'smell_intensity': 'smell-strength',
 
-    'aroma_sweetness': 'sweetness',
-    'Aroma_Sweetness': 'sweetness',
-    'aromaSweetness': 'sweetness',
-    'smell_sweetness': 'sweetness',
+    'aroma_sweetness': 'caramel-toffee-notes',
+    'Aroma_Sweetness': 'caramel-toffee-notes',
+    'aromaSweetness': 'caramel-toffee-notes',
+    'smell_sweetness': 'caramel-toffee-notes',
 
-    'aroma_complexity': 'complexity',
-    'Aroma_Complexity': 'complexity',
-    'aromaComplexity': 'complexity',
+    'aroma_complexity': 'smell-complexity',
+    'Aroma_Complexity': 'smell-complexity',
+    'aromaComplexity': 'smell-complexity',
 
-    'persistence': 'persistence',
-    'Persistence': 'persistence',
-    'aroma_persistence': 'persistence',
-    'Aroma_Persistence': 'persistence',
-    'linger': 'persistence',
+    'persistence': 'smell-duration',
+    'Persistence': 'smell-duration',
+    'aroma_persistence': 'smell-duration',
+    'Aroma_Persistence': 'smell-duration',
+    'linger': 'smell-duration',
 
     // Front mouth stage
     'taste_sweetness': 'sweetness',
@@ -79,11 +82,15 @@ const ATTRIBUTE_ALIASES = {
     'Front_Sweetness': 'sweetness',
     'Sweetness': 'sweetness',
 
-    'taste_sourness': 'sourness',
-    'Taste_Sourness': 'sourness',
-    'front_sourness': 'sourness',
-    'Front_Sourness': 'sourness',
-    'Sourness': 'sourness',
+    'taste_sourness': 'sourness-tartness',
+    'Taste_Sourness': 'sourness-tartness',
+    'front_sourness': 'sourness-tartness',
+    'Front_Sourness': 'sourness-tartness',
+    'Sourness': 'sourness-tartness',
+    'acidity': 'sourness-tartness',
+    'Acidity': 'sourness-tartness',
+    'acid': 'sourness-tartness',
+    'ph_response': 'sourness-tartness',
 
     'taste_saltiness': 'saltiness',
     'Taste_Saltiness': 'saltiness',
@@ -91,41 +98,44 @@ const ATTRIBUTE_ALIASES = {
     'Front_Saltiness': 'saltiness',
     'Saltiness': 'saltiness',
 
-    'front_texture': 'texture',
-    'Front_Texture': 'texture',
-    'Texture': 'texture',
-    'mouthfeel': 'texture',
-    'Mouthfeel': 'texture',
+    'front_texture': 'first-bite-texture',
+    'Front_Texture': 'first-bite-texture',
+    'Texture': 'first-bite-texture',
+    'mouthfeel': 'first-bite-texture',
+    'Mouthfeel': 'first-bite-texture',
 
-    'acidity': 'acidity',
-    'Acidity': 'acidity',
-    'acid': 'acidity',
-    'ph_response': 'acidity',
-
-    'spiciness': 'spiciness',
-    'Spiciness': 'spiciness',
-    'heat': 'spiciness',
-    'Heat': 'spiciness',
-    'pungency': 'spiciness',
-    'Pungency': 'spiciness',
+    'spiciness': 'spicy-heat',
+    'Spiciness': 'spicy-heat',
+    'heat': 'spicy-heat',
+    'Heat': 'spicy-heat',
+    'pungency': 'spicy-heat',
+    'Pungency': 'spicy-heat',
 
     // Mid/rear mouth stage
-    'mid_bitterness': 'bitterness',
-    'Mid_Bitterness': 'bitterness',
-    'Bitterness': 'bitterness',
+    'mid_bitterness': 'bitterness-development',
+    'Mid_Bitterness': 'bitterness-development',
+    'Bitterness': 'bitterness-development',
 
-    'mid_umami': 'umami',
-    'Mid_Umami': 'umami',
-    'Umami': 'umami',
-    'savory': 'umami',
-    'Savory': 'umami',
+    'mid_umami': 'umami-savoury-depth',
+    'Mid_Umami': 'umami-savoury-depth',
+    'Umami': 'umami-savoury-depth',
+    'savory': 'umami-savoury-depth',
+    'Savory': 'umami-savoury-depth',
 
-    'mid_richness': 'richness',
-    'Mid_Richness': 'richness',
-    'Richness': 'richness',
-    'body': 'richness',
-    'Body': 'richness',
+    'mid_richness': 'richness-fullness',
+    'Mid_Richness': 'richness-fullness',
+    'Richness': 'richness-fullness',
+    'body': 'richness-fullness',
+    'Body': 'richness-fullness',
 
+    'mid_mouthfeel': 'overall-mid-palate-intensity',
+    'Mid_Mouthfeel': 'overall-mid-palate-intensity',
+    'mouth_feel': 'overall-mid-palate-intensity',
+    'Mouth_Feel': 'overall-mid-palate-intensity',
+    'weight': 'overall-mid-palate-intensity',
+    'Weight': 'overall-mid-palate-intensity',
+
+    // Texture stage
     'mid_creaminess': 'creaminess',
     'Mid_Creaminess': 'creaminess',
     'Creaminess': 'creaminess',
@@ -137,32 +147,31 @@ const ATTRIBUTE_ALIASES = {
     'tannin': 'astringency',
     'Tannin': 'astringency',
 
-    'mid_mouthfeel': 'mouthfeel',
-    'Mid_Mouthfeel': 'mouthfeel',
-    'mouth_feel': 'mouthfeel',
-    'Mouth_Feel': 'mouthfeel',
-    'weight': 'mouthfeel',
-    'Weight': 'mouthfeel',
-
     // Aftertaste stage
-    'aftertaste_duration': 'duration',
-    'Aftertaste_Duration': 'duration',
-    'aftertasteDuration': 'duration',
-    'finish_length': 'duration',
-    'Finish_Length': 'duration',
-    'Duration': 'duration',
+    'aftertaste_duration': 'finish-length',
+    'Aftertaste_Duration': 'finish-length',
+    'aftertasteDuration': 'finish-length',
+    'finish_length': 'finish-length',
+    'Finish_Length': 'finish-length',
+    'Duration': 'finish-length',
 
-    'aftertaste_pleasantness': 'pleasantness',
-    'Aftertaste_Pleasantness': 'pleasantness',
-    'aftertastePleasantness': 'pleasantness',
-    'Pleasantness': 'pleasantness',
+    'aftertaste_pleasantness': 'finish-quality',
+    'Aftertaste_Pleasantness': 'finish-quality',
+    'aftertastePleasantness': 'finish-quality',
+    'Pleasantness': 'finish-quality',
 
-    'aftertaste_cleanness': 'cleanness',
-    'Aftertaste_Cleanness': 'cleanness',
-    'aftertasteCleanness': 'cleanness',
-    'Cleanness': 'cleanness',
-    'clean_finish': 'cleanness',
-    'Clean_Finish': 'cleanness'
+    'aftertaste_cleanness': 'finish-cleanness',
+    'Aftertaste_Cleanness': 'finish-cleanness',
+    'aftertasteCleanness': 'finish-cleanness',
+    'Cleanness': 'finish-cleanness',
+    'clean_finish': 'finish-cleanness',
+    'Clean_Finish': 'finish-cleanness',
+
+    // Overall Assessment stage
+    'overall_quality': 'overall-quality',
+    'Overall_Quality': 'overall-quality',
+    'satisfaction_overall': 'satisfaction-overall',
+    'Satisfaction_Overall': 'satisfaction-overall'
 };
 
 /**
@@ -204,18 +213,29 @@ const STAGE_ALIASES = {
     'after_taste': 'aftertaste',
     'After_Taste': 'aftertaste',
     'finish': 'aftertaste',
-    'Finish': 'aftertaste'
+    'Finish': 'aftertaste',
+
+    'texture': 'texture',
+    'Texture': 'texture',
+    'mouthfeel_stage': 'texture',
+
+    'overallAssessment': 'overallAssessment',
+    'overall_assessment': 'overallAssessment',
+    'Overall_Assessment': 'overallAssessment',
+    'overall': 'overallAssessment'
 };
 
 /**
  * Valid sensory attributes per stage (canonical names)
  */
 const STAGE_ATTRIBUTES = {
-    appearance: ['visualAppeal', 'colorIntensity', 'carbonation', 'overallIntensity'],
-    aroma: ['intensity', 'sweetness', 'complexity', 'persistence', 'overallIntensity'],
-    frontMouth: ['sweetness', 'sourness', 'saltiness', 'texture', 'acidity', 'spiciness', 'overallIntensity'],
-    midRearMouth: ['bitterness', 'umami', 'richness', 'creaminess', 'astringency', 'mouthfeel', 'overallIntensity'],
-    aftertaste: ['duration', 'pleasantness', 'cleanness', 'overallIntensity']
+    appearance: ['visual-appeal', 'color-richness', 'bubble-activity'],
+    aroma: ['smell-strength', 'smell-complexity', 'caramel-toffee-notes', 'smell-duration'],
+    frontMouth: ['sweetness', 'sourness-tartness', 'saltiness', 'first-bite-texture', 'spicy-heat'],
+    midRearMouth: ['bitterness-development', 'umami-savoury-depth', 'richness-fullness', 'overall-mid-palate-intensity'],
+    texture: ['creaminess', 'astringency', 'smoothness', 'chewiness', 'crunchiness'],
+    aftertaste: ['finish-length', 'finish-quality', 'finish-cleanness'],
+    overallAssessment: ['overall-quality', 'satisfaction-overall', 'want-more-quality', 'refreshing-quality']
 };
 
 /**
@@ -223,10 +243,12 @@ const STAGE_ATTRIBUTES = {
  */
 const VALIDATION_STAGE_EMOTIONS = {
     appearance: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise'],
-    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
+    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued'],
     frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
     midRearMouth: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication'],
-    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving']
+    texture: ['satisfied', 'pleased', 'comforted'],
+    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving-want-more'],
+    overallAssessment: ['satisfaction', 'happiness', 'pleasure']
 };
 
 /**
@@ -368,7 +390,7 @@ function validateExperience(experience) {
     }
 
     // Validate each stage
-    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste'];
+    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overallAssessment'];
 
     for (const stageName of requiredStages) {
         const stage = experience.stages[stageName];
@@ -379,9 +401,8 @@ function validateExperience(experience) {
         }
 
         // Check attribute values are in valid range
-        const validAttrs = STAGE_ATTRIBUTES[stageName] || [];
         for (const [attr, value] of Object.entries(stage)) {
-            if (attr === 'emotions' || attr === 'overallIntensity') continue;
+            if (attr === 'emotions') continue;
 
             if (typeof value === 'number') {
                 if (value < 0 || value > 10) {
@@ -400,7 +421,7 @@ function validateExperience(experience) {
         for (const [attr, value] of Object.entries(stage)) {
             if (attr !== 'emotions' && typeof value === 'number') {
                 totalCount++;
-                if (value === 5) defaultCount++;
+                if (value === 0) defaultCount++;
             }
         }
 
@@ -409,24 +430,6 @@ function validateExperience(experience) {
                 field: `stages.${stageName}`,
                 message: `All values are defaults - inference may be inaccurate`
             });
-        }
-    }
-
-    // Check emotional triggers
-    if (!experience.emotionalTriggers) {
-        result.warnings.push({ field: 'emotionalTriggers', message: 'Emotional triggers missing' });
-    } else {
-        const triggers = ['moreishness', 'refreshment', 'melt', 'crunch'];
-        for (const trigger of triggers) {
-            const value = experience.emotionalTriggers[trigger];
-            if (value === undefined) {
-                result.warnings.push({ field: `emotionalTriggers.${trigger}`, message: `${trigger} trigger missing` });
-            } else if (value < 0 || value > 10) {
-                result.warnings.push({
-                    field: `emotionalTriggers.${trigger}`,
-                    message: `Value ${value} out of range (0-10)`
-                });
-            }
         }
     }
 
@@ -458,11 +461,13 @@ function autoCorrectExperience(experience) {
 
     // Ensure all required stages exist with defaults
     const defaultStages = {
-        appearance: { visualAppeal: 5, colorIntensity: 5, carbonation: 5, emotions: {} },
-        aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
-        frontMouth: { sweetness: 5, sourness: 5, saltiness: 5, texture: 5, acidity: 5, spiciness: 5, emotions: {} },
-        midRearMouth: { bitterness: 5, umami: 5, richness: 5, creaminess: 5, astringency: 5, mouthfeel: 5, emotions: {} },
-        aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
+        appearance: { 'visual-appeal': 0, 'color-richness': 0, 'bubble-activity': 0, emotions: {} },
+        aroma: { 'smell-strength': 0, 'smell-complexity': 0, 'caramel-toffee-notes': 0, 'smell-duration': 0, emotions: {} },
+        frontMouth: { sweetness: 0, 'sourness-tartness': 0, saltiness: 0, 'first-bite-texture': 0, 'spicy-heat': 0, emotions: {} },
+        midRearMouth: { 'bitterness-development': 0, 'umami-savoury-depth': 0, 'richness-fullness': 0, 'overall-mid-palate-intensity': 0, emotions: {} },
+        texture: { creaminess: 0, astringency: 0, smoothness: 0, emotions: {} },
+        aftertaste: { 'finish-length': 0, 'finish-quality': 0, 'finish-cleanness': 0, emotions: {} },
+        overallAssessment: { 'overall-quality': 0, 'satisfaction-overall': 0, emotions: {} }
     };
 
     for (const [stageName, defaults] of Object.entries(defaultStages)) {
@@ -483,11 +488,6 @@ function autoCorrectExperience(experience) {
                 corrected.stages[stageName][attr] = Math.max(0, Math.min(10, value));
             }
         }
-    }
-
-    // Ensure emotional triggers exist
-    if (!corrected.emotionalTriggers) {
-        corrected.emotionalTriggers = { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 };
     }
 
     // Ensure need state

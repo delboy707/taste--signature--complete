@@ -10,7 +10,7 @@
  *   sampleSize: number,
  *   dataSource: string (e.g., 'Industry Survey 2024', 'Internal Database'),
  *   attributeBenchmarks: {
- *     appearance: { visualAppeal: { mean, median, p25, p50, p75, stdDev }, ... },
+ *     appearance: { 'visual-appeal': { mean, median, p25, p50, p75, stdDev }, ... },
  *     aroma: { intensity: { mean, median, p25, p50, p75, stdDev }, ... },
  *     ...
  *   },
@@ -36,25 +36,25 @@ const defaultBenchmarks = [
         dataSource: 'Taste Signature Industry Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 },
-                colorIntensity: { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 },
+                'color-richness': { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.7 },
+                'smell-strength': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.7 },
                 sweetness: { mean: 4.2, median: 4.0, p25: 3.5, p50: 4.0, p75: 5.0, stdDev: 1.0 },
-                complexity: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
+                'smell-complexity': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
             },
             frontMouth: {
                 sweetness: { mean: 4.5, median: 4.5, p25: 4.0, p50: 4.5, p75: 5.0, stdDev: 0.8 },
                 bitterness: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 }
             },
             midRearMouth: {
-                richness: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
+                'richness-fullness': { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
                 creaminess: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.8 }
             },
             aftertaste: {
-                duration: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 8.0, stdDev: 0.9 },
-                pleasantness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'finish-length': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 8.0, stdDev: 0.9 },
+                'finish-quality': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.2, stdDev: 0.9 },
@@ -72,12 +72,12 @@ const defaultBenchmarks = [
         dataSource: 'Craft Beer Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 8.0, stdDev: 1.0 },
-                colorIntensity: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 8.0, stdDev: 1.0 },
+                'color-richness': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
-                complexity: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
+                'smell-strength': { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
+                'smell-complexity': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
             },
             frontMouth: {
                 bitterness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
@@ -96,21 +96,21 @@ const defaultBenchmarks = [
         dataSource: 'Dairy Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'smell-strength': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 },
                 sweetness: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 8.0, stdDev: 0.9 }
             },
             frontMouth: {
                 sweetness: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 }
             },
             midRearMouth: {
-                richness: { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.9 },
+                'richness-fullness': { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.9 },
                 creaminess: { mean: 8.5, median: 8.5, p25: 8.0, p50: 8.5, p75: 9.0, stdDev: 0.7 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 }
+                'finish-quality': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.8 },
@@ -128,22 +128,22 @@ const defaultBenchmarks = [
         dataSource: 'Coffee Sensory Consortium 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 8.5, median: 8.5, p25: 8.0, p50: 8.5, p75: 9.0, stdDev: 0.6 },
-                complexity: { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.8 }
+                'smell-strength': { mean: 8.5, median: 8.5, p25: 8.0, p50: 8.5, p75: 9.0, stdDev: 0.6 },
+                'smell-complexity': { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.8 }
             },
             frontMouth: {
                 bitterness: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.7 },
                 sourness: { mean: 5.5, median: 5.5, p25: 5.0, p50: 5.5, p75: 6.0, stdDev: 0.8 }
             },
             midRearMouth: {
-                richness: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
+                'richness-fullness': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
             },
             aftertaste: {
-                duration: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.7 },
-                pleasantness: { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'finish-length': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.7 },
+                'finish-quality': { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 },
@@ -158,11 +158,11 @@ const defaultBenchmarks = [
         dataSource: 'Dessert Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
-                colorIntensity: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
+                'color-richness': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'smell-strength': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
                 sweetness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.7 }
             },
             frontMouth: {
@@ -170,11 +170,11 @@ const defaultBenchmarks = [
                 texture: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             midRearMouth: {
-                richness: { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'richness-fullness': { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.8 },
                 creaminess: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.9 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'finish-quality': { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.9, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.8 },
@@ -192,10 +192,10 @@ const defaultBenchmarks = [
         dataSource: 'Snack Foods Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'visual-appeal': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aroma: {
-                intensity: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 },
+                'smell-strength': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 },
                 savory: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             frontMouth: {
@@ -206,7 +206,7 @@ const defaultBenchmarks = [
                 fattyFeel: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aftertaste: {
-                duration: { mean: 6.0, median: 6.0, p25: 5.5, p50: 6.0, p75: 6.5, stdDev: 0.8 }
+                'finish-length': { mean: 6.0, median: 6.0, p25: 5.5, p50: 6.0, p75: 6.5, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.4, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.9 },
@@ -224,11 +224,11 @@ const defaultBenchmarks = [
         dataSource: 'Confectionery Sensory Institute 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
-                colorIntensity: { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.7 }
+                'visual-appeal': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'color-richness': { mean: 8.2, median: 8.0, p25: 7.5, p50: 8.0, p75: 9.0, stdDev: 0.7 }
             },
             aroma: {
-                intensity: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
+                'smell-strength': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
                 fruitiness: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 }
             },
             frontMouth: {
@@ -239,7 +239,7 @@ const defaultBenchmarks = [
                 chewiness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'finish-quality': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             }
         },
         overallSatisfaction: { mean: 7.6, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
@@ -257,11 +257,11 @@ const defaultBenchmarks = [
         dataSource: 'Beverage Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 },
-                colorIntensity: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
+                'visual-appeal': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 },
+                'color-richness': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.9 },
+                'smell-strength': { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.9 },
                 sweetness: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             },
             frontMouth: {
@@ -290,10 +290,10 @@ const defaultBenchmarks = [
         dataSource: 'Cereal Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'smell-strength': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
                 sweetness: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 },
                 toasted: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
@@ -306,7 +306,7 @@ const defaultBenchmarks = [
                 nuttiness: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
+                'finish-quality': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.4, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
@@ -324,11 +324,11 @@ const defaultBenchmarks = [
         dataSource: 'Dairy Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
-                colorIntensity: { mean: 8.5, median: 8.5, p25: 8.0, p50: 8.5, p75: 9.0, stdDev: 0.6 }
+                'visual-appeal': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
+                'color-richness': { mean: 8.5, median: 8.5, p25: 8.0, p50: 8.5, p75: 9.0, stdDev: 0.6 }
             },
             aroma: {
-                intensity: { mean: 6.0, median: 6.0, p25: 5.5, p50: 6.0, p75: 6.5, stdDev: 0.7 },
+                'smell-strength': { mean: 6.0, median: 6.0, p25: 5.5, p50: 6.0, p75: 6.5, stdDev: 0.7 },
                 sourness: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.8 }
             },
             frontMouth: {
@@ -337,10 +337,10 @@ const defaultBenchmarks = [
             },
             midRearMouth: {
                 creaminess: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
-                richness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'richness-fullness': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
+                'finish-quality': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.3, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
@@ -358,11 +358,11 @@ const defaultBenchmarks = [
         dataSource: 'Beverage Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
-                colorIntensity: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'color-richness': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'smell-strength': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
                 fruitiness: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 }
             },
             frontMouth: {
@@ -374,7 +374,7 @@ const defaultBenchmarks = [
                 energizing: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 }
             },
             aftertaste: {
-                duration: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.8 }
+                'finish-length': { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
@@ -392,10 +392,10 @@ const defaultBenchmarks = [
         dataSource: 'Sports Nutrition Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 }
+                'visual-appeal': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 1.0 }
             },
             aroma: {
-                intensity: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
+                'smell-strength': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
                 nuttiness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             frontMouth: {
@@ -403,11 +403,11 @@ const defaultBenchmarks = [
                 chewiness: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             midRearMouth: {
-                richness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
+                'richness-fullness': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
                 graininess: { mean: 5.5, median: 5.5, p25: 5.0, p50: 5.5, p75: 6.0, stdDev: 1.0 }
             },
             aftertaste: {
-                pleasantness: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'finish-quality': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             }
         },
         overallSatisfaction: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
@@ -426,11 +426,11 @@ const defaultBenchmarks = [
         dataSource: 'Bakery Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
-                colorIntensity: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'visual-appeal': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'color-richness': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aroma: {
-                intensity: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
+                'smell-strength': { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 },
                 sweetness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
                 butteriness: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
@@ -439,11 +439,11 @@ const defaultBenchmarks = [
                 crunchiness: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 1.0 }
             },
             midRearMouth: {
-                richness: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'richness-fullness': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
                 butteriness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
+                'finish-quality': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             }
         },
         overallSatisfaction: { mean: 7.8, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.8 },
@@ -462,10 +462,10 @@ const defaultBenchmarks = [
         dataSource: 'Frozen Foods Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'visual-appeal': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aroma: {
-                intensity: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
+                'smell-strength': { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
                 savory: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
                 cheesiness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
@@ -478,7 +478,7 @@ const defaultBenchmarks = [
                 fattyFeel: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             },
             aftertaste: {
-                pleasantness: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'finish-quality': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             }
         },
         overallSatisfaction: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
@@ -496,11 +496,11 @@ const defaultBenchmarks = [
         dataSource: 'Condiments Sensory Database 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
-                colorIntensity: { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 }
+                'visual-appeal': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'color-richness': { mean: 8.0, median: 8.0, p25: 7.5, p50: 8.0, p75: 8.5, stdDev: 0.7 }
             },
             aroma: {
-                intensity: { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
+                'smell-strength': { mean: 7.8, median: 8.0, p25: 7.0, p50: 8.0, p75: 8.5, stdDev: 0.8 },
                 spiciness: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 }
             },
             frontMouth: {
@@ -512,7 +512,7 @@ const defaultBenchmarks = [
                 heatBuild: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.9 }
             },
             aftertaste: {
-                duration: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'finish-length': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             }
         },
         overallSatisfaction: { mean: 7.5, median: 7.5, p25: 7.0, p50: 7.5, p75: 8.0, stdDev: 0.8 },
@@ -530,11 +530,11 @@ const defaultBenchmarks = [
         dataSource: 'Alternative Protein Sensory Panel 2024',
         attributeBenchmarks: {
             appearance: {
-                visualAppeal: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
-                colorIntensity: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
+                'visual-appeal': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
+                'color-richness': { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             },
             aroma: {
-                intensity: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
+                'smell-strength': { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 },
                 savory: { mean: 7.2, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
                 meatiness: { mean: 6.5, median: 6.5, p25: 6.0, p50: 6.5, p75: 7.0, stdDev: 1.0 }
             },
@@ -547,7 +547,7 @@ const defaultBenchmarks = [
                 umami: { mean: 7.0, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.8 }
             },
             aftertaste: {
-                pleasantness: { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 }
+                'finish-quality': { mean: 6.8, median: 7.0, p25: 6.0, p50: 7.0, p75: 7.5, stdDev: 0.9 }
             }
         },
         overallSatisfaction: { mean: 6.9, median: 7.0, p25: 6.5, p50: 7.0, p75: 7.5, stdDev: 0.9 },
@@ -650,7 +650,7 @@ function compareAgainstBenchmark(productId, benchmarkId) {
     });
 
     // Overall satisfaction comparison
-    const productSatisfaction = product.stages.aftertaste.emotions.satisfaction || 0;
+    const productSatisfaction = product.stages.overallAssessment?.['satisfaction-overall'] || product.stages.aftertaste?.emotions?.satisfaction || 0;
     if (benchmark.overallSatisfaction) {
         const satisfactionPercentile = calculatePercentile(productSatisfaction, benchmark.overallSatisfaction);
 
@@ -746,7 +746,7 @@ function createBenchmarkFromProducts(name, category, productIds) {
 
     // Calculate benchmarks from product data
     // For each stage and attribute, calculate statistics
-    const stageKeys = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste'];
+    const stageKeys = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overallAssessment'];
 
     stageKeys.forEach(stageKey => {
         if (!newBenchmark.attributeBenchmarks[stageKey]) {
@@ -778,7 +778,7 @@ function createBenchmarkFromProducts(name, category, productIds) {
 
     // Overall satisfaction
     const satisfactionValues = products
-        .map(p => p.stages.aftertaste.emotions.satisfaction || 0)
+        .map(p => p.stages.overallAssessment?.['satisfaction-overall'] || p.stages.aftertaste?.emotions?.satisfaction || 0)
         .filter(v => v > 0);
 
     if (satisfactionValues.length > 0) {
