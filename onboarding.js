@@ -187,7 +187,7 @@ const OnboardingManager = {
                             <div class="tour-icon">🤖</div>
                             <div class="tour-info">
                                 <h4>AI Insights</h4>
-                                <p>Claude-powered recommendations and pattern detection</p>
+                                <p>AI-powered recommendations and pattern detection</p>
                             </div>
                         </div>
 

@@ -75,7 +75,7 @@ class TutorialManager {
             {
                 target: '[data-view="ai-insights"]',
                 title: '🤖 AI-Powered Analysis',
-                content: 'Get strategic insights from Claude AI. Ask questions about your data, compare products, and discover improvement opportunities.',
+                content: 'Get strategic insights from AI. Ask questions about your data, compare products, and discover improvement opportunities.',
                 position: 'right',
                 highlight: true
             },
@@ -465,7 +465,7 @@ class TutorialManager {
             'ai-insights': {
                 title: '🤖 AI-Powered Insights',
                 content: `
-                    <h4>Using Claude AI:</h4>
+                    <h4>Using AI Insights:</h4>
                     <p>Ask natural language questions about your taste data and get strategic recommendations.</p>
                     <h4>Example Questions:</h4>
                     <ul>

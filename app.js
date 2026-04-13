@@ -1352,7 +1352,7 @@ async function getAIComparisonInsights() {
     const content = document.getElementById('ai-comparison-content');
 
     container.style.display = 'block';
-    content.innerHTML = '<div class="loading-spinner">🤖 Claude is analyzing your products...</div>';
+    content.innerHTML = '<div class="loading-spinner">🤖 AI is analyzing your products...</div>';
 
     // Scroll to AI insights
     container.scrollIntoView({ behavior: 'smooth' });
@@ -3037,7 +3037,7 @@ function updateAIInsightsView() {
                 <div class="ai-config-success">
                     <span class="success-icon">✅</span>
                     <div>
-                        <strong>Claude AI Connected</strong>
+                        <strong>AI Connected</strong>
                         <p style="margin: 5px 0 0 0;">Using model: ${claudeAI.model}</p>
                     </div>
                 </div>
@@ -3190,7 +3190,7 @@ async function executeAIQuery(query) {
 
     try {
         const response = await claudeAI.answerQuery(query, experiences);
-        showAIResponse(response, 'Claude\'s Answer');
+        showAIResponse(response, 'AI Answer');
     } catch (error) {
         showAIError(error.message);
     }
