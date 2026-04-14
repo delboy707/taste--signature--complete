@@ -465,6 +465,42 @@ async function processUploadedFile(file) {
                 reader.onerror = () => reject(new Error('Failed to read file'));
                 reader.readAsText(file);
             });
+            // Detect QEP template by presence of stage-prefixed columns in header row
+            const firstLine = text.split('\n')[0];
+            const isQEP = firstLine.includes('app_') && firstLine.includes('aroma_') && firstLine.includes('tex_');
+
+            if (isQEP) {
+                const qepResult = window.BatchImport.parseQEPImportCSV(text);
+                if (qepResult.warnings.length) {
+                    console.warn('QEP import warnings:', qepResult.warnings);
+                }
+                if (!qepResult.products.length) {
+                    alert('No valid data rows found in QEP template. Please check your file and try again.');
+                    return;
+                }
+                const qepImport = await window.BatchImport.executeQEPBatchImport(
+                    qepResult.products,
+                    function(progress) {
+                        console.log('QEP import progress: ' + progress.percent + '%');
+                    }
+                );
+                let msg = 'QEP Import complete.\n\n';
+                msg += '✅ Imported: ' + qepImport.success + '\n';
+                msg += '❌ Failed: ' + qepImport.failed;
+                if (qepImport.errors.length) {
+                    msg += '\n\nErrors:\n';
+                    qepImport.errors.slice(0, 5).forEach(function(e) {
+                        msg += 'Row ' + e.row + ' (' + e.product + '): ' + e.error + '\n';
+                    });
+                }
+                alert(msg);
+                if (qepImport.success > 0) {
+                    resetBatchImport();
+                    if (typeof updateDashboard === 'function') updateDashboard();
+                }
+                return;
+            }
+
             result = parseCSVFile(text);
         } else if (extension === 'xlsx') {
             result = await parseExcelFile(file);
@@ -1014,39 +1050,4 @@ function showImportSummaryModal(results) {
                         <div style="font-size: 14px; color: #6b7280;">Imported</div>
                     </div>
                     <div style="background: ${results.failed > 0 ? '#fef2f2' : '#f3f4f6'}; padding: 16px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: bold; color: ${results.failed > 0 ? '#ef4444' : '#9ca3af'};">${results.failed}</div>
-                        <div style="font-size: 14px; color: #6b7280;">Failed</div>
-                    </div>
-                    <div style="background: #eff6ff; padding: 16px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${Math.round(results.autoEvalStats.averageConfidence * 100)}%</div>
-                        <div style="font-size: 14px; color: #6b7280;">Avg Confidence</div>
-                    </div>
-                    <div style="background: ${results.autoEvalStats.warningCount > 0 ? '#fef3c7' : '#f3f4f6'}; padding: 16px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: bold; color: ${results.autoEvalStats.warningCount > 0 ? '#f59e0b' : '#9ca3af'};">${results.autoEvalStats.warningCount}</div>
-                        <div style="font-size: 14px; color: #6b7280;">Warnings</div>
-                    </div>
-                </div>
-
-                <div style="background: #f3f4f6; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
-                    <span style="color: #6b7280;">Data Type:</span>
-                    <strong style="color: #1f2937;">${formatDataType(results.autoEvalStats.dataType)}</strong>
-                </div>
-
-                <button class="btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="closeImportSummaryModal()">
-                    Done
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-/**
- * Close import summary modal
- */
-function closeImportSummaryModal() {
-    const modal = document.getElementById('import-summary-modal');
-    if (modal) {
-        modal.remove();
-    }
-}
+                        <div style="font-size: 32px; font-weight: bold; color: ${results.failed > 0 ? '#ef4444' : '#9ca3af'};">${results.failed}</div
