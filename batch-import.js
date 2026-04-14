@@ -754,9 +754,359 @@ function getConfidenceLabel(confidence) {
     return { label: 'Low', color: '#ef4444' };
 }
 
+
+// ===== QEP TASTE SIGNATURE IMPORT =====
+
+/**
+ * Stage definitions — all 7 stages with consumer-friendly attribute labels
+ * and approved emotion vocabularies.
+ */
+const QEP_STAGES = {
+  app: {
+    label: 'APPEARANCE',
+    attributes: [
+      'Color_Shade','Color_Richness','Color_Lightness','Color_Strength','Color_Evenness',
+      'Color_Depth','Surface_Shine','Surface_Texture','Surface_Oiliness','Surface_Moisture',
+      'See-Through_Quality','Cloudiness','Light-Blocking','Piece_Size','Shape_Regularity',
+      'Size_Consistency','Surface_Holes','Perceived_Thickness','Flow_and_Legs','Bubble_Size',
+      'Bubble_Activity','Foam_Height','Foam_Persistence','Visible_Particles',
+      'Pattern_and_Marbling','Visual_Complexity','Visual_Appeal','Temperature_Cue'
+    ],
+    emotions: ['anticipation','curiosity','desire','eager','excitement','happiness','interest',
+               'pleased','surprise','attracted','disappointed','disgusted','indifferent',
+               'suspicious','worried','anxious','confused','bored']
+  },
+  aroma: {
+    label: 'AROMA',
+    attributes: [
+      'Smell_Strength','First_Impression','Pungent_Sting','Fruity_Notes','Flower-Like_Notes',
+      'Plant-Like_Green_Notes','Warm_Spice_Notes','Toasted_Roasted_Notes',
+      'Caramel_Toffee_Notes','Fermented_Notes','Dairy_Creamy_Notes','Earth-Like_Notes',
+      'Ocean_Sea_Notes','Nut-Like_Notes','Wood-Like_Notes','Savoury_Meaty_Notes',
+      'Smoky_Notes','Chemical_Solvent_Notes','Sulphur-Like_Notes','Smell_Duration',
+      'Smell_Development','Smell_Lift','Smell_Complexity','Smell_Balance',
+      'Freshness_vs_Staleness'
+    ],
+    emotions: ['pleasure','comfort','nostalgia','happiness','energized','relaxed','intrigued',
+               'refreshed','desire','warm','soothed','surprised','interested','calm',
+               'disgusted','irritated','worried','disappointed','indifferent','anxious','repulsed']
+  },
+  fom: {
+    label: 'FRONT_OF_MOUTH',
+    attributes: [
+      'Sweetness','Sourness_Tartness','Saltiness','Bitterness','Savouriness','Spicy_Heat',
+      'Cooling_Sensation','Carbonation_Bite','Tingling_Numbing','First_Hit_Speed',
+      'Initial_Impact_Strength','Flavour_Burst','First-Bite_Texture','Temperature_Sensation',
+      'Initial_Mouth-Watering','Overall_Initial_Impact','Taste_Dominance_at_Entry'
+    ],
+    emotions: ['excitement','surprise','happiness','pleasure','interest','satisfaction',
+               'energized','delighted','amused','disappointed','disgusted','bored',
+               'confused','overwhelmed','upset','worried']
+  },
+  mrm: {
+    label: 'MID_REAR_MOUTH',
+    attributes: [
+      'Sweetness_Development','Sourness_Acidity_Development','Saltiness_Development',
+      'Bitterness_Development','Umami_Savoury_Depth','Richness_Fullness','Fat_Taste',
+      'Metallic_Sensation','Starchy_Cereal_Quality','Mineral_Quality',
+      'In-Mouth_Aroma_Strength','In-Mouth_Aroma_Complexity','In-Mouth_Aroma_Character',
+      'Flavour_Peak','Time_to_Peak','Peak_Duration','Flavour_Dominance_Sequence',
+      'Taste_Balance','Taste_Suppression','Taste_Enhancement','Flavour_Complexity',
+      'Flavour_Harmony','Flavour_Cleanness','Flavour_Depth','Overall_Mid-Palate_Intensity'
+    ],
+    emotions: ['satisfaction','pleasure','indulgence','comfort','calm','warmth','joy',
+               'loving','adventurous','energized','secure','nostalgic','guilty','bored',
+               'disgusted','disappointed','aggressive','overwhelmed','dissatisfied','sad']
+  },
+  tex: {
+    label: 'TEXTURE',
+    attributes: [
+      'Hardness_Firmness','Softness','Thickness-Oral','Cohesiveness','Springiness_Bounce',
+      'Stickiness','Bounce-Back','Snap_Shatter','Crunchiness','Crispness','Crackiness',
+      'Chewiness','Gumminess','Toughness','Tenderness','Crumbliness','Mushiness',
+      'Rubberiness','Mouldability','Thinness','Thickness-High','Runniness','Syrupiness',
+      'Body_Fullness','Heaviness','Sliminess','Fluidity','Consistency','Graininess',
+      'Grittiness','Sandiness','Chalkiness','Powderiness','Pulpiness','Seediness',
+      'Mealiness_Flouriness','Coarseness','Particle_Uniformity','Fibrousness','Cellularity',
+      'Crystallinity','Flakiness','Layered_Structure','Porosity_Aeration','Sponginess',
+      'Denseness_Compactness','Lightness_Airiness','Evenness','Lumpiness','Smoothness',
+      'Roughness','Slipperiness_Slickness','Mouth-Coating','Film-Forming','Waxiness',
+      'Astringency','Dryness','Moistness','Wetness','Wateriness','Juiciness','Succulence',
+      'Oiliness','Greasiness','Fattiness','Creaminess','Butteriness','Richness_Unctuousness',
+      'Fat_Slickness','Cooling_Effect','Warming_Effect','Temperature_Contrast','Melt_Rate',
+      'Effervescence','Carbonation_Bite-Oral','Bubble_Size-Oral',
+      'Prickling_Tingling_from_Carbonation','Foam_Density','Foam_Stability',
+      'Mousse-Like_Quality','Fizziness','Tingling','Numbing','Burning_Heat',
+      'Nasal_Pungency-Oral','Metallic_Mouthfeel','Electric_Buzzing_Sensation',
+      'Breakdown_Rate','Melt_Dissolution_Rate','Bolus_Formation_Ease','Chew-Down_Change',
+      'Moisture_Release_Rate','Creaminess_Development','Ease_of_Swallow','Residual_Mouthfeel',
+      'Pastiness_Doughiness','Starchiness','Gel-Like_Quality','Doughy_Quality',
+      'Compactness','Overall_Textural_Complexity'
+    ],
+    emotions: ['satisfied','pleased','comforted','indulged','calm-relaxed','nostalgic',
+               'secure','excited','energized','delighted','refreshed','interested','playful',
+               'pleasantly-surprised','disgusted','disappointed','frustrated',
+               'annoyed-irritated','bored','uncomfortable','anxious-uneasy',
+               'unpleasantly-surprised','put-off','tired-fatigued','overwhelmed']
+  },
+  aft: {
+    label: 'AFTERTASTE',
+    attributes: [
+      'Finish_Length','Flavour_Linger','Fade_Pattern','Sweet_Linger','Bitter_Linger',
+      'Sour_Linger','Salt_Linger','Umami_Linger','Astringent_Linger','Metallic_Linger',
+      'Heat_Linger','After-Smell_Strength','After-Smell_Variety','After-Smell_Character',
+      'After-Smell_Development','Mouth_Coating','Palate_Cleansing','After-Dryness',
+      'After-Salivation','Finish_Evolution','Finish_Quality','Finish_Cleanness',
+      'Finish_Complexity','Warming_Persistence','Cooling_Persistence'
+    ],
+    emotions: ['satisfaction','completeness','happiness','craving-want-more','calm',
+               'comforted','pleased','refreshed','nostalgic','surprised','disappointed',
+               'disgusted','guilty','worried','dissatisfied','bored','regret']
+  },
+  oa: {
+    label: 'OVERALL_ASSESSMENT',
+    attributes: [
+      'Overall_Quality','Balance','Harmony','True-to-Type_Character','Craftsmanship',
+      'Flavour_Complexity','Flavour_Depth','Flavour_Coherence','Flavour_Richness',
+      'Overall_Strength','Flavour_Impact','Memorability','Want-More_Quality',
+      'Satisfaction','Refreshing_Quality','Palatability','Craveability',
+      'Filling_Quality','Thirst-Quenching_Quality','Sensory_Journey',
+      'Flavour_Fatigue_Resistance'
+    ],
+    emotions: ['satisfaction','happiness','pleasure','enjoyment','comfort','calm','warmth',
+               'joy','nostalgia','energized','loving','gratitude','proud','adventurous',
+               'indulgent','interested','relaxed','secure','desire','surprised',
+               'disappointed','disgusted','bored','guilty','worried','dissatisfied',
+               'sad','regret','angry','anxious','confused']
+  }
+};
+
+/**
+ * generateQEPImportTemplate()
+ *
+ * Builds the full 262-column QEP CSV template in memory and triggers download.
+ * Replaces the old generateBatchImportTemplate() for QEP-structured imports.
+ */
+function generateQEPImportTemplate() {
+  const metadata = ['Product_Name','Brand','Category','Variant','Panel_Size','Test_Date'];
+  const headers = [...metadata];
+  const instructions = [
+    '[required]','[required]','[required e.g. chocolate/beverage/snack]',
+    '[required e.g. Original/Light]','[number of panellists]','[YYYY-MM-DD]'
+  ];
+  const sample = [
+    'Dark Chocolate Bar','QEP Sample Brand','confectionery','70% Cocoa Original','12','2026-04-14'
+  ];
+
+  Object.entries(QEP_STAGES).forEach(function(entry) {
+    var prefix = entry[0];
+    var stage  = entry[1];
+    stage.attributes.forEach(function(attr) {
+      headers.push(prefix + '_' + attr);
+      instructions.push('[0-10 or leave blank if not assessed]');
+      sample.push('');
+    });
+    headers.push(prefix + '_Emotions');
+    headers.push(prefix + '_Notes');
+    instructions.push('[Select from: ' + stage.emotions.join(';') + '] — separate with semicolons');
+    instructions.push('[optional free text]');
+    sample.push('');
+    sample.push('');
+  });
+
+  var csv = headers.join(',') + '\n';
+  csv += instructions.map(function(c) { return '"' + c.replace(/"/g, '""') + '"'; }).join(',') + '\n';
+  csv += sample.join(',') + '\n';
+  csv += new Array(headers.length).fill('').join(',') + '\n';
+
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = window.URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href     = url;
+  link.download = 'QEP_Taste_Signature_Import_Template.csv';
+  link.click();
+  window.URL.revokeObjectURL(url);
+}
+
+/**
+ * parseQEPImportCSV(csvText)
+ *
+ * Reads a completed QEP template and returns an array of structured product objects.
+ * Row 0 = headers, Row 1 = instructions (always skipped), Row 2+ = data.
+ *
+ * Returns: { products: Array, warnings: Array }
+ */
+function parseQEPImportCSV(csvText) {
+  var warnings = [];
+  var products = [];
+
+  // Build prefix → stageKey lookup
+  var prefixMap = {};
+  Object.keys(QEP_STAGES).forEach(function(prefix) {
+    prefixMap[prefix] = prefix;
+  });
+
+  var METADATA_KEYS = ['Product_Name','Brand','Category','Variant','Panel_Size','Test_Date'];
+
+  function classifyColumn(header) {
+    var idx = header.indexOf('_');
+    if (idx === -1) return null;
+    var prefix = header.slice(0, idx);
+    var rest   = header.slice(idx + 1);
+    if (!prefixMap[prefix]) return null;
+    if (rest === 'Emotions') return { prefix: prefix, type: 'emotions' };
+    if (rest === 'Notes')    return { prefix: prefix, type: 'notes' };
+    return { prefix: prefix, type: 'score', attr: rest };
+  }
+
+  var rows = parseCSVFile(csvText); // reuse existing parser
+  if (!rows || !rows.headers || rows.headers.length === 0) {
+    return { products: products, warnings: ['Could not parse CSV structure.'] };
+  }
+
+  var headers  = rows.headers;
+  var dataRows = rows.rows.slice(1); // skip instructions row
+
+  var colMap = headers.map(function(h) {
+    return {
+      header: h,
+      meta:   METADATA_KEYS.includes(h) ? h : null,
+      stage:  classifyColumn(h)
+    };
+  });
+
+  dataRows.forEach(function(row, rowIdx) {
+    var vals = Object.values(row);
+    if (vals.every(function(v) { return !v || v.trim() === ''; })) return;
+
+    var product = {
+      metadata: { productName:'', brand:'', category:'', variant:'', panelSize:'', testDate:'' },
+      stages: {}
+    };
+    Object.keys(QEP_STAGES).forEach(function(p) {
+      product.stages[p] = { scores: {}, emotions: [], notes: '' };
+    });
+
+    colMap.forEach(function(col, i) {
+      var raw = (vals[i] || '').trim();
+      if (col.meta) {
+        var key = col.meta
+          .replace(/_([a-z])/gi, function(_, c) { return c.toUpperCase(); })
+          .replace(/^[A-Z]/, function(c) { return c.toLowerCase(); });
+        product.metadata[key] = raw;
+        return;
+      }
+      if (!col.stage) return;
+      var s = col.stage;
+      if (s.type === 'emotions') {
+        product.stages[s.prefix].emotions = raw ? raw.split(';').map(function(e) { return e.trim(); }).filter(Boolean) : [];
+        return;
+      }
+      if (s.type === 'notes') {
+        product.stages[s.prefix].notes = raw;
+        return;
+      }
+      if (raw === '') return;
+      var n = parseFloat(raw);
+      if (isNaN(n)) {
+        warnings.push('Row ' + (rowIdx + 3) + ', "' + col.header + '": not a number — skipped.');
+        return;
+      }
+      product.stages[s.prefix].scores[s.attr] = n;
+    });
+
+    products.push(product);
+  });
+
+  return { products: products, warnings: warnings };
+}
+
+/**
+ * executeQEPBatchImport(products)
+ *
+ * Writes QEP-parsed products to Firestore under the company's experiences collection.
+ * Uses window.firestoreManager.getExperiencesCollection() — the same path all other
+ * experience writes use: companies/{companyId}/experiences/
+ *
+ * @param {Array}    products  Output of parseQEPImportCSV().products
+ * @param {Function} onProgress  Optional callback({ current, total })
+ * @returns {Promise<{ success: number, failed: number, errors: Array }>}
+ */
+async function executeQEPBatchImport(products, onProgress) {
+  var results = { success: 0, failed: 0, errors: [] };
+
+  if (!window.firestoreManager) {
+    results.errors.push('Firestore manager not initialised. Please ensure you are logged in.');
+    results.failed = products.length;
+    return results;
+  }
+
+  var collection = window.firestoreManager.getExperiencesCollection();
+  var total = products.length;
+
+  for (var i = 0; i < total; i++) {
+    var product = products[i];
+    try {
+      // Validate required metadata
+      if (!product.metadata.productName || !product.metadata.brand) {
+        throw new Error('Missing required fields: productName or brand.');
+      }
+
+      // Build experience document matching app schema
+      var doc = {
+        importedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        importType:  'qep_csv',
+        productInfo: {
+          name:      product.metadata.productName,
+          brand:     product.metadata.brand,
+          type:      (product.metadata.category || 'food').toLowerCase(),
+          variant:   product.metadata.variant || '',
+          panelSize: parseInt(product.metadata.panelSize, 10) || null,
+          testDate:  product.metadata.testDate  || null
+        },
+        stages: buildFirestoreStages(product.stages),
+        notes: product.stages.oa && product.stages.oa.notes ? product.stages.oa.notes : ''
+      };
+
+      await collection.add(doc);
+      results.success++;
+    } catch (err) {
+      results.failed++;
+      results.errors.push({ row: i + 1, product: product.metadata.productName || 'Unknown', error: err.message });
+    }
+
+    if (typeof onProgress === 'function') {
+      onProgress({ current: i + 1, total: total, percent: Math.round(((i + 1) / total) * 100) });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * buildFirestoreStages(stages)
+ * Converts the parsed stage objects into the format the app stores in Firestore.
+ * Scores become a flat key→value map per stage; emotions stay as an array.
+ */
+function buildFirestoreStages(stages) {
+  var out = {};
+  Object.keys(QEP_STAGES).forEach(function(prefix) {
+    var s = stages[prefix] || {};
+    out[prefix] = {
+      scores:   s.scores   || {},
+      emotions: s.emotions || [],
+      notes:    s.notes    || ''
+    };
+  });
+  return out;
+}
+
 // Export functions for use in UI
 if (typeof window !== 'undefined') {
     window.BatchImport = {
+        generateQEPImportTemplate,
+        parseQEPImportCSV,
+        executeQEPBatchImport,
         parseCSVFile,
         parseExcelFile,
         suggestColumnMapping,
