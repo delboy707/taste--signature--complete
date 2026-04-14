@@ -758,7 +758,7 @@ function getConfidenceLabel(confidence) {
 // ===== QEP TASTE SIGNATURE IMPORT =====
 
 /**
- * Stage definitions — all 7 stages with consumer-friendly attribute labels
+ * Stage definitions - all 7 stages with consumer-friendly attribute labels
  * and approved emotion vocabularies.
  */
 const QEP_STAGES = {
@@ -908,7 +908,7 @@ function generateQEPImportTemplate() {
     });
     headers.push(prefix + '_Emotions');
     headers.push(prefix + '_Notes');
-    instructions.push('[Select from: ' + stage.emotions.join(';') + '] — separate with semicolons');
+    instructions.push('[Select from: ' + stage.emotions.join(';') + '] - separate with semicolons');
     instructions.push('[optional free text]');
     sample.push('');
     sample.push('');
@@ -1009,7 +1009,7 @@ function parseQEPImportCSV(csvText) {
       if (raw === '') return;
       var n = parseFloat(raw);
       if (isNaN(n)) {
-        warnings.push('Row ' + (rowIdx + 3) + ', "' + col.header + '": not a number — skipped.');
+        warnings.push('Row ' + (rowIdx + 3) + ', "' + col.header + '": not a number - skipped.');
         return;
       }
       product.stages[s.prefix].scores[s.attr] = n;
@@ -1025,7 +1025,7 @@ function parseQEPImportCSV(csvText) {
  * executeQEPBatchImport(products)
  *
  * Writes QEP-parsed products to Firestore under the company's experiences collection.
- * Uses window.firestoreManager.getExperiencesCollection() — the same path all other
+ * Uses window.firestoreManager.getExperiencesCollection() - the same path all other
  * experience writes use: companies/{companyId}/experiences/
  *
  * @param {Array}    products  Output of parseQEPImportCSV().products
