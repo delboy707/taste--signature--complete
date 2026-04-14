@@ -940,7 +940,7 @@ function parseQEPImportCSV(csvText) {
   var warnings = [];
   var products = [];
 
-  // Build prefix → stageKey lookup
+  // Build prefix -> stageKey lookup
   var prefixMap = {};
   Object.keys(QEP_STAGES).forEach(function(prefix) {
     prefixMap[prefix] = prefix;
@@ -1086,7 +1086,7 @@ async function executeQEPBatchImport(products, onProgress) {
 /**
  * buildFirestoreStages(stages)
  * Converts the parsed stage objects into the format the app stores in Firestore.
- * Scores become a flat key→value map per stage; emotions stay as an array.
+ * Scores become a flat key->value map per stage; emotions stay as an array.
  */
 function buildFirestoreStages(stages) {
   var out = {};
