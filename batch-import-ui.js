@@ -88,6 +88,9 @@ function renderBatchImportOverview() {
                 <button class="btn-secondary" onclick="downloadBatchImportTemplate()">
                     📥 Download Template
                 </button>
+                <button class="btn-primary" onclick="window.BatchImport.generateQEPImportTemplate()">
+                    📥 Download QEP Full Template
+                </button>
                 <button class="btn-secondary" onclick="showBatchImportHelp()">
                     ❓ Import Guide
                 </button>
