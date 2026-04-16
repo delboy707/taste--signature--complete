@@ -88,6 +88,19 @@ function renderBatchImportOverview() {
                 <button class="btn-secondary" onclick="downloadBatchImportTemplate()">
                     📥 Download Template
                 </button>
+                <button class="btn-primary" onclick="window.BatchImport.generateQEPImportTemplate()">
+                    Download QEP Full Template (262 columns)
+                </button>
+                <div style="margin-top:16px;padding:16px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;">
+                    <strong>How to import QEP data:</strong>
+                    <ol style="margin:8px 0 0 20px;font-size:13px;line-height:1.8;">
+                        <li>Click Download QEP Full Template above</li>
+                        <li>Fill in your panel data - scores 0-10, leave unused columns blank</li>
+                        <li>For emotions: pick from the list in row 2, separate with semicolons</li>
+                        <li>Save as CSV and upload using the file upload below</li>
+                        <li>The app detects QEP templates automatically</li>
+                    </ol>
+                </div>
                 <button class="btn-secondary" onclick="showBatchImportHelp()">
                     ❓ Import Guide
                 </button>
@@ -462,6 +475,28 @@ async function processUploadedFile(file) {
                 reader.onerror = () => reject(new Error('Failed to read file'));
                 reader.readAsText(file);
             });
+            var firstLine = text.split("\n")[0];
+            var isQEP = firstLine.indexOf("app_") >= 0 && firstLine.indexOf("aroma_") >= 0 && firstLine.indexOf("tex_") >= 0;
+            if (isQEP) {
+                var qepResult = window.BatchImport.parseQEPImportCSV(text);
+                if (qepResult.warnings.length) console.warn("QEP warnings:", qepResult.warnings);
+                if (!qepResult.products.length) {
+                    alert("No valid data rows found. Please add your data below row 3 in the template.");
+                    return;
+                }
+                window.BatchImport.executeQEPBatchImport(qepResult.products, function(p) {
+                    console.log("QEP import: " + p.percent + "%");
+                }).then(function(r) {
+                    var msg = "QEP Import complete.\n\nImported: " + r.success + "\nFailed: " + r.failed;
+                    if (r.errors.length) {
+                        msg += "\n\nErrors:\n";
+                        r.errors.slice(0, 5).forEach(function(e) { msg += "Row " + e.row + ": " + e.error + "\n"; });
+                    }
+                    alert(msg);
+                    if (r.success > 0) { resetBatchImport(); if (typeof updateDashboard === "function") updateDashboard(); }
+                });
+                return;
+            }
             result = parseCSVFile(text);
         } else if (extension === 'xlsx') {
             result = await parseExcelFile(file);
