@@ -94,6 +94,7 @@ function renderBatchImportOverview() {
             </div>
 
             ${renderAutoEvalToggle()}
+            ${renderQEPTemplateSection()}
         </div>
     `;
 }
@@ -462,6 +463,11 @@ async function processUploadedFile(file) {
                 reader.onerror = () => reject(new Error('Failed to read file'));
                 reader.readAsText(file);
             });
+                        // --- QEP detection (v2) ---
+            if (typeof isQEPCSV === "function" && isQEPCSV(text)) {
+                handleQEPCSVUpload(text, file.name);
+                return;
+            }
             result = parseCSVFile(text);
         } else if (extension === 'xlsx') {
             result = await parseExcelFile(file);
@@ -1047,3 +1053,202 @@ function closeImportSummaryModal() {
         modal.remove();
     }
 }
+
+// === QEP_UI_V2_START ===
+
+/**
+ * QEP Taste Signature UI helpers - v2
+ */
+
+function renderQEPTemplateSection() {
+  return '' +
+    '<div class="qep-template-panel" style="margin-top:16px;padding:16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:12px;border:1px solid #7dd3fc;">' +
+      '<h5 style="margin:0 0 8px 0;color:#0c4a6e;">QEP Taste Signature - Full Template</h5>' +
+      '<p style="margin:0 0 12px 0;font-size:13px;color:#075985;">' +
+        'Download the full 262-column QEP template with all 7 stages, 242 attributes and stage emotions. ' +
+        'The template is detected automatically on upload.' +
+      '</p>' +
+      '<button class="btn-primary" onclick="downloadQEPTemplate()" style="margin-right:8px;">' +
+        'Download QEP Full Template (262 columns)' +
+      '</button>' +
+      '<button class="btn-secondary" onclick="showQEPImportHelp()">How to use</button>' +
+    '</div>';
+}
+
+function downloadQEPTemplate() {
+  if (typeof generateQEPImportTemplate === "function") {
+    generateQEPImportTemplate();
+  } else if (window.BatchImport && typeof window.BatchImport.generateQEPImportTemplate === "function") {
+    window.BatchImport.generateQEPImportTemplate();
+  } else {
+    alert("QEP template generator is not loaded. Please refresh the page.");
+  }
+}
+
+function showQEPImportHelp() {
+  var msg =
+    "QEP TASTE SIGNATURE IMPORT\n\n" +
+    "1. Click \"Download QEP Full Template\" to get the 262-column CSV.\n\n" +
+    "2. Open the file in Google Sheets or Excel.\n" +
+    "   - Row 1: Column headers (do NOT change)\n" +
+    "   - Row 2: Instructions for each column (ignored on import)\n" +
+    "   - Row 3: Sample product (ignored on import)\n" +
+    "   - Row 4 onwards: Your actual product data\n\n" +
+    "3. Fill in Row 4+ with your panel data:\n" +
+    "   - Product_Name, Brand, Category, Variant are required\n" +
+    "   - Attribute scores: 0 to 10, leave blank if not assessed\n" +
+    "   - Emotions: semicolon-separated, from the list shown in Row 2\n\n" +
+    "4. Save as CSV (not XLSX) and upload via Step 1.\n\n" +
+    "TIPS:\n" +
+    "- If a column is missing, that attribute is just skipped\n" +
+    "- Case does not matter in column names\n" +
+    "- Non-numeric values in score cells are skipped with a warning";
+  alert(msg);
+}
+
+function handleQEPCSVUpload(csvText, fileName) {
+  var container = document.getElementById("batch-import-container");
+  if (container) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner"></div><p style="margin-top:20px;color:#6b7280;">Parsing QEP template...</p></div>';
+  }
+
+  var parseResult;
+  try {
+    parseResult = parseQEPImportCSV(csvText);
+  } catch (err) {
+    showQEPImportResultPanel({
+      success: false,
+      fileName: fileName,
+      fatalError: "Parser crashed: " + err.message
+    });
+    return;
+  }
+
+  if (!parseResult.success || parseResult.errors.length > 0) {
+    showQEPImportResultPanel({
+      success: false,
+      fileName: fileName,
+      parseResult: parseResult
+    });
+    return;
+  }
+
+  // Confirm before committing
+  var msg = "Ready to import " + parseResult.products.length + " product(s) from " + fileName + ".\n\n";
+  if (parseResult.warnings.length > 0) {
+    msg += "There are " + parseResult.warnings.length + " warning(s). Click OK to continue, Cancel to review.";
+  } else {
+    msg += "No warnings. Click OK to continue.";
+  }
+
+  if (!confirm(msg)) {
+    showQEPImportResultPanel({
+      success: false,
+      fileName: fileName,
+      parseResult: parseResult,
+      cancelled: true
+    });
+    return;
+  }
+
+  executeQEPBatchImport(parseResult.products).then(function(importResult) {
+    showQEPImportResultPanel({
+      success: importResult.success > 0,
+      fileName: fileName,
+      parseResult: parseResult,
+      importResult: importResult
+    });
+    if (importResult.success > 0 && typeof updateDashboard === "function") {
+      try { updateDashboard(); } catch (e) { /* ignore */ }
+    }
+  }).catch(function(err) {
+    showQEPImportResultPanel({
+      success: false,
+      fileName: fileName,
+      parseResult: parseResult,
+      fatalError: "Import crashed: " + err.message
+    });
+  });
+}
+
+function showQEPImportResultPanel(ctx) {
+  var container = document.getElementById("batch-import-container");
+  if (!container) return;
+
+  var html = '<div class="analytics-section">';
+
+  if (ctx.fatalError) {
+    html += '<h4 style="color:#b91c1c;">QEP Import Failed</h4>';
+    html += '<p><strong>File:</strong> ' + escapeHtml(ctx.fileName || "") + '</p>';
+    html += '<div style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px;margin:12px 0;">';
+    html += '<strong>Error:</strong> ' + escapeHtml(ctx.fatalError);
+    html += '</div>';
+  } else if (ctx.cancelled) {
+    html += '<h4>Import Cancelled</h4>';
+    html += '<p>No products were imported.</p>';
+  } else if (!ctx.success) {
+    html += '<h4 style="color:#b91c1c;">QEP Import Could Not Proceed</h4>';
+    html += '<p><strong>File:</strong> ' + escapeHtml(ctx.fileName || "") + '</p>';
+    if (ctx.parseResult && ctx.parseResult.errors.length > 0) {
+      html += '<div style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px;margin:12px 0;">';
+      html += '<strong>Errors:</strong><ul style="margin:8px 0 0 20px;">';
+      ctx.parseResult.errors.forEach(function(e) {
+        html += '<li>' + escapeHtml(e) + '</li>';
+      });
+      html += '</ul></div>';
+    }
+  } else {
+    html += '<h4 style="color:#047857;">QEP Import Complete</h4>';
+    html += '<p><strong>File:</strong> ' + escapeHtml(ctx.fileName || "") + '</p>';
+
+    var r = ctx.importResult;
+    var s = ctx.parseResult.stats;
+
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;">';
+    html += '<div style="background:#f0fdf4;padding:16px;border-radius:8px;text-align:center;">';
+    html += '<div style="font-size:28px;font-weight:bold;color:#10b981;">' + r.success + '</div>';
+    html += '<div style="font-size:12px;color:#6b7280;">Imported</div></div>';
+    html += '<div style="background:' + (r.failed > 0 ? "#fef2f2" : "#f3f4f6") + ';padding:16px;border-radius:8px;text-align:center;">';
+    html += '<div style="font-size:28px;font-weight:bold;color:' + (r.failed > 0 ? "#ef4444" : "#9ca3af") + ';">' + r.failed + '</div>';
+    html += '<div style="font-size:12px;color:#6b7280;">Failed</div></div>';
+    html += '<div style="background:#eff6ff;padding:16px;border-radius:8px;text-align:center;">';
+    html += '<div style="font-size:28px;font-weight:bold;color:#3b82f6;">' + s.attributesFound + '</div>';
+    html += '<div style="font-size:12px;color:#6b7280;">Attributes / ' + s.attributesExpected + '</div></div>';
+    html += '<div style="background:' + (ctx.parseResult.warnings.length > 0 ? "#fef3c7" : "#f3f4f6") + ';padding:16px;border-radius:8px;text-align:center;">';
+    html += '<div style="font-size:28px;font-weight:bold;color:' + (ctx.parseResult.warnings.length > 0 ? "#f59e0b" : "#9ca3af") + ';">' + ctx.parseResult.warnings.length + '</div>';
+    html += '<div style="font-size:12px;color:#6b7280;">Warnings</div></div>';
+    html += '</div>';
+  }
+
+  // Show warnings (if any parseResult)
+  if (ctx.parseResult && ctx.parseResult.warnings && ctx.parseResult.warnings.length > 0) {
+    html += '<details style="margin-top:12px;"><summary style="cursor:pointer;color:#92400e;"><strong>Warnings (' + ctx.parseResult.warnings.length + ')</strong></summary>';
+    html += '<ul style="margin:8px 0 0 20px;font-size:13px;color:#78350f;">';
+    ctx.parseResult.warnings.slice(0, 50).forEach(function(w) {
+      html += '<li>' + escapeHtml(w) + '</li>';
+    });
+    if (ctx.parseResult.warnings.length > 50) {
+      html += '<li>... and ' + (ctx.parseResult.warnings.length - 50) + ' more.</li>';
+    }
+    html += '</ul></details>';
+  }
+
+  // Show per-row import errors (if any)
+  if (ctx.importResult && ctx.importResult.errors && ctx.importResult.errors.length > 0) {
+    html += '<details style="margin-top:12px;"><summary style="cursor:pointer;color:#b91c1c;"><strong>Row errors (' + ctx.importResult.errors.length + ')</strong></summary>';
+    html += '<ul style="margin:8px 0 0 20px;font-size:13px;color:#7f1d1d;">';
+    ctx.importResult.errors.forEach(function(e) {
+      html += '<li>Row ' + e.row + ' (' + escapeHtml(e.product || "") + '): ' + escapeHtml(e.error) + '</li>';
+    });
+    html += '</ul></details>';
+  }
+
+  html += '<div style="margin-top:20px;">';
+  html += '<button class="btn-primary" onclick="resetBatchImport()">Back to Batch Import</button>';
+  html += '</div>';
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+// === QEP_UI_V2_END ===
