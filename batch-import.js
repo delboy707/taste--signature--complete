@@ -216,6 +216,16 @@ function suggestColumnMapping(headers) {
         'mouthfeel': 'midMouth.texture',
         'richness': 'midMouth.richness',
 
+        // Texture
+        'texture': 'texture.overallTexturalComplexity',
+        'crunchiness': 'texture.crunchiness',
+        'smoothness': 'texture.smoothness',
+        'chewiness': 'texture.chewiness',
+        'creaminess_texture': 'texture.creaminess',
+        'hardness': 'texture.hardnessFirmness',
+        'melt_rate': 'texture.meltRate',
+        'mouth_coating': 'texture.mouthCoating',
+
         // Aftertaste
         'aftertaste': 'aftertaste.aftertasteQuality',
         'finish': 'aftertaste.aftertasteQuality',
@@ -268,6 +278,7 @@ function parseAttributePath(path) {
         'aroma': 'Aroma',
         'frontMouth': 'Front of Mouth',
         'midMouth': 'Mid/Rear Mouth',
+        'texture': 'Texture',
         'aftertaste': 'Aftertaste',
         'overall': 'Overall'
     };
@@ -422,6 +433,20 @@ function createExperienceFromRow(row, columnMapping) {
                 emotions: []
             },
             {
+                name: 'Texture',
+                attributes: [
+                    { label: 'Overall Textural Complexity', value: 5 },
+                    { label: 'Smoothness', value: 5 },
+                    { label: 'Crunchiness', value: 5 },
+                    { label: 'Chewiness', value: 5 },
+                    { label: 'Creaminess', value: 5 },
+                    { label: 'Hardness/Firmness', value: 5 },
+                    { label: 'Melt/Dissolution Rate', value: 5 },
+                    { label: 'Mouth Coating', value: 5 }
+                ],
+                emotions: []
+            },
+            {
                 name: 'Aftertaste',
                 attributes: [
                     { label: 'Aftertaste Quality', value: 5 },
@@ -520,6 +545,13 @@ function generateBatchImportTemplate() {
         'creaminess',
         'astringency',
         'mouthfeel',
+        // Texture
+        'smoothness_texture',
+        'crunchiness',
+        'chewiness',
+        'mouthCoating',
+        'meltRate',
+        'overallTexturalComplexity',
         // Aftertaste
         'duration',
         'pleasantness',

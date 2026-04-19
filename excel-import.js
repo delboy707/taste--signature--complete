@@ -233,6 +233,7 @@ class ExcelImporter {
                     aroma: this.extractStageData(normalized, 'aroma'),
                     frontMouth: this.extractStageData(normalized, 'taste', 'front'),
                     midRearMouth: this.extractStageData(normalized, 'taste', 'mid'),
+                    texture: this.extractStageData(normalized, 'texture'),
                     aftertaste: this.extractStageData(normalized, 'aftertaste')
                 };
 

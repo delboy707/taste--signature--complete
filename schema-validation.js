@@ -162,7 +162,58 @@ const ATTRIBUTE_ALIASES = {
     'aftertasteCleanness': 'cleanness',
     'Cleanness': 'cleanness',
     'clean_finish': 'cleanness',
-    'Clean_Finish': 'cleanness'
+    'Clean_Finish': 'cleanness',
+
+    // Texture stage
+    'texture_hardness': 'hardness',
+    'Texture_Hardness': 'hardness',
+    'Hardness': 'hardness',
+    'firmness': 'hardness',
+    'Firmness': 'hardness',
+
+    'texture_crunchiness': 'crunchiness',
+    'Texture_Crunchiness': 'crunchiness',
+    'Crunchiness': 'crunchiness',
+    'crunch': 'crunchiness',
+    'Crunch': 'crunchiness',
+
+    'texture_smoothness': 'smoothness',
+    'Texture_Smoothness': 'smoothness',
+    'Smoothness': 'smoothness',
+
+    'texture_viscosity': 'viscosity',
+    'Texture_Viscosity': 'viscosity',
+    'Viscosity': 'viscosity',
+
+    'texture_chewiness': 'chewiness',
+    'Texture_Chewiness': 'chewiness',
+    'Chewiness': 'chewiness',
+
+    'texture_moisture': 'moisture',
+    'Texture_Moisture': 'moisture',
+    'Moisture': 'moisture',
+    'juiciness': 'moisture',
+    'Juiciness': 'moisture',
+
+    'texture_oiliness': 'oiliness',
+    'Texture_Oiliness': 'oiliness',
+    'Oiliness': 'oiliness',
+
+    'texture_effervescence': 'effervescence',
+    'Texture_Effervescence': 'effervescence',
+    'Effervescence': 'effervescence',
+
+    'body_fullness': 'bodyFullness',
+    'Body_Fullness': 'bodyFullness',
+    'bodyFullness': 'bodyFullness',
+
+    'breakdown_rate': 'breakdownRate',
+    'Breakdown_Rate': 'breakdownRate',
+    'breakdownRate': 'breakdownRate',
+
+    'overall_complexity': 'overallComplexity',
+    'Overall_Complexity': 'overallComplexity',
+    'overallComplexity': 'overallComplexity'
 };
 
 /**
@@ -199,6 +250,13 @@ const STAGE_ALIASES = {
     'Mid_Mouth': 'midRearMouth',
     'middle_taste': 'midRearMouth',
 
+    'texture': 'texture',
+    'Texture': 'texture',
+    'textural': 'texture',
+    'Textural': 'texture',
+    'mouthfeel_texture': 'texture',
+    'physical_texture': 'texture',
+
     'aftertaste': 'aftertaste',
     'Aftertaste': 'aftertaste',
     'after_taste': 'aftertaste',
@@ -215,6 +273,7 @@ const STAGE_ATTRIBUTES = {
     aroma: ['intensity', 'sweetness', 'complexity', 'persistence', 'overallIntensity'],
     frontMouth: ['sweetness', 'sourness', 'saltiness', 'texture', 'acidity', 'spiciness', 'overallIntensity'],
     midRearMouth: ['bitterness', 'umami', 'richness', 'creaminess', 'astringency', 'mouthfeel', 'overallIntensity'],
+    texture: ['hardness', 'crunchiness', 'smoothness', 'creaminess', 'viscosity', 'chewiness', 'moisture', 'oiliness', 'effervescence', 'bodyFullness', 'astringency', 'breakdownRate', 'overallComplexity', 'overallIntensity'],
     aftertaste: ['duration', 'pleasantness', 'cleanness', 'overallIntensity']
 };
 
@@ -222,11 +281,13 @@ const STAGE_ATTRIBUTES = {
  * Valid emotions per stage
  */
 const VALIDATION_STAGE_EMOTIONS = {
-    appearance: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise'],
-    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue'],
-    frontMouth: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment'],
-    midRearMouth: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication'],
-    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving']
+    appearance: ['anticipation', 'curiosity', 'desire', 'eager', 'excitement', 'happiness', 'interest', 'pleased', 'surprise', 'attracted', 'disappointed', 'disgusted', 'indifferent', 'suspicious', 'worried', 'anxious', 'confused', 'bored'],
+    aroma: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'calm', 'disgusted', 'irritated', 'worried', 'disappointed', 'indifferent', 'anxious', 'repulsed'],
+    frontMouth: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried'],
+    midRearMouth: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad'],
+    texture: ['satisfaction', 'pleasure', 'comfort', 'surprise', 'delight', 'indulgence', 'excitement', 'interest', 'calm', 'happiness', 'refreshed', 'energized', 'disgusted', 'disappointed', 'bored', 'overwhelmed', 'irritated', 'anxious'],
+    aftertaste: ['satisfaction', 'completeness', 'happiness', 'craving', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret'],
+    overall: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
 };
 
 /**
@@ -368,7 +429,7 @@ function validateExperience(experience) {
     }
 
     // Validate each stage
-    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste'];
+    const requiredStages = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste'];
 
     for (const stageName of requiredStages) {
         const stage = experience.stages[stageName];
@@ -462,6 +523,7 @@ function autoCorrectExperience(experience) {
         aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
         frontMouth: { sweetness: 5, sourness: 5, saltiness: 5, texture: 5, acidity: 5, spiciness: 5, emotions: {} },
         midRearMouth: { bitterness: 5, umami: 5, richness: 5, creaminess: 5, astringency: 5, mouthfeel: 5, emotions: {} },
+        texture: { hardness: 5, crunchiness: 5, smoothness: 5, creaminess: 5, viscosity: 5, chewiness: 5, moisture: 5, oiliness: 5, effervescence: 5, bodyFullness: 5, astringency: 5, breakdownRate: 5, overallComplexity: 5, emotions: {} },
         aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
     };
 

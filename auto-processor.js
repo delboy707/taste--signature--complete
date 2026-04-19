@@ -10,7 +10,9 @@ const DATA_TYPE_INDICATORS = {
         'sweetness', 'sourness', 'bitterness', 'saltiness', 'umami',
         'visualAppeal', 'visual_appeal', 'colorIntensity', 'color_intensity',
         'aromaIntensity', 'aroma_intensity', 'richness', 'creaminess',
-        'texture', 'aftertaste', 'duration', 'pleasantness'
+        'texture', 'aftertaste', 'duration', 'pleasantness',
+        'hardness', 'crunchiness', 'smoothness', 'viscosity', 'chewiness',
+        'moisture', 'oiliness', 'effervescence', 'bodyFullness', 'breakdownRate'
     ],
     consumer_feedback: [
         'feedback', 'comments', 'review', 'rating', 'overall_rating',
@@ -312,6 +314,7 @@ class AutoProcessor {
                 aroma: { intensity: 5, sweetness: 5, complexity: 5, persistence: 5, emotions: {} },
                 frontMouth: { sweetness: 5, sourness: 3, saltiness: 3, texture: 5, acidity: 3, spiciness: 3, emotions: {} },
                 midRearMouth: { bitterness: 3, umami: 3, richness: 5, creaminess: 5, astringency: 3, mouthfeel: 5, emotions: {} },
+                texture: { hardness: 5, crunchiness: 5, smoothness: 5, creaminess: 5, viscosity: 5, chewiness: 5, moisture: 5, oiliness: 3, effervescence: 3, bodyFullness: 5, astringency: 3, breakdownRate: 5, overallComplexity: 5, emotions: {} },
                 aftertaste: { duration: 5, pleasantness: 5, cleanness: 5, emotions: {} }
             },
             needState: '',
@@ -330,6 +333,7 @@ class AutoProcessor {
             aroma: {},
             frontMouth: {},
             midRearMouth: {},
+            texture: {},
             aftertaste: {}
         };
 
@@ -394,6 +398,34 @@ class AutoProcessor {
             'mouth_feel': 'midRearMouth.mouthfeel',
             'weight': 'midRearMouth.mouthfeel',
             'body': 'midRearMouth.mouthfeel',
+
+            // Texture
+            'hardness': 'texture.hardness',
+            'texture_hardness': 'texture.hardness',
+            'firmness': 'texture.hardness',
+            'crunchiness': 'texture.crunchiness',
+            'texture_crunchiness': 'texture.crunchiness',
+            'crunch': 'texture.crunchiness',
+            'smoothness': 'texture.smoothness',
+            'texture_smoothness': 'texture.smoothness',
+            'texture_creaminess': 'texture.creaminess',
+            'viscosity': 'texture.viscosity',
+            'texture_viscosity': 'texture.viscosity',
+            'chewiness': 'texture.chewiness',
+            'texture_chewiness': 'texture.chewiness',
+            'moisture': 'texture.moisture',
+            'texture_moisture': 'texture.moisture',
+            'juiciness': 'texture.moisture',
+            'oiliness': 'texture.oiliness',
+            'texture_oiliness': 'texture.oiliness',
+            'effervescence': 'texture.effervescence',
+            'texture_effervescence': 'texture.effervescence',
+            'bodyFullness': 'texture.bodyFullness',
+            'body_fullness': 'texture.bodyFullness',
+            'breakdownRate': 'texture.breakdownRate',
+            'breakdown_rate': 'texture.breakdownRate',
+            'overallComplexity': 'texture.overallComplexity',
+            'texture_complexity': 'texture.overallComplexity',
 
             // Aftertaste
             'aftertasteDuration': 'aftertaste.duration',
@@ -519,11 +551,14 @@ class AutoProcessor {
         const richness = sensoryData.midRearMouth?.richness || 5;
         const creaminess = sensoryData.midRearMouth?.creaminess || 5;
 
+        const textureComplexity = sensoryData.texture?.overallComplexity || 5;
+
         emotions.stages = {
             appearance: { emotions: { anticipation: 6, desire: 5, excitement: 5 } },
             aroma: { emotions: { pleasure: 6, comfort: 5 } },
             frontMouth: { emotions: { happiness: sweetness * 0.8, satisfaction: 6 } },
             midRearMouth: { emotions: { indulgence: richness * 0.8, comfort: creaminess * 0.7 } },
+            texture: { emotions: { satisfaction: textureComplexity * 0.7, pleasure: 5, comfort: creaminess * 0.6 } },
             aftertaste: { emotions: { satisfaction: 6, completeness: 5 } }
         };
 

@@ -130,6 +130,7 @@ class TemplatesManager {
             'experience-aroma': template.guidedAttributes.aroma,
             'experience-front-mouth': template.guidedAttributes.frontMouth,
             'experience-mid-rear': template.guidedAttributes.midRearMouth,
+            'experience-texture': template.guidedAttributes.texture,
             'experience-aftertaste': template.guidedAttributes.aftertaste,
             'experience-emotional': template.guidedAttributes.emotionalResponse
         };

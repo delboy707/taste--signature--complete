@@ -60,12 +60,27 @@ class PDFExporter {
             let y = yPos;
 
             // Create sensory attributes table
+            // Build texture summary for PDF
+            let textureKeyAttrs = 'N/A';
+            if (experience.stages.texture) {
+                const tex = experience.stages.texture;
+                const texEntries = Object.entries(tex).filter(([k, v]) => k !== 'emotions' && k !== 'overallIntensity' && typeof v === 'number');
+                if (texEntries.length > 0) {
+                    textureKeyAttrs = texEntries
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(([k, v]) => `${k}: ${v}/10`)
+                        .join(', ');
+                }
+            }
+
             const sensoryData = [
                 ['Stage', 'Key Attributes', 'Intensity'],
                 ['Appearance', `Visual Appeal: ${experience.stages.appearance.visualAppeal}/10`, `${experience.stages.appearance.overallIntensity}/10`],
                 ['Aroma', `Intensity: ${experience.stages.aroma.intensity}/10, Complexity: ${experience.stages.aroma.complexity}/10`, `${experience.stages.aroma.overallIntensity}/10`],
                 ['First Taste', `Sweet: ${experience.stages.frontMouth.sweetness}/10, Sour: ${experience.stages.frontMouth.sourness}/10`, `${experience.stages.frontMouth.overallIntensity}/10`],
                 ['Mid-Palate', `Rich: ${experience.stages.midRearMouth.richness}/10, Creamy: ${experience.stages.midRearMouth.creaminess}/10`, `${experience.stages.midRearMouth.overallIntensity}/10`],
+                ['Texture', textureKeyAttrs, `${(experience.stages.texture && experience.stages.texture.overallIntensity) || 'N/A'}/10`],
                 ['Aftertaste', `Duration: ${experience.stages.aftertaste.duration}/10, Pleasant: ${experience.stages.aftertaste.pleasantness}/10`, `${experience.stages.aftertaste.overallIntensity}/10`]
             ];
 
@@ -300,6 +315,7 @@ class PDFExporter {
                 ['Aroma Intensity', ...experiences.map(exp => `${exp.stages.aroma.intensity}/10`)],
                 ['Sweetness', ...experiences.map(exp => `${exp.stages.frontMouth.sweetness}/10`)],
                 ['Richness', ...experiences.map(exp => `${exp.stages.midRearMouth.richness}/10`)],
+                ['Texture Complexity', ...experiences.map(exp => `${(exp.stages.texture && exp.stages.texture.overallComplexity) || 'N/A'}/10`)],
                 ['Aftertaste', ...experiences.map(exp => `${exp.stages.aftertaste.duration}/10`)],
                 ['Satisfaction', ...experiences.map(exp => `${exp.stages.aftertaste.emotions.satisfaction}/10`)]
             ];

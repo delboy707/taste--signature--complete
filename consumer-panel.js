@@ -235,7 +235,7 @@ function compareExpertVsConsumer(productId) {
         appearance: (expertEval.stages.appearance.visualAppeal / 10) * 9,
         aroma: (expertEval.stages.aroma.overallIntensity / 10) * 9,
         flavor: (expertEval.stages.frontMouth.overallIntensity / 10) * 9,
-        texture: (expertEval.stages.frontMouth.texture / 10) * 9,
+        texture: ((expertEval.stages.texture && expertEval.stages.texture.overallTexturalComplexity) || (expertEval.stages.frontMouth.texture) || 5) / 10 * 9,
         aftertaste: (expertEval.stages.aftertaste.pleasantness / 10) * 9
     };
 
@@ -378,7 +378,8 @@ function generatePreferenceMap() {
                 stages.appearance.overallIntensity || 0,
                 stages.aroma.overallIntensity || 0,
                 stages.frontMouth.overallIntensity || 0,
-                stages.midRearMouth.overallIntensity || 0
+                stages.midRearMouth.overallIntensity || 0,
+                (stages.texture && stages.texture.overallTexturalComplexity) || 0
             ]);
         }
 

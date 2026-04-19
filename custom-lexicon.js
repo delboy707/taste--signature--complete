@@ -21,7 +21,7 @@ const defaultLexicon = {
                 { id: 'carbonation', label: 'Carbonation/Fizz', type: 'slider', min: 1, max: 10, unit: '', description: 'Visible effervescence' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Combined visual impact' }
             ],
-            emotions: ['anticipation', 'desire', 'excitement', 'happiness', 'curiosity', 'surprise']
+            emotions: ['anticipation', 'curiosity', 'desire', 'eager', 'excitement', 'happiness', 'interest', 'pleased', 'surprise', 'attracted', 'disappointed', 'disgusted', 'indifferent', 'suspicious', 'worried', 'anxious', 'confused', 'bored']
         },
         {
             id: 'aroma',
@@ -34,7 +34,7 @@ const defaultLexicon = {
                 { id: 'persistence', label: 'Persistence/Linger', type: 'slider', min: 1, max: 10, unit: '', description: 'How long aroma lingers' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total aromatic impact' }
             ],
-            emotions: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energy', 'relaxation', 'intrigue']
+            emotions: ['pleasure', 'comfort', 'nostalgia', 'happiness', 'energized', 'relaxed', 'intrigued', 'refreshed', 'desire', 'warm', 'soothed', 'surprised', 'interested', 'calm', 'disgusted', 'irritated', 'worried', 'disappointed', 'indifferent', 'anxious', 'repulsed']
         },
         {
             id: 'frontMouth',
@@ -49,7 +49,7 @@ const defaultLexicon = {
                 { id: 'spiciness', label: 'Spiciness/Heat', type: 'slider', min: 1, max: 10, unit: '', description: 'Heat and spice intensity' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total front palate impact' }
             ],
-            emotions: ['excitement', 'satisfaction', 'happiness', 'pleasure', 'disappointment']
+            emotions: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried']
         },
         {
             id: 'midRearMouth',
@@ -64,19 +64,42 @@ const defaultLexicon = {
                 { id: 'mouthfeel', label: 'Mouthfeel/Body', type: 'slider', min: 1, max: 10, unit: '', description: 'Weight and texture in mouth' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total mid/rear palate impact' }
             ],
-            emotions: ['indulgence', 'comfort', 'satisfaction', 'pleasure', 'sophistication']
+            emotions: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad']
+        },
+        {
+            id: 'texture',
+            name: 'Texture',
+            order: 5,
+            attributes: [
+                { id: 'hardnessFirmness', label: 'Hardness/Firmness', type: 'slider', min: 1, max: 10, unit: '', description: 'Resistance to deformation' },
+                { id: 'smoothness', label: 'Smoothness', type: 'slider', min: 1, max: 10, unit: '', description: 'Absence of particles or irregularities' },
+                { id: 'creaminess', label: 'Creaminess', type: 'slider', min: 1, max: 10, unit: '', description: 'Smooth, rich mouthfeel' },
+                { id: 'crunchiness', label: 'Crunchiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Audible and tactile fracture' },
+                { id: 'chewiness', label: 'Chewiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Sustained resistance during chewing' },
+                { id: 'mouthCoating', label: 'Mouth Coating', type: 'slider', min: 1, max: 10, unit: '', description: 'Film left on oral surfaces' },
+                { id: 'meltRate', label: 'Melt/Dissolution Rate', type: 'slider', min: 1, max: 10, unit: '', description: 'Speed of melting or dissolving' },
+                { id: 'overallTexturalComplexity', label: 'Overall Textural Complexity', type: 'slider', min: 1, max: 10, unit: '', description: 'Combined textural impact' }
+            ],
+            emotions: ['satisfaction', 'pleasure', 'indulgence', 'comfort', 'calm', 'warmth', 'joy', 'loving', 'adventurous', 'energized', 'secure', 'nostalgic', 'guilty', 'bored', 'disgusted', 'disappointed', 'aggressive', 'overwhelmed', 'dissatisfied', 'sad']
         },
         {
             id: 'aftertaste',
             name: 'Aftertaste',
-            order: 5,
+            order: 6,
             attributes: [
                 { id: 'duration', label: 'Duration', type: 'slider', min: 1, max: 10, unit: 'seconds', description: 'How long flavors linger' },
                 { id: 'pleasantness', label: 'Pleasantness', type: 'slider', min: 1, max: 10, unit: '', description: 'Quality of lingering taste' },
                 { id: 'cleanness', label: 'Palate Cleanness', type: 'slider', min: 1, max: 10, unit: '', description: 'How clean palate feels' },
                 { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total aftertaste impact' }
             ],
-            emotions: ['satisfaction', 'completeness', 'happiness', 'craving']
+            emotions: ['satisfaction', 'completeness', 'happiness', 'craving', 'calm', 'comforted', 'pleased', 'refreshed', 'nostalgic', 'surprised', 'disappointed', 'disgusted', 'guilty', 'worried', 'dissatisfied', 'bored', 'regret']
+        },
+        {
+            id: 'overall',
+            name: 'Overall',
+            order: 7,
+            attributes: [],
+            emotions: ['satisfaction', 'happiness', 'pleasure', 'enjoyment', 'comfort', 'calm', 'warmth', 'joy', 'nostalgia', 'energized', 'loving', 'gratitude', 'proud', 'adventurous', 'indulgent', 'interested', 'relaxed', 'secure', 'desire', 'surprised', 'disappointed', 'disgusted', 'bored', 'guilty', 'worried', 'dissatisfied', 'sad', 'regret', 'angry', 'anxious', 'confused']
         }
     ],
     emotionalTriggers: [

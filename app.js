@@ -2,7 +2,7 @@
 let experiences = [];
 let charts = {};
 let currentStage = 1;
-const totalStages = 7;
+const totalStages = 8;
 let firestoreManager = null;
 let isCloudSyncEnabled = false;
 
@@ -533,82 +533,177 @@ function handleFormSubmit(e) {
         originalTestId: originalTestId,
         isRetest: originalTestId !== null,
         reformulationStatus: document.getElementById('reformulation-status')?.value || '',
-        stages: {
-            appearance: {
-                visualAppeal: parseInt(document.getElementById('appearance-visual-appeal').value),
-                colorIntensity: parseInt(document.getElementById('appearance-color-intensity').value),
-                overallIntensity: parseInt(document.getElementById('appearance-overall-intensity').value),
-                carbonation: parseInt(document.getElementById('appearance-carbonation')?.value || 5),
-                emotions: {
-                    anticipation: parseInt(document.getElementById('appearance-anticipation').value),
-                    desire: parseInt(document.getElementById('appearance-desire').value),
-                    excitement: parseInt(document.getElementById('appearance-excitement').value),
-                    happiness: parseInt(document.getElementById('appearance-happiness').value),
-                    curiosity: parseInt(document.getElementById('appearance-curiosity').value),
-                    surprise: parseInt(document.getElementById('appearance-surprise')?.value || 5)
-                }
-            },
-            aroma: {
-                intensity: parseInt(document.getElementById('aroma-intensity').value),
-                sweetness: parseInt(document.getElementById('aroma-sweetness').value),
-                complexity: parseInt(document.getElementById('aroma-complexity').value),
-                overallIntensity: parseInt(document.getElementById('aroma-overall-intensity').value),
-                persistence: parseInt(document.getElementById('aroma-persistence')?.value || 5),
-                emotions: {
-                    pleasure: parseInt(document.getElementById('aroma-pleasure').value),
-                    comfort: parseInt(document.getElementById('aroma-comfort').value),
-                    nostalgia: parseInt(document.getElementById('aroma-nostalgia').value),
-                    happiness: parseInt(document.getElementById('aroma-happiness').value),
-                    energy: parseInt(document.getElementById('aroma-energy').value),
-                    relaxation: parseInt(document.getElementById('aroma-relaxation').value),
-                    intrigue: parseInt(document.getElementById('aroma-intrigue')?.value || 5)
-                }
-            },
-            frontMouth: {
-                sweetness: parseInt(document.getElementById('front-sweetness').value),
-                sourness: parseInt(document.getElementById('front-sourness').value),
-                saltiness: parseInt(document.getElementById('front-saltiness').value),
-                texture: parseInt(document.getElementById('front-texture').value),
-                overallIntensity: parseInt(document.getElementById('front-overall-intensity').value),
-                acidity: parseInt(document.getElementById('front-acidity')?.value || 5),
-                spiciness: parseInt(document.getElementById('front-spiciness')?.value || 5),
-                emotions: {
-                    excitement: parseInt(document.getElementById('front-excitement').value),
-                    satisfaction: parseInt(document.getElementById('front-satisfaction').value),
-                    happiness: parseInt(document.getElementById('front-happiness').value),
-                    pleasure: parseInt(document.getElementById('front-pleasure').value),
-                    disappointment: parseInt(document.getElementById('front-disappointment')?.value || 5)
-                }
-            },
-            midRearMouth: {
-                bitterness: parseInt(document.getElementById('mid-bitterness').value),
-                umami: parseInt(document.getElementById('mid-umami').value),
-                richness: parseInt(document.getElementById('mid-richness').value),
-                creaminess: parseInt(document.getElementById('mid-creaminess').value),
-                overallIntensity: parseInt(document.getElementById('mid-overall-intensity').value),
-                astringency: parseInt(document.getElementById('mid-astringency')?.value || 5),
-                mouthfeel: parseInt(document.getElementById('mid-mouthfeel')?.value || 5),
-                emotions: {
-                    indulgence: parseInt(document.getElementById('mid-indulgence').value),
-                    comfort: parseInt(document.getElementById('mid-comfort').value),
-                    satisfaction: parseInt(document.getElementById('mid-satisfaction').value),
-                    pleasure: parseInt(document.getElementById('mid-pleasure').value),
-                    sophistication: parseInt(document.getElementById('mid-sophistication')?.value || 5)
-                }
-            },
-            aftertaste: {
-                duration: parseInt(document.getElementById('after-duration').value),
-                pleasantness: parseInt(document.getElementById('after-pleasantness').value),
-                cleanness: parseInt(document.getElementById('after-cleanness').value),
-                overallIntensity: parseInt(document.getElementById('after-overall-intensity').value),
-                emotions: {
-                    satisfaction: parseInt(document.getElementById('after-satisfaction').value),
-                    completeness: parseInt(document.getElementById('after-completeness').value),
-                    happiness: parseInt(document.getElementById('after-happiness').value),
-                    craving: parseInt(document.getElementById('after-craving')?.value || 5)
-                }
-            }
-        },
+        stages: (function() {
+            // Build stages data dynamically from sensory attributes
+            const stageIdPrefixMap = {
+                appearance: 'appearance',
+                aroma: 'aroma',
+                frontMouth: 'front',
+                midRearMouth: 'mid',
+                texture: 'tex',
+                aftertaste: 'after',
+                overall: 'overall'
+            };
+
+            const stages = {};
+            Object.entries(SENSORY_ATTRIBUTES_BY_STAGE).forEach(([stageId, attrs]) => {
+                const prefix = stageIdPrefixMap[stageId];
+                const stageData = {};
+                attrs.forEach(attr => {
+                    const elemId = `${prefix}-${attr.id}`;
+                    const elem = document.getElementById(elemId);
+                    stageData[attrIdToKey(attr.id)] = parseInt(elem?.value || 5);
+                });
+                stages[stageId] = stageData;
+            });
+
+            // Add emotions for each stage (collected separately from emotion sliders)
+            stages.appearance.emotions = {
+                anticipation: parseInt(document.getElementById('appearance-anticipation')?.value || 5),
+                curiosity: parseInt(document.getElementById('appearance-curiosity')?.value || 5),
+                desire: parseInt(document.getElementById('appearance-desire')?.value || 5),
+                eager: parseInt(document.getElementById('appearance-eager')?.value || 5),
+                excitement: parseInt(document.getElementById('appearance-excitement')?.value || 5),
+                happiness: parseInt(document.getElementById('appearance-happiness')?.value || 5),
+                interest: parseInt(document.getElementById('appearance-interest')?.value || 5),
+                pleased: parseInt(document.getElementById('appearance-pleased')?.value || 5),
+                surprise: parseInt(document.getElementById('appearance-surprise')?.value || 5),
+                attracted: parseInt(document.getElementById('appearance-attracted')?.value || 5),
+                disappointed: parseInt(document.getElementById('appearance-disappointed')?.value || 0),
+                disgusted: parseInt(document.getElementById('appearance-disgusted')?.value || 0),
+                indifferent: parseInt(document.getElementById('appearance-indifferent')?.value || 0),
+                suspicious: parseInt(document.getElementById('appearance-suspicious')?.value || 0),
+                worried: parseInt(document.getElementById('appearance-worried')?.value || 0),
+                anxious: parseInt(document.getElementById('appearance-anxious')?.value || 0),
+                confused: parseInt(document.getElementById('appearance-confused')?.value || 0),
+                bored: parseInt(document.getElementById('appearance-bored')?.value || 0)
+            };
+
+            stages.aroma.emotions = {
+                pleasure: parseInt(document.getElementById('aroma-pleasure')?.value || 5),
+                comfort: parseInt(document.getElementById('aroma-comfort')?.value || 5),
+                nostalgia: parseInt(document.getElementById('aroma-nostalgia')?.value || 5),
+                happiness: parseInt(document.getElementById('aroma-happiness')?.value || 5),
+                energized: parseInt(document.getElementById('aroma-energized')?.value || 5),
+                relaxed: parseInt(document.getElementById('aroma-relaxed')?.value || 5),
+                intrigued: parseInt(document.getElementById('aroma-intrigued')?.value || 5),
+                refreshed: parseInt(document.getElementById('aroma-refreshed')?.value || 5),
+                desire: parseInt(document.getElementById('aroma-desire')?.value || 5),
+                warm: parseInt(document.getElementById('aroma-warm')?.value || 5),
+                soothed: parseInt(document.getElementById('aroma-soothed')?.value || 5),
+                surprised: parseInt(document.getElementById('aroma-surprised')?.value || 5),
+                interested: parseInt(document.getElementById('aroma-interested')?.value || 5),
+                calm: parseInt(document.getElementById('aroma-calm')?.value || 5),
+                disgusted: parseInt(document.getElementById('aroma-disgusted')?.value || 0),
+                irritated: parseInt(document.getElementById('aroma-irritated')?.value || 0),
+                worried: parseInt(document.getElementById('aroma-worried')?.value || 0),
+                disappointed: parseInt(document.getElementById('aroma-disappointed')?.value || 0),
+                indifferent: parseInt(document.getElementById('aroma-indifferent')?.value || 0),
+                anxious: parseInt(document.getElementById('aroma-anxious')?.value || 0),
+                repulsed: parseInt(document.getElementById('aroma-repulsed')?.value || 0)
+            };
+
+            stages.frontMouth.emotions = {
+                excitement: parseInt(document.getElementById('front-excitement')?.value || 5),
+                surprise: parseInt(document.getElementById('front-surprise')?.value || 5),
+                happiness: parseInt(document.getElementById('front-happiness')?.value || 5),
+                pleasure: parseInt(document.getElementById('front-pleasure')?.value || 5),
+                interest: parseInt(document.getElementById('front-interest')?.value || 5),
+                satisfaction: parseInt(document.getElementById('front-satisfaction')?.value || 5),
+                energized: parseInt(document.getElementById('front-energized')?.value || 5),
+                delighted: parseInt(document.getElementById('front-delighted')?.value || 5),
+                amused: parseInt(document.getElementById('front-amused')?.value || 5),
+                disappointed: parseInt(document.getElementById('front-disappointed')?.value || 0),
+                disgusted: parseInt(document.getElementById('front-disgusted')?.value || 0),
+                bored: parseInt(document.getElementById('front-bored')?.value || 0),
+                confused: parseInt(document.getElementById('front-confused')?.value || 0),
+                overwhelmed: parseInt(document.getElementById('front-overwhelmed')?.value || 0),
+                upset: parseInt(document.getElementById('front-upset')?.value || 0),
+                worried: parseInt(document.getElementById('front-worried')?.value || 0)
+            };
+
+            stages.midRearMouth.emotions = {
+                satisfaction: parseInt(document.getElementById('mid-satisfaction')?.value || 5),
+                pleasure: parseInt(document.getElementById('mid-pleasure')?.value || 5),
+                indulgence: parseInt(document.getElementById('mid-indulgence')?.value || 5),
+                comfort: parseInt(document.getElementById('mid-comfort')?.value || 5),
+                calm: parseInt(document.getElementById('mid-calm')?.value || 5),
+                warmth: parseInt(document.getElementById('mid-warmth')?.value || 5),
+                joy: parseInt(document.getElementById('mid-joy')?.value || 5),
+                loving: parseInt(document.getElementById('mid-loving')?.value || 5),
+                adventurous: parseInt(document.getElementById('mid-adventurous')?.value || 5),
+                energized: parseInt(document.getElementById('mid-energized')?.value || 5),
+                secure: parseInt(document.getElementById('mid-secure')?.value || 5),
+                nostalgic: parseInt(document.getElementById('mid-nostalgic')?.value || 5),
+                guilty: parseInt(document.getElementById('mid-guilty')?.value || 0),
+                bored: parseInt(document.getElementById('mid-bored')?.value || 0),
+                disgusted: parseInt(document.getElementById('mid-disgusted')?.value || 0),
+                disappointed: parseInt(document.getElementById('mid-disappointed')?.value || 0),
+                aggressive: parseInt(document.getElementById('mid-aggressive')?.value || 0),
+                overwhelmed: parseInt(document.getElementById('mid-overwhelmed')?.value || 0),
+                dissatisfied: parseInt(document.getElementById('mid-dissatisfied')?.value || 0),
+                sad: parseInt(document.getElementById('mid-sad')?.value || 0)
+            };
+
+            // Texture stage - no emotions (new stage)
+            stages.texture.emotions = {};
+
+            stages.aftertaste.emotions = {
+                satisfaction: parseInt(document.getElementById('after-satisfaction')?.value || 5),
+                completeness: parseInt(document.getElementById('after-completeness')?.value || 5),
+                happiness: parseInt(document.getElementById('after-happiness')?.value || 5),
+                craving: parseInt(document.getElementById('after-craving')?.value || 5),
+                calm: parseInt(document.getElementById('after-calm')?.value || 5),
+                comforted: parseInt(document.getElementById('after-comforted')?.value || 5),
+                pleased: parseInt(document.getElementById('after-pleased')?.value || 5),
+                refreshed: parseInt(document.getElementById('after-refreshed')?.value || 5),
+                nostalgic: parseInt(document.getElementById('after-nostalgic')?.value || 5),
+                surprised: parseInt(document.getElementById('after-surprised')?.value || 5),
+                disappointed: parseInt(document.getElementById('after-disappointed')?.value || 0),
+                disgusted: parseInt(document.getElementById('after-disgusted')?.value || 0),
+                guilty: parseInt(document.getElementById('after-guilty')?.value || 0),
+                worried: parseInt(document.getElementById('after-worried')?.value || 0),
+                dissatisfied: parseInt(document.getElementById('after-dissatisfied')?.value || 0),
+                bored: parseInt(document.getElementById('after-bored')?.value || 0),
+                regret: parseInt(document.getElementById('after-regret')?.value || 0)
+            };
+
+            stages.overall.emotions = {
+                satisfaction: parseInt(document.getElementById('overall-satisfaction')?.value || 5),
+                happiness: parseInt(document.getElementById('overall-happiness')?.value || 5),
+                pleasure: parseInt(document.getElementById('overall-pleasure')?.value || 5),
+                enjoyment: parseInt(document.getElementById('overall-enjoyment')?.value || 5),
+                comfort: parseInt(document.getElementById('overall-comfort')?.value || 5),
+                calm: parseInt(document.getElementById('overall-calm')?.value || 5),
+                warmth: parseInt(document.getElementById('overall-warmth')?.value || 5),
+                joy: parseInt(document.getElementById('overall-joy')?.value || 5),
+                nostalgia: parseInt(document.getElementById('overall-nostalgia')?.value || 5),
+                energized: parseInt(document.getElementById('overall-energized')?.value || 5),
+                loving: parseInt(document.getElementById('overall-loving')?.value || 5),
+                gratitude: parseInt(document.getElementById('overall-gratitude')?.value || 5),
+                proud: parseInt(document.getElementById('overall-proud')?.value || 5),
+                adventurous: parseInt(document.getElementById('overall-adventurous')?.value || 5),
+                indulgent: parseInt(document.getElementById('overall-indulgent')?.value || 5),
+                interested: parseInt(document.getElementById('overall-interested')?.value || 5),
+                relaxed: parseInt(document.getElementById('overall-relaxed')?.value || 5),
+                secure: parseInt(document.getElementById('overall-secure')?.value || 5),
+                desire: parseInt(document.getElementById('overall-desire')?.value || 5),
+                surprised: parseInt(document.getElementById('overall-surprised')?.value || 5),
+                disappointed: parseInt(document.getElementById('overall-disappointed')?.value || 0),
+                disgusted: parseInt(document.getElementById('overall-disgusted')?.value || 0),
+                bored: parseInt(document.getElementById('overall-bored')?.value || 0),
+                guilty: parseInt(document.getElementById('overall-guilty')?.value || 0),
+                worried: parseInt(document.getElementById('overall-worried')?.value || 0),
+                dissatisfied: parseInt(document.getElementById('overall-dissatisfied')?.value || 0),
+                sad: parseInt(document.getElementById('overall-sad')?.value || 0),
+                regret: parseInt(document.getElementById('overall-regret')?.value || 0),
+                angry: parseInt(document.getElementById('overall-angry')?.value || 0),
+                anxious: parseInt(document.getElementById('overall-anxious')?.value || 0),
+                confused: parseInt(document.getElementById('overall-confused')?.value || 0)
+            };
+
+            return stages;
+        })(),
         needState: document.querySelector('input[name="need-state"]:checked').value,
         emotionalTriggers: {
             moreishness: parseInt(document.getElementById('trigger-moreishness').value),
@@ -914,12 +1009,13 @@ function renderShapeOfTaste(exp) {
 
     destroyChart('shape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
     const intensities = [
         exp.stages.appearance?.overallIntensity ?? 0,
         exp.stages.aroma?.overallIntensity ?? 0,
         exp.stages.frontMouth?.overallIntensity ?? 0,
         exp.stages.midRearMouth?.overallIntensity ?? 0,
+        exp.stages.texture?.overallTexturalComplexity ?? 0,
         exp.stages.aftertaste?.overallIntensity ?? 0
     ];
 
@@ -981,15 +1077,24 @@ function renderEmotionalJourney(exp) {
 
     destroyChart('emotionalJourney');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste', 'Overall'];
+
+    // Helper to calculate average of all positive emotion values in a stage
+    function avgPositiveEmotions(emotions) {
+        if (!emotions) return 0;
+        const vals = Object.values(emotions).filter(v => typeof v === 'number' && v > 0);
+        return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    }
 
     // Get average emotional response per stage
     const emotionalData = [
-        ((exp.stages.appearance?.emotions?.anticipation ?? 0) + (exp.stages.appearance?.emotions?.desire ?? 0)) / 2,
-        ((exp.stages.aroma?.emotions?.pleasure ?? 0) + (exp.stages.aroma?.emotions?.comfort ?? 0)) / 2,
-        ((exp.stages.frontMouth?.emotions?.excitement ?? 0) + (exp.stages.frontMouth?.emotions?.satisfaction ?? 0)) / 2,
-        ((exp.stages.midRearMouth?.emotions?.indulgence ?? 0) + (exp.stages.midRearMouth?.emotions?.comfort ?? 0)) / 2,
-        ((exp.stages.aftertaste?.emotions?.satisfaction ?? 0) + (exp.stages.aftertaste?.emotions?.completeness ?? 0)) / 2
+        avgPositiveEmotions(exp.stages.appearance?.emotions),
+        avgPositiveEmotions(exp.stages.aroma?.emotions),
+        avgPositiveEmotions(exp.stages.frontMouth?.emotions),
+        avgPositiveEmotions(exp.stages.midRearMouth?.emotions),
+        avgPositiveEmotions(exp.stages.texture?.emotions),
+        avgPositiveEmotions(exp.stages.aftertaste?.emotions),
+        avgPositiveEmotions(exp.stages.overall?.emotions)
     ];
 
     charts.emotionalJourney = new Chart(ctx, {
@@ -1295,7 +1400,7 @@ function renderComparisonShapeChart(products) {
 
     destroyChart('comparisonShape');
 
-    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Aftertaste'];
+    const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
     const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
 
     const datasets = products.map((exp, idx) => ({
@@ -1305,6 +1410,7 @@ function renderComparisonShapeChart(products) {
             exp.stages.aroma.overallIntensity,
             exp.stages.frontMouth.overallIntensity,
             exp.stages.midRearMouth.overallIntensity,
+            exp.stages.texture?.overallTexturalComplexity ?? 0,
             exp.stages.aftertaste.overallIntensity
         ],
         borderColor: colors[idx],
@@ -2106,22 +2212,34 @@ function renderEmotionalMap(exp) {
 
     // Collect all unique emotions from the experience
     const emotionsByStage = {
-        'Appearance': exp.stages.appearance.emotions,
-        'Aroma': exp.stages.aroma.emotions,
-        'Front': exp.stages.frontMouth.emotions,
-        'Mid/Rear': exp.stages.midRearMouth.emotions,
-        'Aftertaste': exp.stages.aftertaste.emotions
+        'Appearance': exp.stages.appearance?.emotions || {},
+        'Aroma': exp.stages.aroma?.emotions || {},
+        'Front': exp.stages.frontMouth?.emotions || {},
+        'Mid/Rear': exp.stages.midRearMouth?.emotions || {},
+        'Aftertaste': exp.stages.aftertaste?.emotions || {},
+        'Overall': exp.stages.overall?.emotions || {}
     };
 
-    // Get all unique emotion types
+    // Get all unique emotion types, filter to only those with values > 0 in at least one stage
     const emotionTypes = new Set();
     Object.values(emotionsByStage).forEach(emotions => {
-        Object.keys(emotions).forEach(emotion => emotionTypes.add(emotion));
+        Object.entries(emotions).forEach(([emotion, value]) => {
+            if (value > 0) emotionTypes.add(emotion);
+        });
     });
+
+    // Extended color palette for larger emotion sets
+    const colors = [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b',
+        '#fa709a', '#fee140', '#a18cd1', '#fbc2eb', '#84fab0', '#8fd3f4',
+        '#ff9a9e', '#fecfef', '#ffecd2', '#fcb69f', '#a1c4fd', '#c2e9fb',
+        '#d4fc79', '#96e6a1', '#e0c3fc', '#8ec5fc', '#f5576c', '#4facfe',
+        '#667eea', '#764ba2', '#f093fb', '#43e97b', '#00f2fe', '#fa709a',
+        '#fee140'
+    ];
 
     // Create datasets for each emotion type
     const datasets = Array.from(emotionTypes).map((emotion, idx) => {
-        const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b'];
         return {
             label: emotion.charAt(0).toUpperCase() + emotion.slice(1),
             data: Object.keys(emotionsByStage).map(stage =>
@@ -2171,11 +2289,12 @@ function renderShapeOfEmotion(exp) {
 
     // Calculate average emotional intensity per stage
     const avgByStage = {
-        'Appearance': calculateAvgEmotions(exp.stages.appearance.emotions),
-        'Aroma': calculateAvgEmotions(exp.stages.aroma.emotions),
-        'Front': calculateAvgEmotions(exp.stages.frontMouth.emotions),
-        'Mid/Rear': calculateAvgEmotions(exp.stages.midRearMouth.emotions),
-        'Aftertaste': calculateAvgEmotions(exp.stages.aftertaste.emotions)
+        'Appearance': calculateAvgEmotions(exp.stages.appearance?.emotions || {}),
+        'Aroma': calculateAvgEmotions(exp.stages.aroma?.emotions || {}),
+        'Front': calculateAvgEmotions(exp.stages.frontMouth?.emotions || {}),
+        'Mid/Rear': calculateAvgEmotions(exp.stages.midRearMouth?.emotions || {}),
+        'Aftertaste': calculateAvgEmotions(exp.stages.aftertaste?.emotions || {}),
+        'Overall': calculateAvgEmotions(exp.stages.overall?.emotions || {})
     };
 
     charts.shapeEmotion = new Chart(ctx, {
@@ -2265,7 +2384,12 @@ function renderEmotionalProfileRadar(exp) {
             scales: {
                 r: {
                     beginAtZero: true,
-                    max: 10
+                    max: 10,
+                    pointLabels: {
+                        font: {
+                            size: Object.keys(emotionAverages).length > 20 ? 8 : 10
+                        }
+                    }
                 }
             },
             plugins: {
@@ -2281,29 +2405,32 @@ function renderCorrelationHeatmap(exp) {
     const container = document.getElementById('correlation-heatmap');
 
     // Get all sensory attributes (including new ones)
-    const sensoryAttributes = {
-        'Visual Appeal': exp.stages.appearance.visualAppeal,
-        'Color Intensity': exp.stages.appearance.colorIntensity,
-        'Carbonation': exp.stages.appearance.carbonation || 5,
-        'Aroma Intensity': exp.stages.aroma.intensity,
-        'Aroma Persistence': exp.stages.aroma.persistence || 5,
-        'Sweetness': exp.stages.frontMouth.sweetness,
-        'Sourness': exp.stages.frontMouth.sourness,
-        'Saltiness': exp.stages.frontMouth.saltiness,
-        'Acidity': exp.stages.frontMouth.acidity || 5,
-        'Spiciness': exp.stages.frontMouth.spiciness || 5,
-        'Bitterness': exp.stages.midRearMouth.bitterness,
-        'Umami': exp.stages.midRearMouth.umami,
-        'Richness': exp.stages.midRearMouth.richness,
-        'Astringency': exp.stages.midRearMouth.astringency || 5,
-        'Mouthfeel': exp.stages.midRearMouth.mouthfeel || 5,
-        'Texture': exp.stages.frontMouth.texture
+    // Build sensory attributes dynamically from all stages
+    const sensoryAttributes = {};
+    const stageIdPrefixMap = {
+        appearance: 'Appearance',
+        aroma: 'Aroma',
+        frontMouth: 'Front',
+        midRearMouth: 'Mid/Rear',
+        texture: 'Texture',
+        aftertaste: 'Aftertaste',
+        overall: 'Overall'
     };
+    Object.entries(exp.stages).forEach(([stageId, stageData]) => {
+        if (!stageData) return;
+        const stageLabel = stageIdPrefixMap[stageId] || stageId;
+        Object.entries(stageData).forEach(([key, value]) => {
+            if (key !== 'emotions' && typeof value === 'number') {
+                const label = `${stageLabel}: ${key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()}`;
+                sensoryAttributes[label] = value;
+            }
+        });
+    });
 
     // Get all emotional outcomes
     const emotions = {};
     Object.values(exp.stages).forEach(stage => {
-        if (stage.emotions) {
+        if (stage && stage.emotions) {
             Object.entries(stage.emotions).forEach(([emotion, value]) => {
                 if (!emotions[emotion]) {
                     emotions[emotion] = value;
@@ -2421,24 +2548,32 @@ function renderCorrelationInsights(exp) {
     const container = document.getElementById('correlation-insights');
     if (!container) return;
 
-    // Get all sensory attributes
-    const sensoryAttributes = {
-        'Visual Appeal': exp.stages.appearance.visualAppeal,
-        'Color Intensity': exp.stages.appearance.colorIntensity,
-        'Aroma Intensity': exp.stages.aroma.intensity,
-        'Sweetness': exp.stages.frontMouth.sweetness,
-        'Sourness': exp.stages.frontMouth.sourness,
-        'Saltiness': exp.stages.frontMouth.saltiness,
-        'Bitterness': exp.stages.midRearMouth.bitterness,
-        'Umami': exp.stages.midRearMouth.umami,
-        'Richness': exp.stages.midRearMouth.richness,
-        'Texture': exp.stages.frontMouth.texture
+    // Build sensory attributes dynamically from all stages
+    const sensoryAttributes = {};
+    const stageLabels = {
+        appearance: 'Appearance',
+        aroma: 'Aroma',
+        frontMouth: 'Front',
+        midRearMouth: 'Mid/Rear',
+        texture: 'Texture',
+        aftertaste: 'Aftertaste',
+        overall: 'Overall'
     };
+    Object.entries(exp.stages).forEach(([stageId, stageData]) => {
+        if (!stageData) return;
+        const stageLabel = stageLabels[stageId] || stageId;
+        Object.entries(stageData).forEach(([key, value]) => {
+            if (key !== 'emotions' && typeof value === 'number') {
+                const label = `${stageLabel}: ${key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim()}`;
+                sensoryAttributes[label] = value;
+            }
+        });
+    });
 
     // Get all emotional outcomes
     const emotions = {};
     Object.values(exp.stages).forEach(stage => {
-        if (stage.emotions) {
+        if (stage && stage.emotions) {
             Object.entries(stage.emotions).forEach(([emotion, value]) => {
                 if (!emotions[emotion]) {
                     emotions[emotion] = value;
@@ -3332,6 +3467,8 @@ function createSampleExperience(config) {
         'excited': 8, 'adventurous': 7
     };
 
+    function randEmoVal(base) { return Math.min(10, Math.max(0, base + Math.floor(Math.random() * 3) - 1)); }
+
     const experience = {
         id: Date.now() + Math.random(),
         timestamp: Date.now(),
@@ -3347,13 +3484,24 @@ function createSampleExperience(config) {
                 visualAppeal: 7 + Math.floor(Math.random() * 3),
                 colorAppeal: 7 + Math.floor(Math.random() * 3),
                 anticipation: 7 + Math.floor(Math.random() * 3),
-                emotions: {}
+                emotions: {
+                    anticipation: randEmoVal(7), curiosity: randEmoVal(6), desire: randEmoVal(6), eager: randEmoVal(5),
+                    excitement: randEmoVal(6), happiness: randEmoVal(6), interest: randEmoVal(6), pleased: randEmoVal(5),
+                    surprise: randEmoVal(4), attracted: randEmoVal(6),
+                    disappointed: 0, disgusted: 0, indifferent: 0, suspicious: 0, worried: 0, anxious: 0, confused: 0, bored: 0
+                }
             },
             aroma: {
                 intensity: 6 + Math.floor(Math.random() * 3),
                 pleasantness: 7 + Math.floor(Math.random() * 3),
                 complexity: 6 + Math.floor(Math.random() * 3),
-                emotions: {}
+                emotions: {
+                    pleasure: randEmoVal(7), comfort: randEmoVal(6), nostalgia: randEmoVal(5), happiness: randEmoVal(6),
+                    energized: randEmoVal(5), relaxed: randEmoVal(5), intrigued: randEmoVal(5), refreshed: randEmoVal(5),
+                    desire: randEmoVal(5), warm: randEmoVal(5), soothed: randEmoVal(4), surprised: randEmoVal(4),
+                    interested: randEmoVal(5), calm: randEmoVal(5),
+                    disgusted: 0, irritated: 0, worried: 0, disappointed: 0, indifferent: 0, anxious: 0, repulsed: 0
+                }
             },
             frontMouth: {
                 sweetness: config.profile.sweet || 5,
@@ -3362,21 +3510,44 @@ function createSampleExperience(config) {
                 saltiness: config.profile.saltiness || 3,
                 umami: config.profile.umami || 2,
                 spiciness: config.profile.spiciness || 1,
-                emotions: {}
+                emotions: {
+                    excitement: randEmoVal(6), surprise: randEmoVal(4), happiness: randEmoVal(6), pleasure: randEmoVal(7),
+                    interest: randEmoVal(5), satisfaction: randEmoVal(7), energized: randEmoVal(5), delighted: randEmoVal(6),
+                    amused: randEmoVal(4),
+                    disappointed: 0, disgusted: 0, bored: 0, confused: 0, overwhelmed: 0, upset: 0, worried: 0
+                }
             },
             midRearMouth: {
                 richness: config.profile.richness || 5,
                 creaminess: config.profile.creaminess || 5,
                 mouthCoating: 5 + Math.floor(Math.random() * 3),
                 textureAppeal: 6 + Math.floor(Math.random() * 3),
-                emotions: {}
+                emotions: {
+                    satisfaction: randEmoVal(7), pleasure: randEmoVal(7), indulgence: randEmoVal(6), comfort: randEmoVal(6),
+                    calm: randEmoVal(5), warmth: randEmoVal(5), joy: randEmoVal(6), loving: randEmoVal(4),
+                    adventurous: randEmoVal(4), energized: randEmoVal(5), secure: randEmoVal(4), nostalgic: randEmoVal(4),
+                    guilty: 0, bored: 0, disgusted: 0, disappointed: 0, aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
+                }
             },
             aftertaste: {
                 duration: 6 + Math.floor(Math.random() * 3),
                 pleasantness: 7 + Math.floor(Math.random() * 3),
                 lingering: 6 + Math.floor(Math.random() * 3),
                 emotions: {
-                    satisfaction: 7 + Math.floor(Math.random() * 3)
+                    satisfaction: randEmoVal(7), completeness: randEmoVal(6), happiness: randEmoVal(6), craving: randEmoVal(5),
+                    calm: randEmoVal(5), comforted: randEmoVal(5), pleased: randEmoVal(6), refreshed: randEmoVal(5),
+                    nostalgic: randEmoVal(4), surprised: randEmoVal(3),
+                    disappointed: 0, disgusted: 0, guilty: 0, worried: 0, dissatisfied: 0, bored: 0, regret: 0
+                }
+            },
+            overall: {
+                emotions: {
+                    satisfaction: randEmoVal(7), happiness: randEmoVal(7), pleasure: randEmoVal(7), enjoyment: randEmoVal(7),
+                    comfort: randEmoVal(6), calm: randEmoVal(5), warmth: randEmoVal(5), joy: randEmoVal(6),
+                    nostalgia: randEmoVal(4), energized: randEmoVal(5), loving: randEmoVal(4), gratitude: randEmoVal(4),
+                    proud: randEmoVal(3), adventurous: randEmoVal(4), indulgent: randEmoVal(5), interested: randEmoVal(5),
+                    relaxed: randEmoVal(5), secure: randEmoVal(4), desire: randEmoVal(5), surprised: randEmoVal(3),
+                    disappointed: 0, disgusted: 0, bored: 0, guilty: 0, worried: 0, dissatisfied: 0, sad: 0, regret: 0, angry: 0, anxious: 0, confused: 0
                 }
             }
         },
@@ -3386,18 +3557,18 @@ function createSampleExperience(config) {
             melt: config.profile.creaminess || 5,
             crunch: config.type === 'Snack' ? 7 + Math.floor(Math.random() * 3) : 2
         },
-        overall: {
-            overallLiking: 7 + Math.floor(Math.random() * 3),
-            purchaseIntent: 7 + Math.floor(Math.random() * 3),
-            uniqueness: 6 + Math.floor(Math.random() * 3),
-            qualityPerception: 7 + Math.floor(Math.random() * 3)
-        },
         notes: `Sample product demonstrating ${config.needState} need state.`
     };
 
-    // Add emotions to stages
+    // Boost specific emotions based on config
     config.emotions.forEach(emotion => {
-        experience.stages.aftertaste.emotions[emotion] = emotionMap[emotion] || 7;
+        const val = emotionMap[emotion] || 7;
+        // Apply to relevant stages
+        Object.values(experience.stages).forEach(stage => {
+            if (stage.emotions && emotion in stage.emotions) {
+                stage.emotions[emotion] = val;
+            }
+        });
     });
 
     return experience;

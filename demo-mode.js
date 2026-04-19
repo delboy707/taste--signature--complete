@@ -64,11 +64,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 9,
+                            curiosity: 6,
                             desire: 8,
+                            eager: 7,
                             excitement: 7,
                             happiness: 7,
-                            curiosity: 6,
-                            surprise: 4
+                            interest: 7,
+                            pleased: 6,
+                            surprise: 4,
+                            attracted: 8,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -82,9 +94,23 @@ class DemoMode {
                             comfort: 6,
                             nostalgia: 4,
                             happiness: 7,
-                            energy: 4,
-                            relaxation: 6,
-                            intrigue: 9
+                            energized: 4,
+                            relaxed: 6,
+                            intrigued: 9,
+                            refreshed: 3,
+                            desire: 7,
+                            warm: 5,
+                            soothed: 4,
+                            surprised: 4,
+                            interested: 7,
+                            calm: 5,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -97,10 +123,21 @@ class DemoMode {
                         spiciness: 1,
                         emotions: {
                             excitement: 7,
-                            satisfaction: 8,
+                            surprise: 5,
                             happiness: 7,
                             pleasure: 8,
-                            disappointment: 1
+                            interest: 7,
+                            satisfaction: 8,
+                            energized: 5,
+                            delighted: 7,
+                            amused: 4,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -112,11 +149,42 @@ class DemoMode {
                         astringency: 4,
                         mouthfeel: 8,
                         emotions: {
-                            indulgence: 9,
-                            comfort: 7,
                             satisfaction: 8,
                             pleasure: 8,
-                            sophistication: 9
+                            indulgence: 9,
+                            comfort: 7,
+                            calm: 5,
+                            warmth: 6,
+                            joy: 7,
+                            loving: 5,
+                            adventurous: 6,
+                            energized: 4,
+                            secure: 5,
+                            nostalgic: 4,
+                            guilty: 1,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        smoothness: 8, mouthCoating: 7, creaminess: 7, butteriness: 6,
+                        meltDissolutionRate: 8, hardnessFirmness: 6, snapShatter: 7,
+                        cohesiveness: 6, richnessUnctuousness: 8, filmForming: 5,
+                        residualMouthfeel: 7, creaminessDevelopment: 7, easeOfSwallow: 7,
+                        overallTexturalComplexity: 8, fatSlickness: 6, waxiness: 4,
+                        densenessCompactness: 6, bolusFormationEase: 7, chewDownChange: 6,
+                        meltRate: 8,
+                        emotions: {
+                            satisfaction: 8, pleasure: 8, indulgence: 9, comfort: 7,
+                            calm: 5, warmth: 6, joy: 7, loving: 5, adventurous: 5,
+                            energized: 4, secure: 5, nostalgic: 4,
+                            guilty: 1, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -128,7 +196,55 @@ class DemoMode {
                             satisfaction: 8,
                             completeness: 8,
                             happiness: 7,
-                            craving: 6
+                            craving: 6,
+                            calm: 6,
+                            comforted: 5,
+                            pleased: 7,
+                            refreshed: 4,
+                            nostalgic: 4,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 8,
+                            happiness: 7,
+                            pleasure: 8,
+                            enjoyment: 8,
+                            comfort: 7,
+                            calm: 5,
+                            warmth: 6,
+                            joy: 7,
+                            nostalgia: 4,
+                            energized: 4,
+                            loving: 5,
+                            gratitude: 5,
+                            proud: 4,
+                            adventurous: 6,
+                            indulgent: 9,
+                            interested: 7,
+                            relaxed: 5,
+                            secure: 4,
+                            desire: 7,
+                            surprised: 4,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -163,11 +279,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 7,
+                            curiosity: 3,
                             desire: 7,
+                            eager: 5,
                             excitement: 5,
                             happiness: 7,
-                            curiosity: 3,
-                            surprise: 2
+                            interest: 5,
+                            pleased: 6,
+                            surprise: 2,
+                            attracted: 6,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -181,9 +309,23 @@ class DemoMode {
                             comfort: 9,
                             nostalgia: 8,
                             happiness: 8,
-                            energy: 3,
-                            relaxation: 7,
-                            intrigue: 3
+                            energized: 3,
+                            relaxed: 7,
+                            intrigued: 3,
+                            refreshed: 3,
+                            desire: 6,
+                            warm: 7,
+                            soothed: 6,
+                            surprised: 2,
+                            interested: 4,
+                            calm: 7,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -196,10 +338,21 @@ class DemoMode {
                         spiciness: 0,
                         emotions: {
                             excitement: 5,
-                            satisfaction: 7,
+                            surprise: 2,
                             happiness: 8,
                             pleasure: 7,
-                            disappointment: 1
+                            interest: 4,
+                            satisfaction: 7,
+                            energized: 3,
+                            delighted: 6,
+                            amused: 3,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -211,11 +364,42 @@ class DemoMode {
                         astringency: 1,
                         mouthfeel: 7,
                         emotions: {
-                            indulgence: 7,
-                            comfort: 9,
                             satisfaction: 7,
                             pleasure: 7,
-                            sophistication: 3
+                            indulgence: 7,
+                            comfort: 9,
+                            calm: 7,
+                            warmth: 7,
+                            joy: 7,
+                            loving: 6,
+                            adventurous: 2,
+                            energized: 3,
+                            secure: 6,
+                            nostalgic: 8,
+                            guilty: 1,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        smoothness: 9, mouthCoating: 7, creaminess: 8, butteriness: 7,
+                        meltDissolutionRate: 9, softness: 8, cohesiveness: 5,
+                        richnessUnctuousness: 7, filmForming: 5, fatSlickness: 6,
+                        residualMouthfeel: 6, creaminessDevelopment: 8, easeOfSwallow: 8,
+                        overallTexturalComplexity: 6, meltRate: 9, waxiness: 3,
+                        densenessCompactness: 5, bolusFormationEase: 8, chewDownChange: 5,
+                        moistureReleaseRate: 4,
+                        emotions: {
+                            satisfaction: 7, pleasure: 7, indulgence: 7, comfort: 9,
+                            calm: 7, warmth: 7, joy: 7, loving: 6, adventurous: 2,
+                            energized: 3, secure: 6, nostalgic: 8,
+                            guilty: 1, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -227,7 +411,55 @@ class DemoMode {
                             satisfaction: 7,
                             completeness: 6,
                             happiness: 7,
-                            craving: 8
+                            craving: 8,
+                            calm: 6,
+                            comforted: 8,
+                            pleased: 6,
+                            refreshed: 3,
+                            nostalgic: 8,
+                            surprised: 2,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 7,
+                            happiness: 8,
+                            pleasure: 7,
+                            enjoyment: 7,
+                            comfort: 9,
+                            calm: 7,
+                            warmth: 7,
+                            joy: 7,
+                            nostalgia: 8,
+                            energized: 3,
+                            loving: 6,
+                            gratitude: 5,
+                            proud: 3,
+                            adventurous: 2,
+                            indulgent: 7,
+                            interested: 4,
+                            relaxed: 7,
+                            secure: 6,
+                            desire: 6,
+                            surprised: 2,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -262,11 +494,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 8,
+                            curiosity: 8,
                             desire: 7,
+                            eager: 7,
                             excitement: 7,
                             happiness: 6,
-                            curiosity: 8,
-                            surprise: 5
+                            interest: 8,
+                            pleased: 5,
+                            surprise: 5,
+                            attracted: 7,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -280,9 +524,23 @@ class DemoMode {
                             comfort: 6,
                             nostalgia: 3,
                             happiness: 7,
-                            energy: 8,
-                            relaxation: 4,
-                            intrigue: 9
+                            energized: 8,
+                            relaxed: 4,
+                            intrigued: 9,
+                            refreshed: 5,
+                            desire: 7,
+                            warm: 6,
+                            soothed: 3,
+                            surprised: 6,
+                            interested: 8,
+                            calm: 3,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -295,10 +553,21 @@ class DemoMode {
                         spiciness: 1,
                         emotions: {
                             excitement: 8,
-                            satisfaction: 7,
+                            surprise: 6,
                             happiness: 7,
                             pleasure: 7,
-                            disappointment: 1
+                            interest: 8,
+                            satisfaction: 7,
+                            energized: 7,
+                            delighted: 6,
+                            amused: 4,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 1,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -310,11 +579,42 @@ class DemoMode {
                         astringency: 3,
                         mouthfeel: 6,
                         emotions: {
-                            indulgence: 6,
-                            comfort: 5,
                             satisfaction: 7,
                             pleasure: 8,
-                            sophistication: 9
+                            indulgence: 6,
+                            comfort: 5,
+                            calm: 4,
+                            warmth: 6,
+                            joy: 6,
+                            loving: 4,
+                            adventurous: 8,
+                            energized: 7,
+                            secure: 4,
+                            nostalgic: 3,
+                            guilty: 0,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        thinness: 6, bodyFullness: 6, fluidity: 7, consistency: 7,
+                        smoothness: 7, mouthCoating: 5, warmingEffect: 7,
+                        wateriness: 5, oiliness: 3, astringency: 3,
+                        residualMouthfeel: 5, easeOfSwallow: 8, dryness: 4,
+                        moistness: 6, thicknessViscosity: 4, slipperinessSlickness: 5,
+                        overallTexturalComplexity: 6, temperatureContrast: 5,
+                        heaviness: 3, lightnessAiriness: 6,
+                        emotions: {
+                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 5,
+                            calm: 4, warmth: 6, joy: 6, loving: 4, adventurous: 7,
+                            energized: 7, secure: 4, nostalgic: 3,
+                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -326,7 +626,55 @@ class DemoMode {
                             satisfaction: 8,
                             completeness: 7,
                             happiness: 7,
-                            craving: 5
+                            craving: 5,
+                            calm: 4,
+                            comforted: 4,
+                            pleased: 7,
+                            refreshed: 5,
+                            nostalgic: 3,
+                            surprised: 4,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 8,
+                            happiness: 7,
+                            pleasure: 8,
+                            enjoyment: 8,
+                            comfort: 5,
+                            calm: 4,
+                            warmth: 6,
+                            joy: 6,
+                            nostalgia: 3,
+                            energized: 8,
+                            loving: 4,
+                            gratitude: 5,
+                            proud: 5,
+                            adventurous: 8,
+                            indulgent: 6,
+                            interested: 8,
+                            relaxed: 4,
+                            secure: 4,
+                            desire: 7,
+                            surprised: 5,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -361,11 +709,23 @@ class DemoMode {
                         carbonation: 8,
                         emotions: {
                             anticipation: 8,
+                            curiosity: 7,
                             desire: 7,
+                            eager: 7,
                             excitement: 8,
                             happiness: 7,
-                            curiosity: 7,
-                            surprise: 5
+                            interest: 7,
+                            pleased: 6,
+                            surprise: 5,
+                            attracted: 7,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -379,9 +739,23 @@ class DemoMode {
                             comfort: 4,
                             nostalgia: 3,
                             happiness: 7,
-                            energy: 6,
-                            relaxation: 5,
-                            intrigue: 8
+                            energized: 6,
+                            relaxed: 5,
+                            intrigued: 8,
+                            refreshed: 6,
+                            desire: 7,
+                            warm: 4,
+                            soothed: 3,
+                            surprised: 5,
+                            interested: 7,
+                            calm: 4,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -394,10 +768,21 @@ class DemoMode {
                         spiciness: 2,
                         emotions: {
                             excitement: 8,
-                            satisfaction: 7,
+                            surprise: 6,
                             happiness: 7,
                             pleasure: 7,
-                            disappointment: 2
+                            interest: 7,
+                            satisfaction: 7,
+                            energized: 6,
+                            delighted: 5,
+                            amused: 4,
+                            disappointed: 2,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 2,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -409,11 +794,42 @@ class DemoMode {
                         astringency: 5,
                         mouthfeel: 7,
                         emotions: {
-                            indulgence: 6,
-                            comfort: 5,
                             satisfaction: 7,
                             pleasure: 7,
-                            sophistication: 7
+                            indulgence: 6,
+                            comfort: 5,
+                            calm: 4,
+                            warmth: 4,
+                            joy: 6,
+                            loving: 3,
+                            adventurous: 8,
+                            energized: 6,
+                            secure: 4,
+                            nostalgic: 3,
+                            guilty: 0,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 1,
+                            aggressive: 2,
+                            overwhelmed: 2,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        effervescence: 8, carbonationBiteTexture: 7, bubbleSizeTexture: 6,
+                        pricklingTinglingCarbonation: 7, fluidity: 7, bodyFullness: 6,
+                        mouthCoating: 5, thinness: 5, wateriness: 4, smoothness: 5,
+                        astringency: 5, dryness: 5, coolingEffect: 6, fizziness: 8,
+                        consistency: 6, residualMouthfeel: 6, easeOfSwallow: 7,
+                        overallTexturalComplexity: 7, lightnessAiriness: 5,
+                        foamStability: 6,
+                        emotions: {
+                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 4,
+                            calm: 4, warmth: 4, joy: 6, loving: 3, adventurous: 8,
+                            energized: 6, secure: 4, nostalgic: 3,
+                            guilty: 0, bored: 0, disgusted: 0, disappointed: 1,
+                            aggressive: 2, overwhelmed: 2, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -425,7 +841,55 @@ class DemoMode {
                             satisfaction: 7,
                             completeness: 6,
                             happiness: 7,
-                            craving: 8
+                            craving: 8,
+                            calm: 4,
+                            comforted: 4,
+                            pleased: 6,
+                            refreshed: 5,
+                            nostalgic: 3,
+                            surprised: 4,
+                            disappointed: 1,
+                            disgusted: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 7,
+                            happiness: 7,
+                            pleasure: 7,
+                            enjoyment: 7,
+                            comfort: 5,
+                            calm: 4,
+                            warmth: 4,
+                            joy: 6,
+                            nostalgia: 3,
+                            energized: 6,
+                            loving: 3,
+                            gratitude: 4,
+                            proud: 5,
+                            adventurous: 8,
+                            indulgent: 6,
+                            interested: 7,
+                            relaxed: 5,
+                            secure: 4,
+                            desire: 7,
+                            surprised: 5,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -460,11 +924,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 8,
+                            curiosity: 5,
                             desire: 9,
+                            eager: 7,
                             excitement: 7,
                             happiness: 8,
-                            curiosity: 5,
-                            surprise: 4
+                            interest: 6,
+                            pleased: 7,
+                            surprise: 4,
+                            attracted: 8,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -478,9 +954,23 @@ class DemoMode {
                             comfort: 8,
                             nostalgia: 6,
                             happiness: 8,
-                            energy: 3,
-                            relaxation: 8,
-                            intrigue: 5
+                            energized: 3,
+                            relaxed: 8,
+                            intrigued: 5,
+                            refreshed: 4,
+                            desire: 8,
+                            warm: 6,
+                            soothed: 7,
+                            surprised: 3,
+                            interested: 5,
+                            calm: 7,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -493,10 +983,21 @@ class DemoMode {
                         spiciness: 0,
                         emotions: {
                             excitement: 7,
-                            satisfaction: 8,
+                            surprise: 4,
                             happiness: 9,
                             pleasure: 9,
-                            disappointment: 0
+                            interest: 6,
+                            satisfaction: 8,
+                            energized: 4,
+                            delighted: 8,
+                            amused: 4,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -508,11 +1009,42 @@ class DemoMode {
                         astringency: 0,
                         mouthfeel: 9,
                         emotions: {
-                            indulgence: 10,
-                            comfort: 9,
                             satisfaction: 9,
                             pleasure: 9,
-                            sophistication: 6
+                            indulgence: 10,
+                            comfort: 9,
+                            calm: 6,
+                            warmth: 8,
+                            joy: 8,
+                            loving: 7,
+                            adventurous: 3,
+                            energized: 3,
+                            secure: 7,
+                            nostalgic: 6,
+                            guilty: 2,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        creaminess: 10, smoothness: 9, butteriness: 8, richnessUnctuousness: 9,
+                        meltDissolutionRate: 9, meltRate: 9, coolingEffect: 7,
+                        fatSlickness: 7, mouthCoating: 8, filmForming: 5,
+                        densenessCompactness: 7, bodyFullness: 8, creaminessDevelopment: 9,
+                        easeOfSwallow: 8, residualMouthfeel: 7, overallTexturalComplexity: 8,
+                        softness: 8, cohesiveness: 6, moistureReleaseRate: 6,
+                        temperatureContrast: 7,
+                        emotions: {
+                            satisfaction: 9, pleasure: 9, indulgence: 10, comfort: 9,
+                            calm: 6, warmth: 8, joy: 8, loving: 7, adventurous: 3,
+                            energized: 3, secure: 7, nostalgic: 6,
+                            guilty: 2, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -524,7 +1056,55 @@ class DemoMode {
                             satisfaction: 9,
                             completeness: 8,
                             happiness: 8,
-                            craving: 7
+                            craving: 7,
+                            calm: 6,
+                            comforted: 8,
+                            pleased: 8,
+                            refreshed: 4,
+                            nostalgic: 6,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 2,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 9,
+                            happiness: 9,
+                            pleasure: 9,
+                            enjoyment: 9,
+                            comfort: 9,
+                            calm: 6,
+                            warmth: 8,
+                            joy: 8,
+                            nostalgia: 6,
+                            energized: 3,
+                            loving: 7,
+                            gratitude: 6,
+                            proud: 4,
+                            adventurous: 3,
+                            indulgent: 10,
+                            interested: 5,
+                            relaxed: 7,
+                            secure: 7,
+                            desire: 8,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 2,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -559,11 +1139,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 7,
+                            curiosity: 5,
                             desire: 6,
+                            eager: 5,
                             excitement: 5,
                             happiness: 6,
-                            curiosity: 5,
-                            surprise: 4
+                            interest: 6,
+                            pleased: 5,
+                            surprise: 4,
+                            attracted: 6,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 0,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -577,9 +1169,23 @@ class DemoMode {
                             comfort: 8,
                             nostalgia: 6,
                             happiness: 6,
-                            energy: 4,
-                            relaxation: 6,
-                            intrigue: 5
+                            energized: 4,
+                            relaxed: 6,
+                            intrigued: 5,
+                            refreshed: 4,
+                            desire: 5,
+                            warm: 7,
+                            soothed: 5,
+                            surprised: 3,
+                            interested: 5,
+                            calm: 6,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 0,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -592,10 +1198,21 @@ class DemoMode {
                         spiciness: 0,
                         emotions: {
                             excitement: 5,
-                            satisfaction: 7,
+                            surprise: 4,
                             happiness: 6,
                             pleasure: 7,
-                            disappointment: 1
+                            interest: 6,
+                            satisfaction: 7,
+                            energized: 4,
+                            delighted: 5,
+                            amused: 3,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -607,11 +1224,42 @@ class DemoMode {
                         astringency: 2,
                         mouthfeel: 7,
                         emotions: {
-                            indulgence: 5,
-                            comfort: 8,
                             satisfaction: 7,
                             pleasure: 7,
-                            sophistication: 6
+                            indulgence: 5,
+                            comfort: 8,
+                            calm: 6,
+                            warmth: 6,
+                            joy: 5,
+                            loving: 4,
+                            adventurous: 4,
+                            energized: 4,
+                            secure: 6,
+                            nostalgic: 6,
+                            guilty: 0,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        crunchiness: 8, crispness: 7, hardnessFirmness: 7, chewiness: 7,
+                        springinessBounce: 6, porosityAeration: 7, sponginess: 6,
+                        softness: 6, moistness: 5, dryness: 4, coarseness: 5,
+                        flakiness: 4, cellularity: 7, densenessCompactness: 5,
+                        bolusFormationEase: 6, chewDownChange: 6, easeOfSwallow: 6,
+                        residualMouthfeel: 5, overallTexturalComplexity: 7,
+                        fibrousness: 4,
+                        emotions: {
+                            satisfaction: 7, pleasure: 7, indulgence: 5, comfort: 8,
+                            calm: 6, warmth: 6, joy: 5, loving: 4, adventurous: 4,
+                            energized: 4, secure: 6, nostalgic: 6,
+                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -623,7 +1271,55 @@ class DemoMode {
                             satisfaction: 7,
                             completeness: 6,
                             happiness: 6,
-                            craving: 7
+                            craving: 7,
+                            calm: 6,
+                            comforted: 7,
+                            pleased: 6,
+                            refreshed: 3,
+                            nostalgic: 6,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 7,
+                            happiness: 6,
+                            pleasure: 7,
+                            enjoyment: 7,
+                            comfort: 8,
+                            calm: 6,
+                            warmth: 7,
+                            joy: 5,
+                            nostalgia: 6,
+                            energized: 4,
+                            loving: 4,
+                            gratitude: 5,
+                            proud: 4,
+                            adventurous: 4,
+                            indulgent: 5,
+                            interested: 5,
+                            relaxed: 6,
+                            secure: 6,
+                            desire: 5,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -658,11 +1354,23 @@ class DemoMode {
                         carbonation: 0,
                         emotions: {
                             anticipation: 5,
+                            curiosity: 3,
                             desire: 5,
+                            eager: 5,
                             excitement: 4,
                             happiness: 4,
-                            curiosity: 3,
-                            surprise: 2
+                            interest: 4,
+                            pleased: 3,
+                            surprise: 2,
+                            attracted: 4,
+                            disappointed: 1,
+                            disgusted: 0,
+                            indifferent: 2,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 1
                         }
                     },
                     aroma: {
@@ -676,9 +1384,23 @@ class DemoMode {
                             comfort: 5,
                             nostalgia: 3,
                             happiness: 5,
-                            energy: 7,
-                            relaxation: 2,
-                            intrigue: 3
+                            energized: 7,
+                            relaxed: 2,
+                            intrigued: 3,
+                            refreshed: 2,
+                            desire: 4,
+                            warm: 4,
+                            soothed: 2,
+                            surprised: 2,
+                            interested: 4,
+                            calm: 3,
+                            disgusted: 0,
+                            irritated: 1,
+                            worried: 0,
+                            disappointed: 1,
+                            indifferent: 1,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -691,10 +1413,21 @@ class DemoMode {
                         spiciness: 0,
                         emotions: {
                             excitement: 4,
-                            satisfaction: 6,
+                            surprise: 2,
                             happiness: 5,
                             pleasure: 5,
-                            disappointment: 3
+                            interest: 4,
+                            satisfaction: 6,
+                            energized: 5,
+                            delighted: 3,
+                            amused: 2,
+                            disappointed: 3,
+                            disgusted: 0,
+                            bored: 1,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -706,11 +1439,42 @@ class DemoMode {
                         astringency: 2,
                         mouthfeel: 5,
                         emotions: {
-                            indulgence: 4,
-                            comfort: 5,
                             satisfaction: 6,
                             pleasure: 5,
-                            sophistication: 2
+                            indulgence: 4,
+                            comfort: 5,
+                            calm: 3,
+                            warmth: 4,
+                            joy: 4,
+                            loving: 2,
+                            adventurous: 3,
+                            energized: 6,
+                            secure: 4,
+                            nostalgic: 3,
+                            guilty: 1,
+                            bored: 1,
+                            disgusted: 0,
+                            disappointed: 2,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 1,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        chewiness: 7, hardnessFirmness: 6, densenessCompactness: 7,
+                        stickiness: 6, gumminess: 5, graininess: 5, dryness: 5,
+                        crunchiness: 5, coarseness: 4, toughness: 5,
+                        bolusFormationEase: 4, chewDownChange: 5, easeOfSwallow: 4,
+                        residualMouthfeel: 6, pastinessDoughiness: 5, starchiness: 4,
+                        overallTexturalComplexity: 5, particleUniformity: 4,
+                        moistureReleaseRate: 3, mouthCoating: 5,
+                        emotions: {
+                            satisfaction: 5, pleasure: 5, indulgence: 4, comfort: 5,
+                            calm: 3, warmth: 4, joy: 4, loving: 2, adventurous: 3,
+                            energized: 6, secure: 4, nostalgic: 3,
+                            guilty: 1, bored: 1, disgusted: 0, disappointed: 2,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 1, sad: 0
                         }
                     },
                     aftertaste: {
@@ -722,7 +1486,55 @@ class DemoMode {
                             satisfaction: 6,
                             completeness: 6,
                             happiness: 5,
-                            craving: 3
+                            craving: 3,
+                            calm: 3,
+                            comforted: 4,
+                            pleased: 5,
+                            refreshed: 2,
+                            nostalgic: 2,
+                            surprised: 1,
+                            disappointed: 2,
+                            disgusted: 0,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 1,
+                            bored: 1,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 6,
+                            happiness: 5,
+                            pleasure: 5,
+                            enjoyment: 5,
+                            comfort: 5,
+                            calm: 3,
+                            warmth: 4,
+                            joy: 4,
+                            nostalgia: 3,
+                            energized: 7,
+                            loving: 2,
+                            gratitude: 3,
+                            proud: 3,
+                            adventurous: 3,
+                            indulgent: 4,
+                            interested: 4,
+                            relaxed: 2,
+                            secure: 4,
+                            desire: 4,
+                            surprised: 2,
+                            disappointed: 2,
+                            disgusted: 0,
+                            bored: 1,
+                            guilty: 1,
+                            worried: 0,
+                            dissatisfied: 1,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
@@ -757,11 +1569,23 @@ class DemoMode {
                         carbonation: 9,
                         emotions: {
                             anticipation: 6,
+                            curiosity: 4,
                             desire: 6,
+                            eager: 5,
                             excitement: 5,
                             happiness: 6,
-                            curiosity: 4,
-                            surprise: 3
+                            interest: 5,
+                            pleased: 5,
+                            surprise: 3,
+                            attracted: 5,
+                            disappointed: 0,
+                            disgusted: 0,
+                            indifferent: 1,
+                            suspicious: 0,
+                            worried: 0,
+                            anxious: 0,
+                            confused: 0,
+                            bored: 0
                         }
                     },
                     aroma: {
@@ -775,9 +1599,23 @@ class DemoMode {
                             comfort: 4,
                             nostalgia: 2,
                             happiness: 6,
-                            energy: 6,
-                            relaxation: 5,
-                            intrigue: 3
+                            energized: 6,
+                            relaxed: 5,
+                            intrigued: 3,
+                            refreshed: 8,
+                            desire: 5,
+                            warm: 2,
+                            soothed: 4,
+                            surprised: 2,
+                            interested: 4,
+                            calm: 5,
+                            disgusted: 0,
+                            irritated: 0,
+                            worried: 0,
+                            disappointed: 0,
+                            indifferent: 1,
+                            anxious: 0,
+                            repulsed: 0
                         }
                     },
                     frontMouth: {
@@ -790,10 +1628,21 @@ class DemoMode {
                         spiciness: 0,
                         emotions: {
                             excitement: 6,
-                            satisfaction: 7,
+                            surprise: 4,
                             happiness: 6,
                             pleasure: 6,
-                            disappointment: 1
+                            interest: 5,
+                            satisfaction: 7,
+                            energized: 6,
+                            delighted: 5,
+                            amused: 3,
+                            disappointed: 1,
+                            disgusted: 0,
+                            bored: 0,
+                            confused: 0,
+                            overwhelmed: 0,
+                            upset: 0,
+                            worried: 0
                         }
                     },
                     midRearMouth: {
@@ -805,11 +1654,42 @@ class DemoMode {
                         astringency: 1,
                         mouthfeel: 6,
                         emotions: {
-                            indulgence: 2,
-                            comfort: 5,
                             satisfaction: 7,
                             pleasure: 6,
-                            sophistication: 3
+                            indulgence: 2,
+                            comfort: 5,
+                            calm: 6,
+                            warmth: 2,
+                            joy: 5,
+                            loving: 2,
+                            adventurous: 3,
+                            energized: 6,
+                            secure: 4,
+                            nostalgic: 2,
+                            guilty: 0,
+                            bored: 0,
+                            disgusted: 0,
+                            disappointed: 0,
+                            aggressive: 0,
+                            overwhelmed: 0,
+                            dissatisfied: 0,
+                            sad: 0
+                        }
+                    },
+                    texture: {
+                        effervescence: 9, carbonationBiteTexture: 8, fizziness: 9,
+                        bubbleSizeTexture: 6, pricklingTinglingCarbonation: 8,
+                        fluidity: 9, thinness: 8, wateriness: 8, coolingEffect: 7,
+                        smoothness: 5, lightnessAiriness: 8, consistency: 7,
+                        mouthCoating: 2, residualMouthfeel: 2, easeOfSwallow: 9,
+                        overallTexturalComplexity: 5, dryness: 3, moistness: 7,
+                        foamStability: 3, bodyFullness: 2,
+                        emotions: {
+                            satisfaction: 7, pleasure: 6, indulgence: 2, comfort: 5,
+                            calm: 6, warmth: 2, joy: 5, loving: 2, adventurous: 3,
+                            energized: 6, secure: 4, nostalgic: 2,
+                            guilty: 0, bored: 0, disgusted: 0, disappointed: 0,
+                            aggressive: 0, overwhelmed: 0, dissatisfied: 0, sad: 0
                         }
                     },
                     aftertaste: {
@@ -821,7 +1701,55 @@ class DemoMode {
                             satisfaction: 7,
                             completeness: 6,
                             happiness: 6,
-                            craving: 5
+                            craving: 5,
+                            calm: 6,
+                            comforted: 4,
+                            pleased: 6,
+                            refreshed: 9,
+                            nostalgic: 1,
+                            surprised: 2,
+                            disappointed: 0,
+                            disgusted: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            bored: 0,
+                            regret: 0
+                        }
+                    },
+                    overall: {
+                        emotions: {
+                            satisfaction: 7,
+                            happiness: 6,
+                            pleasure: 6,
+                            enjoyment: 6,
+                            comfort: 5,
+                            calm: 6,
+                            warmth: 2,
+                            joy: 5,
+                            nostalgia: 2,
+                            energized: 6,
+                            loving: 2,
+                            gratitude: 4,
+                            proud: 2,
+                            adventurous: 3,
+                            indulgent: 2,
+                            interested: 4,
+                            relaxed: 5,
+                            secure: 4,
+                            desire: 5,
+                            surprised: 3,
+                            disappointed: 0,
+                            disgusted: 0,
+                            bored: 0,
+                            guilty: 0,
+                            worried: 0,
+                            dissatisfied: 0,
+                            sad: 0,
+                            regret: 0,
+                            angry: 0,
+                            anxious: 0,
+                            confused: 0
                         }
                     }
                 },
