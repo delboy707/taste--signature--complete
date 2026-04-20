@@ -1400,29 +1400,85 @@ function buildQEPProductFromRow(row, colMap, csvRowNum, warnings) {
  *
  * Returns: { success, failed, errors, warnings }
  */
+var QEP_PREFIX_TO_MANUAL_KEY = {
+  app: "appearance",
+  aroma: "aroma",
+  fom: "frontMouth",
+  mrm: "midRearMouth",
+  tex: "texture",
+  aft: "aftertaste",
+  oa: "overall"
+};
+
+function qepAttrToCamel(attrName) {
+  var parts = String(attrName).split(/[_]/);
+  var out = "";
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    if (!part) continue;
+    if (out === "") {
+      out = part.charAt(0).toLowerCase() + part.slice(1);
+    } else {
+      out += part.charAt(0).toUpperCase() + part.slice(1);
+    }
+  }
+  return qepHyphenToCamel(out);
+}
+
+function qepHyphenToCamel(str) {
+  var segs = String(str).split("-");
+  var out = "";
+  for (var i = 0; i < segs.length; i++) {
+    var seg = segs[i];
+    if (!seg) continue;
+    if (out === "") {
+      out = seg.charAt(0).toLowerCase() + seg.slice(1);
+    } else {
+      out += seg.charAt(0).toUpperCase() + seg.slice(1);
+    }
+  }
+  return out;
+}
+
+function qepEmotionToCamel(emoName) {
+  return qepHyphenToCamel(String(emoName));
+}
+
 async function executeQEPBatchImport(products, onProgress) {
   var results = { success: 0, failed: 0, errors: [], warnings: [] };
 
   for (var i = 0; i < products.length; i++) {
     var p = products[i];
     try {
-      var stages = [];
+      var stages = {};
       Object.keys(QEP_STAGES).forEach(function(prefix) {
+        var manualKey = QEP_PREFIX_TO_MANUAL_KEY[prefix];
+        if (!manualKey) return;
         var stageData = p.stages[prefix] || { scores: {}, emotions: [], notes: "" };
-        var attributes = [];
+        var stageObj = {};
+
         QEP_STAGES[prefix].attributes.forEach(function(attrName) {
-          var v = stageData.scores[attrName];
-          attributes.push({
-            label: attrName.replace(/_/g, " "),
-            value: (v !== undefined && v !== null) ? v : null
-          });
+          var v = stageData.scores ? stageData.scores[attrName] : undefined;
+          if (typeof v === "number" && !isNaN(v)) {
+            stageObj[qepAttrToCamel(attrName)] = v;
+          }
         });
-        stages.push({
-          name: QEP_STAGE_NAME_MAP[prefix],
-          attributes: attributes,
-          emotions: stageData.emotions || [],
-          notes: stageData.notes || ""
+
+        var emotionsObj = {};
+        QEP_STAGES[prefix].emotions.forEach(function(emoName) {
+          emotionsObj[qepEmotionToCamel(emoName)] = 0;
         });
+        var selectedEmotions = Array.isArray(stageData.emotions) ? stageData.emotions : [];
+        selectedEmotions.forEach(function(emoName) {
+          emotionsObj[qepEmotionToCamel(emoName)] = 7;
+        });
+        stageObj.emotions = emotionsObj;
+
+        if (stageData.notes && String(stageData.notes).trim() !== "") {
+          stageObj._notes = String(stageData.notes);
+        }
+
+        stages[manualKey] = stageObj;
       });
 
       var experience = {
@@ -1430,10 +1486,45 @@ async function executeQEPBatchImport(products, onProgress) {
         timestamp: new Date().toISOString(),
         productInfo: p.productInfo,
         stages: stages,
+        needState: "",
+        emotionalTriggers: { moreishness: 5, refreshment: 5, melt: 5, crunch: 5 },
         notes: "",
         importSource: "QEP_CSV",
         importedAt: new Date().toISOString()
       };
+
+      if (typeof window !== "undefined" && window.EmotionInference &&
+          typeof window.EmotionInference.inferFromSensory === "function") {
+        try {
+          var inferred = window.EmotionInference.inferFromSensory(stages);
+          if (inferred && inferred.needState) {
+            experience.needState = inferred.needState;
+          }
+          if (inferred && inferred.emotionalTriggers) {
+            experience.emotionalTriggers = inferred.emotionalTriggers;
+          }
+          if (inferred && inferred.stages) {
+            Object.keys(inferred.stages).forEach(function(stageKey) {
+              var infStage = inferred.stages[stageKey];
+              var inferredStageEmotions = infStage ? infStage.emotions : null;
+              if (!inferredStageEmotions) return;
+              if (!experience.stages[stageKey]) return;
+              if (!experience.stages[stageKey].emotions) {
+                experience.stages[stageKey].emotions = {};
+              }
+              Object.keys(inferredStageEmotions).forEach(function(emoKey) {
+                var existing = experience.stages[stageKey].emotions[emoKey];
+                if (existing === undefined || existing === 0) {
+                  experience.stages[stageKey].emotions[emoKey] = inferredStageEmotions[emoKey];
+                }
+              });
+            });
+          }
+        } catch (infErr) {
+          results.warnings.push("Inference failed for " +
+            (p.productInfo && p.productInfo.name) + ": " + infErr.message);
+        }
+      }
 
       if (typeof experiences !== "undefined" && Array.isArray(experiences)) {
         experiences.push(experience);
