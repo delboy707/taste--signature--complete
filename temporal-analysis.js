@@ -66,13 +66,14 @@ function getAttributeTimeSeries(productName, stageName, attributeLabel) {
     const timeSeries = [];
 
     evaluations.forEach(exp => {
-        const stage = exp.stages.find(s => s.name === stageName);
-        if (stage) {
-            const attr = stage.attributes.find(a => a.label === attributeLabel);
-            if (attr) {
+        const stages = exp.stages || {};
+        const stage = stages[stageName];
+        if (stage && typeof stage === "object") {
+            const val = stage[attributeLabel];
+            if (typeof val === "number") {
                 timeSeries.push({
                     date: new Date(exp.timestamp),
-                    value: attr.value,
+                    value: val,
                     experienceId: exp.id
                 });
             }
@@ -94,27 +95,39 @@ function getAllAttributesTimeSeries(productName) {
 
     const series = {};
 
-    // Initialize series for all attributes
-    evaluations[0].stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            const key = `${stage.name}.${attr.label}`;
+    // Initialize series for all attributes found in the first evaluation
+    const firstStages = evaluations[0].stages || {};
+    Object.keys(firstStages).forEach(stageKey => {
+        const stage = firstStages[stageKey];
+        if (!stage || typeof stage !== "object") return;
+        Object.keys(stage).forEach(attrKey => {
+            if (attrKey === "emotions" || attrKey === "_notes") return;
+            const val = stage[attrKey];
+            if (typeof val !== "number") return;
+            const key = stageKey + "." + attrKey;
             series[key] = {
-                stageName: stage.name,
-                attributeLabel: attr.label,
+                stageName: stageKey,
+                attributeLabel: attrKey,
                 data: []
             };
         });
     });
 
-    // Populate series
+    // Populate series across all evaluations
     evaluations.forEach(exp => {
-        exp.stages.forEach(stage => {
-            stage.attributes.forEach(attr => {
-                const key = `${stage.name}.${attr.label}`;
+        const stages = exp.stages || {};
+        Object.keys(stages).forEach(stageKey => {
+            const stage = stages[stageKey];
+            if (!stage || typeof stage !== "object") return;
+            Object.keys(stage).forEach(attrKey => {
+                if (attrKey === "emotions" || attrKey === "_notes") return;
+                const val = stage[attrKey];
+                if (typeof val !== "number") return;
+                const key = stageKey + "." + attrKey;
                 if (series[key]) {
                     series[key].data.push({
                         date: new Date(exp.timestamp),
-                        value: attr.value,
+                        value: val,
                         experienceId: exp.id
                     });
                 }
@@ -366,26 +379,32 @@ function compareFreshVsAged(productName) {
         attributeChanges: []
     };
 
-    fresh.stages.forEach(freshStage => {
-        const agedStage = aged.stages.find(s => s.name === freshStage.name);
-        if (agedStage) {
-            freshStage.attributes.forEach(freshAttr => {
-                const agedAttr = agedStage.attributes.find(a => a.label === freshAttr.label);
-                if (agedAttr) {
-                    const change = agedAttr.value - freshAttr.value;
-                    const changePercent = freshAttr.value !== 0 ? (change / freshAttr.value) * 100 : 0;
+    const freshStages = fresh.stages || {};
+    const agedStages = aged.stages || {};
+    Object.keys(freshStages).forEach(stageKey => {
+        const freshStage = freshStages[stageKey];
+        const agedStage = agedStages[stageKey];
+        if (!freshStage || !agedStage) return;
+        if (typeof freshStage !== "object" || typeof agedStage !== "object") return;
 
-                    comparison.attributeChanges.push({
-                        stage: freshStage.name,
-                        attribute: freshAttr.label,
-                        freshValue: freshAttr.value,
-                        agedValue: agedAttr.value,
-                        change: change,
-                        changePercent: changePercent
-                    });
-                }
+        Object.keys(freshStage).forEach(attrKey => {
+            if (attrKey === "emotions" || attrKey === "_notes") return;
+            const freshVal = freshStage[attrKey];
+            const agedVal = agedStage[attrKey];
+            if (typeof freshVal !== "number" || typeof agedVal !== "number") return;
+
+            const change = agedVal - freshVal;
+            const changePercent = freshVal !== 0 ? (change / freshVal) * 100 : 0;
+
+            comparison.attributeChanges.push({
+                stage: stageKey,
+                attribute: attrKey,
+                freshValue: freshVal,
+                agedValue: agedVal,
+                change: change,
+                changePercent: changePercent
             });
-        }
+        });
     });
 
     return comparison;
