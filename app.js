@@ -1037,12 +1037,12 @@ function renderShapeOfTaste(exp) {
 
     const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
     const intensities = [
-        exp.stages.appearance?.overallIntensity ?? 0,
-        exp.stages.aroma?.overallIntensity ?? 0,
-        exp.stages.frontMouth?.overallIntensity ?? 0,
-        exp.stages.midRearMouth?.overallIntensity ?? 0,
+        exp.stages.appearance?.visualAppeal ?? 0,
+        exp.stages.aroma?.smellStrength ?? 0,
+        exp.stages.frontMouth?.overallInitialImpact ?? 0,
+        exp.stages.midRearMouth?.overallMidPalateIntensity ?? 0,
         exp.stages.texture?.overallTexturalComplexity ?? 0,
-        exp.stages.aftertaste?.overallIntensity ?? 0
+        exp.stages.aftertaste?.finishLength ?? 0
     ];
 
     charts.shape = new Chart(ctx, {
