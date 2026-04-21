@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.3-sheetjs-cdn';
+const VERSION = '3.4.4-sheetjs-csp-fix';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
