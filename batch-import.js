@@ -975,6 +975,52 @@ function generateQEPImportTemplate() {
 }
 
 /**
+ * generateQEPImportTemplateXLSX()
+ *
+ * Builds the same 262-column QEP template as an Excel (.xlsx) workbook.
+ * Requires SheetJS (global XLSX) to be loaded.
+ * Row 1 = headers, Row 2 = instructions, Row 3 = sample data, Row 4 = blank starter.
+ */
+function generateQEPImportTemplateXLSX() {
+  if (typeof XLSX === "undefined") {
+    alert("Excel library (SheetJS) is not loaded. Please refresh the page or use the CSV template.");
+    return;
+  }
+
+  var headers = QEP_METADATA_COLS.slice();
+  var instructions = [
+    "[required]","[required]","[required e.g. chocolate/beverage/snack]",
+    "[required e.g. Original/Light]","[number of panellists]","[YYYY-MM-DD]"
+  ];
+  var sample = [
+    "Dark Chocolate Bar","QEP Sample Brand","confectionery","70% Cocoa Original","12","2026-04-18"
+  ];
+
+  Object.keys(QEP_STAGES).forEach(function(prefix) {
+    var stage = QEP_STAGES[prefix];
+    stage.attributes.forEach(function(attr) {
+      headers.push(prefix + "_" + attr);
+      instructions.push("[0-10 or leave blank if not assessed]");
+      sample.push("");
+    });
+    headers.push(prefix + "_Emotions");
+    headers.push(prefix + "_Notes");
+    instructions.push("[Select from: " + stage.emotions.join(";") + "] - separate with semicolons");
+    instructions.push("[optional free text]");
+    sample.push("");
+    sample.push("");
+  });
+
+  var blank = new Array(headers.length).fill("");
+  var aoa = [headers, instructions, sample, blank];
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "QEP_Template");
+  XLSX.writeFile(wb, "QEP_Taste_Signature_Import_Template.xlsx");
+}
+
+/**
  * parseCSVFileV2(csvText)
  *
  * Robust state-machine CSV parser. Handles:
@@ -1553,60 +1599,4 @@ async function executeQEPBatchImport(products, onProgress) {
     }
   }
 
-  if (results.success > 0 && typeof saveData === "function") {
-    try {
-      await Promise.resolve(saveData());
-    } catch (e) {
-      results.warnings.push("Products were imported but saveData() failed: " + e.message);
-    }
-  }
-
-  return results;
-}
-
-/**
- * isQEPCSV(csvText)
- *
- * Fast detection: does this CSV look like a QEP template?
- * Checks the header row for stage-prefixed columns.
- */
-function isQEPCSV(csvText) {
-  if (typeof csvText !== "string") return false;
-  var firstLineEnd = csvText.indexOf("\n");
-  var headerLine = firstLineEnd === -1 ? csvText : csvText.substring(0, firstLineEnd);
-  headerLine = headerLine.toLowerCase();
-  // Need at least two distinct QEP stage prefixes to be confident
-  var hits = 0;
-  if (headerLine.indexOf("app_") !== -1) hits++;
-  if (headerLine.indexOf("aroma_") !== -1) hits++;
-  if (headerLine.indexOf("fom_") !== -1) hits++;
-  if (headerLine.indexOf("mrm_") !== -1) hits++;
-  if (headerLine.indexOf("tex_") !== -1) hits++;
-  if (headerLine.indexOf("aft_") !== -1) hits++;
-  if (headerLine.indexOf("oa_") !== -1) hits++;
-  return hits >= 2;
-}
-
-// === QEP_IMPORT_V2_END ===
-
-// Export functions for use in UI
-if (typeof window !== 'undefined') {
-    window.BatchImport = {
-        generateQEPImportTemplate,
-        parseCSVFileV2,
-        parseQEPImportCSV,
-        executeQEPBatchImport,
-        isQEPCSV,
-        QEP_STAGES,
-        parseCSVFile,
-        parseExcelFile,
-        suggestColumnMapping,
-        validateBatchData,
-        executeBatchImport,
-        executeBatchImportWithAutoEval,
-        previewAutoEvaluation,
-        generateBatchImportTemplate,
-        downloadBatchImportTemplate,
-        getConfidenceLabel
-    };
-}
+  if (results.success > 0 && typeof saveData ===
