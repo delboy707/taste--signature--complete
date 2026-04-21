@@ -470,29 +470,6 @@ async function processUploadedFile(file) {
             }
             result = parseCSVFile(text);
         } else if (extension === 'xlsx') {
-            // --- QEP detection (Excel) ---
-            // Read the first sheet as CSV text and route through the QEP CSV
-            // pipeline if headers match the QEP signature; otherwise fall back to
-            // the generic Excel parser so non-QEP Excel files still work.
-            if (typeof XLSX !== "undefined") {
-                try {
-                    const buf = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.onerror = () => reject(new Error('Failed to read Excel file'));
-                        reader.readAsArrayBuffer(file);
-                    });
-                    const workbook = XLSX.read(new Uint8Array(buf), { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
-                    if (typeof isQEPCSV === "function" && isQEPCSV(csvText)) {
-                        handleQEPCSVUpload(csvText, file.name);
-                        return;
-                    }
-                } catch (xlsxErr) {
-                    console.warn('QEP Excel detection failed, falling back to generic parser:', xlsxErr);
-                }
-            }
             result = await parseExcelFile(file);
         } else {
             alert('Unsupported file format. Please upload CSV or Excel (.xlsx) files.');
@@ -1092,10 +1069,7 @@ function renderQEPTemplateSection() {
         'The template is detected automatically on upload.' +
       '</p>' +
       '<button class="btn-primary" onclick="downloadQEPTemplate()" style="margin-right:8px;">' +
-        'Download CSV Template (262 columns)' +
-      '</button>' +
-      '<button class="btn-primary" onclick="downloadQEPTemplateXLSX()" style="margin-right:8px;">' +
-        'Download Excel Template (262 columns)' +
+        'Download QEP Full Template (262 columns)' +
       '</button>' +
       '<button class="btn-secondary" onclick="showQEPImportHelp()">How to use</button>' +
     '</div>';
@@ -1108,16 +1082,6 @@ function downloadQEPTemplate() {
     window.BatchImport.generateQEPImportTemplate();
   } else {
     alert("QEP template generator is not loaded. Please refresh the page.");
-  }
-}
-
-function downloadQEPTemplateXLSX() {
-  if (typeof generateQEPImportTemplateXLSX === "function") {
-    generateQEPImportTemplateXLSX();
-  } else if (window.BatchImport && typeof window.BatchImport.generateQEPImportTemplateXLSX === "function") {
-    window.BatchImport.generateQEPImportTemplateXLSX();
-  } else {
-    alert("QEP Excel template generator is not loaded. Please refresh the page.");
   }
 }
 
