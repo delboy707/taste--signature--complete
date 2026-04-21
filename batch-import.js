@@ -975,6 +975,52 @@ function generateQEPImportTemplate() {
 }
 
 /**
+ * generateQEPImportTemplateXLSX()
+ *
+ * Builds the same 262-column QEP template as an Excel (.xlsx) workbook.
+ * Requires SheetJS (global XLSX) to be loaded.
+ * Row 1 = headers, Row 2 = instructions, Row 3 = sample data, Row 4 = blank starter.
+ */
+function generateQEPImportTemplateXLSX() {
+  if (typeof XLSX === "undefined") {
+    alert("Excel library (SheetJS) is not loaded. Please refresh the page or use the CSV template.");
+    return;
+  }
+
+  var headers = QEP_METADATA_COLS.slice();
+  var instructions = [
+    "[required]","[required]","[required e.g. chocolate/beverage/snack]",
+    "[required e.g. Original/Light]","[number of panellists]","[YYYY-MM-DD]"
+  ];
+  var sample = [
+    "Dark Chocolate Bar","QEP Sample Brand","confectionery","70% Cocoa Original","12","2026-04-18"
+  ];
+
+  Object.keys(QEP_STAGES).forEach(function(prefix) {
+    var stage = QEP_STAGES[prefix];
+    stage.attributes.forEach(function(attr) {
+      headers.push(prefix + "_" + attr);
+      instructions.push("[0-10 or leave blank if not assessed]");
+      sample.push("");
+    });
+    headers.push(prefix + "_Emotions");
+    headers.push(prefix + "_Notes");
+    instructions.push("[Select from: " + stage.emotions.join(";") + "] - separate with semicolons");
+    instructions.push("[optional free text]");
+    sample.push("");
+    sample.push("");
+  });
+
+  var blank = new Array(headers.length).fill("");
+  var aoa = [headers, instructions, sample, blank];
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "QEP_Template");
+  XLSX.writeFile(wb, "QEP_Taste_Signature_Import_Template.xlsx");
+}
+
+/**
  * parseCSVFileV2(csvText)
  *
  * Robust state-machine CSV parser. Handles:
@@ -1593,6 +1639,7 @@ function isQEPCSV(csvText) {
 if (typeof window !== 'undefined') {
     window.BatchImport = {
         generateQEPImportTemplate,
+        generateQEPImportTemplateXLSX,
         parseCSVFileV2,
         parseQEPImportCSV,
         executeQEPBatchImport,

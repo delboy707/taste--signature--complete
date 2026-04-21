@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.1-offline';
+const VERSION = '3.4.2-prompt-b';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
@@ -33,7 +33,9 @@ const networkFirstUrls = [
   '/approval-workflow.js',
   '/temporal-analysis.js',
   '/photo-manager.js',
-  '/recipe-tracker.js'
+  '/recipe-tracker.js',
+  '/batch-import.js',
+  '/batch-import-ui.js'
 ];
 
 // Install event - cache files
