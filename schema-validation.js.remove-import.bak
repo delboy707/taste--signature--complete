@@ -13,6 +13,8 @@ const ATTRIBUTE_ALIASES = {
     'ProductName': 'name',
     'product name': 'name',
     'Product Name': 'name',
+    'flavor_name': 'name',
+    'Flavor_Name': 'name',
     'item': 'name',
     'Item': 'name',
     'title': 'name',

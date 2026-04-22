@@ -354,6 +354,10 @@
                             <span class="nav-icon">📤</span>
                             <span>Batch Import</span>
                         </a>
+                        <a href="#" class="nav-item" data-view="import">
+                            <span class="nav-icon">📥</span>
+                            <span>Import Data</span>
+                        </a>
                         <a href="#" class="nav-item" data-view="integrations">
                             <span class="nav-icon">🔗</span>
                             <span>Integrations</span>
@@ -2263,6 +2267,67 @@
                     </div>
                 </div>
 
+                <!-- Import Data View -->
+                <div id="view-import" class="view">
+                    <div class="card">
+                        <h3>Import Flavor Concepts & Data</h3>
+                        <p style="color: var(--text-light); margin-bottom: 25px;">
+                            Upload Excel (.xlsx) CSV, or JSON files containing flavor concepts. Data will be automatically mapped to the Taste Signature framework.
+                        </p>
+
+                        <div class="import-section">
+                            <div class="file-upload-area" id="file-upload-area">
+                                <div class="upload-icon">📁</div>
+                                <h4>Drag & Drop Files Here</h4>
+                                <p>or click to browse</p>
+                                <input type="file" id="file-input" accept=".csv,.json,.xlsx" multiple style="display: none;">
+                                <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+                                    Choose Files
+                                </button>
+                            </div>
+
+                            <div class="import-format-guide">
+                                <h4>Supported Formats</h4>
+                                <ul>
+                                    <li><strong>CSV:</strong> Comma-separated values with headers</li>
+                                    <li><strong>JSON:</strong> Array of flavor concept objects</li>
+                                    <li><strong>Excel (.xlsx):</strong> TasteAI flavor concepts format</li>
+                                </ul>
+
+                                <h4 style="margin-top: 20px;">Expected Columns</h4>
+                                <ul>
+                                    <li>Concept_ID or ID</li>
+                                    <li>Flavor_Name or Name</li>
+                                    <li>Primary_Ingredients or Ingredients</li>
+                                    <li>Taste_Profile</li>
+                                    <li>Emotional_Resonance</li>
+                                    <li>Target_Product_Category or Category</li>
+                                    <li>Market_Trend_Alignment (optional)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="import-preview" style="display: none; margin-top: 30px;">
+                            <h4>Import Preview</h4>
+                            <div id="import-preview-content"></div>
+                            <div style="margin-top: 20px;">
+                                <button id="btn-confirm-import" class="btn-primary">Import <span id="import-count">0</span> Items</button>
+                                <button id="btn-cancel-import" class="btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="import-status" style="margin-top: 20px;"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Quick Import: Sample Flavor Concepts</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px;">
+                            Load the included TasteAI flavor concepts to see the framework in action.
+                        </p>
+                        <button id="btn-load-sample-data" class="btn-primary">Load 15 Sample Concepts</button>
+                    </div>
+                </div>
+
                 <!-- Integrations View (NEW - Phase 2) -->
                 <div id="view-integrations" class="view">
                     <div class="card">
@@ -2336,6 +2401,7 @@
     <script src="camera-integration.js"></script>
     <script src="push-notifications.js"></script>
     <script src="claude-api.js"></script>
+    <script src="data-importer.js"></script>
     <script src="excel-import.js"></script>
     <script src="pdf-export.js"></script>
     <script src="export-controller.js"></script>
