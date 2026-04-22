@@ -1,0 +1,30 @@
+# Backup files from patch scripts
+*.bak
+*.bak.*
+
+# Patch scripts (local tooling only, not repo content)
+prompt-*-patch*.js
+remove-legacy-*.js
+*-patch.js
+*-patch-v*.js
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor temp files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
