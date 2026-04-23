@@ -1424,12 +1424,12 @@ function renderComparisonShapeChart(products) {
     const datasets = products.map((exp, idx) => ({
         label: exp.productInfo.name,
         data: [
-            exp.stages.appearance.overallIntensity,
-            exp.stages.aroma.overallIntensity,
-            exp.stages.frontMouth.overallIntensity,
-            exp.stages.midRearMouth.overallIntensity,
+            exp.stages.appearance?.visualAppeal ?? 0,
+            exp.stages.aroma?.smellStrength ?? 0,
+            exp.stages.frontMouth?.overallInitialImpact ?? 0,
+            exp.stages.midRearMouth?.overallMidPalateIntensity ?? 0,
             exp.stages.texture?.overallTexturalComplexity ?? 0,
-            exp.stages.aftertaste.overallIntensity
+            exp.stages.aftertaste?.finishLength ?? 0
         ],
         borderColor: colors[idx],
         backgroundColor: colors[idx] + '20',
@@ -1571,56 +1571,54 @@ function renderComparisonSummaryCards(products) {
 function renderComparisonAttributeMatrix(products) {
     const container = document.getElementById('comparison-attribute-matrix');
 
-    // Define all attributes by stage
+    // Define all attributes by stage (mapped to actual data shape)
     const attributeStructure = [
         {
             stage: 'Appearance',
             attributes: [
                 { key: 'visualAppeal', label: 'Visual Appeal' },
-                { key: 'colorIntensity', label: 'Color Intensity' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
+                { key: 'colorRichness', label: 'Color Richness' },
+                { key: 'surfaceShine', label: 'Surface Shine' }
             ],
             stageKey: 'appearance'
         },
         {
             stage: 'Aroma',
             attributes: [
-                { key: 'intensity', label: 'Intensity' },
-                { key: 'sweetness', label: 'Sweet Notes' },
-                { key: 'complexity', label: 'Complexity' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
+                { key: 'smellStrength', label: 'Smell Strength' },
+                { key: 'smellComplexity', label: 'Smell Complexity' },
+                { key: 'smellBalance', label: 'Smell Balance' },
+                { key: 'fruityNotes', label: 'Fruity Notes' }
             ],
             stageKey: 'aroma'
         },
         {
             stage: 'Front of Mouth',
             attributes: [
+                { key: 'overallInitialImpact', label: 'Overall Initial Impact' },
                 { key: 'sweetness', label: 'Sweetness' },
-                { key: 'sourness', label: 'Sourness' },
-                { key: 'saltiness', label: 'Saltiness' },
-                { key: 'texture', label: 'Texture Impact' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
+                { key: 'sournessTartness', label: 'Sourness/Tartness' },
+                { key: 'saltiness', label: 'Saltiness' }
             ],
             stageKey: 'frontMouth'
         },
         {
             stage: 'Mid/Rear Mouth',
             attributes: [
-                { key: 'bitterness', label: 'Bitterness' },
-                { key: 'umami', label: 'Umami' },
-                { key: 'richness', label: 'Richness' },
-                { key: 'creaminess', label: 'Creaminess' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
+                { key: 'overallMidPalateIntensity', label: 'Overall Mid-Palate Intensity' },
+                { key: 'flavourDepth', label: 'Flavour Depth' },
+                { key: 'tasteBalance', label: 'Taste Balance' },
+                { key: 'richnessFullness', label: 'Richness/Fullness' }
             ],
             stageKey: 'midRearMouth'
         },
         {
             stage: 'Aftertaste',
             attributes: [
-                { key: 'duration', label: 'Duration' },
-                { key: 'pleasantness', label: 'Pleasantness' },
-                { key: 'cleanness', label: 'Palate Cleanness' },
-                { key: 'overallIntensity', label: 'Overall Intensity' }
+                { key: 'finishLength', label: 'Finish Length' },
+                { key: 'finishQuality', label: 'Finish Quality' },
+                { key: 'palateCleansing', label: 'Palate Cleansing' },
+                { key: 'flavourLinger', label: 'Flavour Linger' }
             ],
             stageKey: 'aftertaste'
         }

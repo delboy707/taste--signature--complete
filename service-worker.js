@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.6-slider-default-zero';
+const VERSION = '3.4.7-compare-products-fix';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
