@@ -90,15 +90,6 @@ const OnboardingManager = {
                             <div class="goal-arrow">→</div>
                         </button>
 
-                        <button class="goal-card" data-goal="import">
-                            <div class="goal-icon">📊</div>
-                            <div class="goal-info">
-                                <h3>Import Existing Data</h3>
-                                <p>Sync from spreadsheets, scan barcodes, or connect integrations</p>
-                            </div>
-                            <div class="goal-arrow">→</div>
-                        </button>
-
                         <button class="goal-card" data-goal="explore">
                             <div class="goal-icon">🔍</div>
                             <div class="goal-info">
@@ -124,39 +115,6 @@ const OnboardingManager = {
                         <button class="category-chip" data-category="beverage">🥤 Beverage</button>
                         <button class="category-chip" data-category="sauce">🥫 Sauce</button>
                         <button class="category-chip" data-category="other">📦 Other</button>
-                    </div>
-
-                    <button class="onboarding-back" onclick="OnboardingManager.goBack()">← Back</button>
-                </div>
-
-                <div class="onboarding-content hidden" id="onboarding-step-2-import">
-                    <h2>How would you like to import?</h2>
-                    <p class="onboarding-subtitle">Choose your preferred data source</p>
-
-                    <div class="onboarding-import-options">
-                        <button class="import-option" data-import="barcode">
-                            <div class="import-icon">📷</div>
-                            <div class="import-info">
-                                <h3>Barcode Scanner</h3>
-                                <p>Scan product barcodes to auto-fill details</p>
-                            </div>
-                        </button>
-
-                        <button class="import-option" data-import="spreadsheet">
-                            <div class="import-icon">📑</div>
-                            <div class="import-info">
-                                <h3>Spreadsheet Sync</h3>
-                                <p>Import from Excel or Google Sheets</p>
-                            </div>
-                        </button>
-
-                        <button class="import-option" data-import="webhook">
-                            <div class="import-icon">🔗</div>
-                            <div class="import-info">
-                                <h3>Webhooks & API</h3>
-                                <p>Connect to Zapier, Slack, or custom integrations</p>
-                            </div>
-                        </button>
                     </div>
 
                     <button class="onboarding-back" onclick="OnboardingManager.goBack()">← Back</button>
@@ -240,13 +198,6 @@ const OnboardingManager = {
             });
         });
 
-        // Import options
-        document.querySelectorAll('.import-option').forEach(option => {
-            option.addEventListener('click', (e) => {
-                const importType = option.dataset.import;
-                this.handleImportSelection(importType);
-            });
-        });
     },
 
     /**
@@ -324,41 +275,6 @@ const OnboardingManager = {
             setTimeout(() => {
                 if (typeof selectCategory === 'function') {
                     selectCategory(category);
-                }
-            }, 100);
-        }
-    },
-
-    /**
-     * Handle import selection - go to integrations
-     */
-    handleImportSelection(importType) {
-        this.markOnboardingComplete();
-        this.hideOnboardingModal();
-
-        // Navigate to Integrations view
-        const integrationsNav = document.querySelector('[data-view="integrations"]');
-        if (integrationsNav) {
-            integrationsNav.click();
-
-            // After a short delay, show the appropriate tab
-            setTimeout(() => {
-                switch (importType) {
-                    case 'barcode':
-                        if (typeof showIntegrationTab === 'function') {
-                            showIntegrationTab('barcode');
-                        }
-                        break;
-                    case 'spreadsheet':
-                        if (typeof showIntegrationTab === 'function') {
-                            showIntegrationTab('spreadsheet');
-                        }
-                        break;
-                    case 'webhook':
-                        if (typeof showIntegrationTab === 'function') {
-                            showIntegrationTab('webhooks');
-                        }
-                        break;
                 }
             }, 100);
         }

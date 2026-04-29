@@ -30,14 +30,6 @@ class TutorialManager {
                 highlight: true
             },
             {
-                target: '[data-view="integrations"]',
-                title: '📊 Import Data Automatically',
-                content: 'Don\'t want to enter data manually? Use Integrations to: scan barcodes, import from spreadsheets, or connect webhooks from other tools.',
-                position: 'right',
-                highlight: true,
-                action: () => document.querySelector('[data-view="integrations"]')?.click()
-            },
-            {
                 target: '[data-view="log-experience"]',
                 title: '📋 Full Evaluation (Detailed)',
                 content: 'For comprehensive analysis, use Full Evaluation. Capture data across 7 stages with detailed sensory and emotional mapping.',

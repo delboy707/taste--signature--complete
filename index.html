@@ -31,7 +31,6 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-responsive.css">
     <link rel="stylesheet" href="quick-entry-styles.css">
-    <link rel="stylesheet" href="integrations-styles.css">
     <link rel="stylesheet" href="onboarding-styles.css">
     <link rel="stylesheet" href="voice-photo-styles.css">
     <link rel="stylesheet" href="ui-polish.css">
@@ -354,11 +353,6 @@
                             <span class="nav-icon">📤</span>
                             <span>Batch Import</span>
                         </a>
-                        <a href="#" class="nav-item" data-view="integrations">
-                            <span class="nav-icon">🔗</span>
-                            <span>Integrations</span>
-                            <span class="nav-badge">NEW</span>
-                        </a>
                     </div>
                 </div>
 
@@ -566,34 +560,6 @@
 
                     </div>
 
-                    <!-- PROMINENT Data Import Callout - Visible to ALL users -->
-                    <div class="data-import-callout" style="margin-bottom: 24px; padding: 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 16px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);">
-                        <h3 style="margin: 0 0 12px 0; color: white; font-size: 22px; font-weight: 700;">🚀 Import Data Automatically - No Manual Entry Needed!</h3>
-                        <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.9); font-size: 15px;">Skip the manual work. Import your product data instantly using any of these methods:</p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;">
-                            <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('barcode'), 100);" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 12px; background: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <span style="font-size: 32px;">📷</span>
-                                <span style="font-weight: 700; color: #059669; font-size: 14px;">Scan Barcode</span>
-                                <span style="font-size: 11px; color: #6b7280;">Auto-lookup products</span>
-                            </button>
-                            <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('spreadsheet'), 100);" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 12px; background: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <span style="font-size: 32px;">📑</span>
-                                <span style="font-weight: 700; color: #059669; font-size: 14px;">Spreadsheet Import</span>
-                                <span style="font-size: 11px; color: #6b7280;">Excel or Google Sheets</span>
-                            </button>
-                            <button onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('webhooks'), 100);" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 12px; background: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <span style="font-size: 32px;">🔗</span>
-                                <span style="font-weight: 700; color: #059669; font-size: 14px;">Webhooks / API</span>
-                                <span style="font-size: 11px; color: #6b7280;">Zapier, Slack, Airtable</span>
-                            </button>
-                            <button onclick="navigateToView('quick-entry');" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 12px; background: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <span style="font-size: 32px;">🤖</span>
-                                <span style="font-weight: 700; color: #059669; font-size: 14px;">Photo AI</span>
-                                <span style="font-size: 11px; color: #6b7280;">Snap & auto-detect</span>
-                            </button>
-                        </div>
-                    </div>
-
                     <div class="dashboard-grid">
                         <div class="stat-card">
                             <h3>Total Experiences</h3>
@@ -676,23 +642,6 @@
                                     <div class="stage-number">8</div>
                                     <div class="stage-name">Overall</div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Data Import Callout for Full Evaluation -->
-                        <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px;">
-                            <h4 style="margin: 0 0 10px 0; color: #92400e; font-size: 16px; font-weight: 700;">💡 Skip Manual Entry? Import Your Data Instead!</h4>
-                            <p style="margin: 0 0 14px 0; color: #78350f; font-size: 13px;">Full evaluations have 40+ fields. Save time by importing automatically:</p>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                <button type="button" onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('barcode'), 100);" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: white; border: 1px solid #fbbf24; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #92400e;">
-                                    📷 Scan Barcode
-                                </button>
-                                <button type="button" onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('spreadsheet'), 100);" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: white; border: 1px solid #fbbf24; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #92400e;">
-                                    📑 Spreadsheet Import
-                                </button>
-                                <button type="button" onclick="navigateToView('integrations'); setTimeout(() => showIntegrationTab && showIntegrationTab('webhooks'), 100);" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: white; border: 1px solid #fbbf24; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #92400e;">
-                                    🔗 Webhooks / API
-                                </button>
                             </div>
                         </div>
 
@@ -2263,49 +2212,6 @@
                     </div>
                 </div>
 
-                <!-- Integrations View (NEW - Phase 2) -->
-                <div id="view-integrations" class="view">
-                    <div class="card">
-                        <div class="form-header">
-                            <h3>Data Integrations</h3>
-                            <p class="subtitle">Connect external data sources and automate your workflow</p>
-                        </div>
-
-                        <!-- Tabs for different integration types -->
-                        <div class="integration-tabs" style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
-                            <button class="btn-primary" onclick="showIntegrationTab('scanner')">
-                                📷 Barcode Scanner
-                            </button>
-                            <button class="btn-secondary" onclick="showIntegrationTab('spreadsheet')">
-                                📊 Spreadsheet Sync
-                            </button>
-                            <button class="btn-secondary" onclick="showIntegrationTab('webhooks')">
-                                🔗 Webhooks & API
-                            </button>
-                        </div>
-
-                        <!-- Barcode Scanner Section -->
-                        <div id="integration-scanner" class="integration-section">
-                            <div id="barcode-scanner-container">
-                                <!-- Barcode scanner UI will be rendered here -->
-                            </div>
-                        </div>
-
-                        <!-- Spreadsheet Sync Section -->
-                        <div id="integration-spreadsheet" class="integration-section" style="display: none;">
-                            <div id="spreadsheet-sync-container">
-                                <!-- Spreadsheet sync UI will be rendered here -->
-                            </div>
-                        </div>
-
-                        <!-- Webhooks Section -->
-                        <div id="integration-webhooks" class="integration-section" style="display: none;">
-                            <div id="webhook-integration-container">
-                                <!-- Webhook UI will be rendered here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -2333,7 +2239,6 @@
     <script src="user-tiers.js"></script>
     <script src="mobile-menu.js"></script>
     <script src="video-player.js"></script>
-    <script src="camera-integration.js"></script>
     <script src="push-notifications.js"></script>
     <script src="claude-api.js"></script>
     <script src="excel-import.js"></script>
@@ -2383,9 +2288,6 @@
     <script src="analytics.js"></script>
     <script src="templates-manager.js"></script>
     <script src="quick-entry.js"></script>
-    <script src="barcode-scanner.js"></script>
-    <script src="spreadsheet-sync.js"></script>
-    <script src="webhook-integration.js"></script>
     <script src="sensory-attributes.js"></script>
     <script src="app.js"></script>
 

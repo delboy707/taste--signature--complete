@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.8-jspdf-cache-fix';
+const VERSION = '3.4.9-remove-integrations';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
@@ -10,7 +10,6 @@ const urlsToCache = [
   '/styles.css',
   '/mobile-responsive.css',
   '/quick-entry-styles.css',
-  '/integrations-styles.css',
   '/voice-photo-styles.css',
   '/ui-polish.css',
   '/manifest.json',
