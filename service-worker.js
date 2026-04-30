@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.9-remove-integrations';
+const VERSION = '3.4.10-remove-professional-insights';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use

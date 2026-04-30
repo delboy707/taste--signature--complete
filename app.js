@@ -32,7 +32,6 @@ function initNavigation() {
         'need-states': 'Need States & Triggers',
         'comparison': 'Product Comparison',
         'portfolio': 'Portfolio Emotional Map',
-        'insights': 'Professional Insights',
         'ai-insights': 'AI-Powered Insights',
         'export-reports': 'Export & Reports',
         'batch-import': 'Batch Import Products',
@@ -71,7 +70,6 @@ function initNavigation() {
             if (viewName === 'need-states') updateNeedStatesView();
             if (viewName === 'comparison') updateComparisonView();
             if (viewName === 'portfolio') updatePortfolioView();
-            if (viewName === 'insights') renderAdvancedAnalytics();
             if (viewName === 'ai-insights') updateAIInsightsView();
             if (viewName === 'consumer-panel') renderConsumerPanelDashboard();
             if (viewName === 'custom-lexicon') renderCustomLexiconDashboard();
