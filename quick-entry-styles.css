@@ -12,26 +12,6 @@
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.quick-entry-actions-bar .photo-ai-btn {
-    background: white;
-    color: #059669;
-    font-weight: 600;
-    padding: 12px 24px;
-    font-size: 15px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.quick-entry-actions-bar .photo-ai-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
 .quick-entry-actions-bar .action-hint {
     color: white;
     font-size: 14px;
@@ -45,11 +25,7 @@
         gap: 8px;
     }
 
-    .quick-entry-actions-bar .photo-ai-btn {
-        width: 100%;
-        justify-content: center;
     }
-}
 
 /* Entry Mode Toggle */
 .entry-mode-toggle {

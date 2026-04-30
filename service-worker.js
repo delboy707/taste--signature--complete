@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.10-remove-professional-insights';
+const VERSION = '3.4.11-remove-photo';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
@@ -31,7 +31,6 @@ const networkFirstUrls = [
   '/team-collaboration.js',
   '/approval-workflow.js',
   '/temporal-analysis.js',
-  '/photo-manager.js',
   '/recipe-tracker.js',
   '/batch-import.js',
   '/batch-import-ui.js'

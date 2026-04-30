@@ -23,13 +23,6 @@ class TutorialManager {
                 action: () => document.querySelector('[data-view="quick-entry"]')?.click()
             },
             {
-                target: '.photo-ai-btn',
-                title: '📷 Photo AI - Auto-Detect Products',
-                content: 'Snap a photo of any product! AI will automatically detect the product name, category, and suggest sensory attributes. No typing needed!',
-                position: 'bottom',
-                highlight: true
-            },
-            {
                 target: '[data-view="log-experience"]',
                 title: '📋 Full Evaluation (Detailed)',
                 content: 'For comprehensive analysis, use Full Evaluation. Capture data across 7 stages with detailed sensory and emotional mapping.',

@@ -37,7 +37,6 @@ function initNavigation() {
         'batch-import': 'Batch Import Products',
         'recipe-tracker': 'Recipe & Formulation Tracker',
         'temporal-analysis': 'Temporal Analysis',
-        'photo-gallery': 'Photo Gallery',
         'team-collaboration': 'Team Collaboration',
         'approvals': 'Approval Workflows',
         'history': 'Experience History',
@@ -78,7 +77,6 @@ function initNavigation() {
             if (viewName === 'batch-import') renderBatchImportDashboard();
             if (viewName === 'recipe-tracker') renderRecipeTrackerDashboard();
             if (viewName === 'temporal-analysis') renderTemporalAnalysisDashboard();
-            if (viewName === 'photo-gallery') renderPhotoGalleryDashboard();
             if (viewName === 'team-collaboration') renderTeamCollaborationDashboard();
             if (viewName === 'approvals') renderApprovalsDashboard();
             if (viewName === 'history') updateHistory();

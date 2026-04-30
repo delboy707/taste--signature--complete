@@ -299,15 +299,6 @@ function renderQuickEntryView() {
                 </button>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-entry-actions-bar">
-                <button type="button" class="photo-ai-btn" onclick="PhotoAI.openPhotoModal()">
-                    <span class="photo-icon">📷</span>
-                    <span class="photo-text">Photo AI</span>
-                </button>
-                <span class="action-hint">Snap a photo to auto-fill product details</span>
-            </div>
-
             <!-- Category Selection -->
             <div class="quick-entry-section">
                 <h4>Step 1: Select Product Category</h4>
