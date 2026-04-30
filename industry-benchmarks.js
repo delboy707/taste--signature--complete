@@ -650,7 +650,7 @@ function compareAgainstBenchmark(productId, benchmarkId) {
     });
 
     // Overall satisfaction comparison
-    const productSatisfaction = product.stages.aftertaste.emotions.satisfaction || 0;
+    const productSatisfaction = product?.stages?.aftertaste?.emotions?.satisfaction || 0;
     if (benchmark.overallSatisfaction) {
         const satisfactionPercentile = calculatePercentile(productSatisfaction, benchmark.overallSatisfaction);
 
