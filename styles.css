@@ -7843,3 +7843,11 @@ textarea:focus {
         width: 100%;
     }
 }
+
+
+/* Pre-beta: hide broken benchmark sections (3.4.14) */
+/* Remove this rule and the qep-hidden-pre-beta class instances */
+/* in industry-benchmarks-ui.js when those sections are fixed.   */
+.qep-hidden-pre-beta {
+    display: none;
+}

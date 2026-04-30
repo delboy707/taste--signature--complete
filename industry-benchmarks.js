@@ -853,5 +853,4 @@ function importBenchmark(jsonString) {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    loadIndustryBenchmarks();
-});
+    loadIn
