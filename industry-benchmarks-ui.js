@@ -146,7 +146,7 @@ function renderBenchmarksLibrary() {
 function renderProductBenchmarkComparison() {
     if (experiences.length === 0) {
         return `
-            <div class="analytics-section qep-hidden-pre-beta">
+            <div class="analytics-section">
                 <h4>🎯 Product Benchmark Comparison</h4>
                 <p class="empty-state">Log product experiences to compare against industry benchmarks</p>
             </div>
@@ -154,7 +154,7 @@ function renderProductBenchmarkComparison() {
     }
 
     return `
-        <div class="analytics-section qep-hidden-pre-beta">
+        <div class="analytics-section">
             <h4>🎯 Product Benchmark Comparison</h4>
             <p class="section-description">Compare your products against industry standards and see percentile rankings</p>
 
@@ -304,7 +304,7 @@ function renderCompetitivePositioning() {
     }
 
     return `
-        <div class="analytics-section qep-hidden-pre-beta">
+        <div class="analytics-section">
             <h4>🏆 Competitive Positioning</h4>
             <p class="section-description">See how your product ranks across multiple industry benchmarks</p>
 
