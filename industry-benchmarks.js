@@ -746,7 +746,7 @@ function createBenchmarkFromProducts(name, category, productIds) {
 
     // Calculate benchmarks from product data
     // For each stage and attribute, calculate statistics
-    const stageKeys = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'aftertaste'];
+    const stageKeys = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste'];
 
     stageKeys.forEach(stageKey => {
         if (!newBenchmark.attributeBenchmarks[stageKey]) {
@@ -760,7 +760,7 @@ function createBenchmarkFromProducts(name, category, productIds) {
             if (attrKey === 'emotions') return;
 
             const values = products
-                .map(p => p.stages[stageKey][attrKey])
+                .map(p => p?.stages?.[stageKey]?.[attrKey])
                 .filter(v => v !== undefined);
 
             if (values.length > 0) {
@@ -778,7 +778,7 @@ function createBenchmarkFromProducts(name, category, productIds) {
 
     // Overall satisfaction
     const satisfactionValues = products
-        .map(p => p.stages.aftertaste.emotions.satisfaction || 0)
+        .map(p => p?.stages?.aftertaste?.emotions?.satisfaction || 0)
         .filter(v => v > 0);
 
     if (satisfactionValues.length > 0) {
