@@ -231,7 +231,7 @@ function updateExpertVsConsumerComparison() {
 
     if (!select || !container) return;
 
-    const productId = parseInt(select.value);
+    const productId = parseFloat(select.value);
     if (!productId) {
         container.innerHTML = '';
         return;
@@ -510,7 +510,7 @@ function handlePanelImport() {
     reader.onload = function(e) {
         try {
             const csvText = e.target.result;
-            const productId = parseInt(productSelect.value);
+            const productId = parseFloat(productSelect.value);
             const panelDate = dateInput.value;
 
             const panelData = importConsumerPanelCSV(csvText, productId, panelDate);

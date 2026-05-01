@@ -193,7 +193,7 @@ function renderProductBenchmarkComparison() {
  * Run benchmark comparison
  */
 function runBenchmarkComparison() {
-    const productId = parseInt(document.getElementById('benchmark-product-select').value);
+    const productId = parseFloat(document.getElementById('benchmark-product-select').value);
     const benchmarkId = document.getElementById('benchmark-select').value;
     const resultsContainer = document.getElementById('benchmark-comparison-results');
 
@@ -330,7 +330,7 @@ function updateCompetitivePositioning() {
     const select = document.getElementById('positioning-product-select');
     const container = document.getElementById('positioning-results');
 
-    const productId = parseInt(select.value);
+    const productId = parseFloat(select.value);
     if (!productId) {
         container.innerHTML = '';
         return;
@@ -428,7 +428,7 @@ function createCustomBenchmark() {
     const name = document.getElementById('custom-benchmark-name').value;
     const category = document.getElementById('custom-benchmark-category').value;
     const selectedProducts = Array.from(document.querySelectorAll('.custom-benchmark-product:checked'))
-        .map(cb => parseInt(cb.value));
+        .map(cb => parseFloat(cb.value));
 
     if (!name || !category) {
         alert('Please enter both name and category');

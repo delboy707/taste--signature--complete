@@ -445,7 +445,7 @@ function handleFormSubmit(e) {
 
     // Check if this is a re-test
     const retestSelector = document.getElementById('retest-selector');
-    const originalTestId = retestSelector && retestSelector.value ? parseInt(retestSelector.value) : null;
+    const originalTestId = retestSelector && retestSelector.value ? parseFloat(retestSelector.value) : null;
     let testNumber = 1;
 
     if (originalTestId) {

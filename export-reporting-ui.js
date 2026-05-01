@@ -279,7 +279,7 @@ function renderPortfolioExportSection() {
  */
 function generateComparisonPDF() {
     const checkboxes = document.querySelectorAll('.comparison-product-checkbox:checked');
-    const productIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const productIds = Array.from(checkboxes).map(cb => parseFloat(cb.value));
 
     if (productIds.length < 2) {
         alert('Please select at least 2 products to compare');
@@ -294,7 +294,7 @@ function generateComparisonPDF() {
  */
 function exportComparisonExcel() {
     const checkboxes = document.querySelectorAll('.comparison-product-checkbox:checked');
-    const productIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const productIds = Array.from(checkboxes).map(cb => parseFloat(cb.value));
 
     if (productIds.length < 2) {
         alert('Please select at least 2 products to compare');
@@ -308,7 +308,7 @@ function exportComparisonExcel() {
  * Generate benchmark report from UI
  */
 function generateBenchmarkReportFromUI() {
-    const productId = parseInt(document.getElementById('benchmark-export-product').value);
+    const productId = parseFloat(document.getElementById('benchmark-export-product').value);
     const benchmarkId = document.getElementById('benchmark-export-benchmark').value;
 
     if (!productId || !benchmarkId) {
