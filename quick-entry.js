@@ -497,13 +497,7 @@ function renderQuickEntryView() {
 
                 <div class="quick-form-group" style="margin-top: 20px;">
                     <label for="quick-notes">Quick Notes (optional)</label>
-                    <div class="input-with-voice">
-                        <textarea id="quick-notes" rows="2" placeholder="Any additional observations..."></textarea>
-                        <button type="button" class="voice-input-btn" data-target="quick-notes" onclick="VoiceInput.toggle('quick-notes')">
-                            <span class="voice-icon">🎤</span>
-                            <span class="voice-text">Voice</span>
-                        </button>
-                    </div>
+                    <textarea id="quick-notes" rows="2" placeholder="Any additional observations..."></textarea>
                 </div>
 
                 <div class="quick-entry-actions">

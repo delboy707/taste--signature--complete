@@ -30,13 +30,6 @@ class TutorialManager {
                 highlight: true
             },
             {
-                target: '.voice-input-btn',
-                title: '🎤 Voice Input',
-                content: 'See a microphone button? Click it to speak your notes instead of typing. Works on any text field!',
-                position: 'left',
-                highlight: true
-            },
-            {
                 target: '[data-view="shape-of-taste"]',
                 title: '📈 Shape of Taste',
                 content: 'Visualize how sensory attributes evolve throughout the tasting experience. See intensity changes from first bite to aftertaste.',
