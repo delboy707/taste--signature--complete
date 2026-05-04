@@ -7843,3 +7843,25 @@ textarea:focus {
         width: 100%;
     }
 }
+
+/* Beta feedback footer — added for beta launch */
+.qep-feedback-footer {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    z-index: 9000;
+}
+.qep-feedback-footer .qep-feedback-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: rgba(40, 40, 40, 0.85);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.15s ease;
+}
+.qep-feedback-footer .qep-feedback-btn:hover {
+    background: rgba(20, 20, 20, 0.95);
+}

@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.15-remove-voice-input';
+const VERSION = '3.4.16-add-feedback-footer';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
