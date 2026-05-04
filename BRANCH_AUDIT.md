@@ -272,3 +272,97 @@ af7909b Add deployment fix guides for Firestore rules and PWA icons
 29fd947 Expand emotion lexicon across all 6 stages, add Overall stage
 c0b987c Add Texture stage with 25 emotions to sensory evaluation pipeline
 ```
+
+---
+
+# Annotations — added 2026-05-04 (Phase 0 diagnosis session)
+
+This section captures verdicts on branches investigated during the lexicon merge planning session. Branches not listed here remain `UNCLEAR` pending future investigation.
+
+## `claude/update-texture-emotions-r0kHi` — `SUPERSEDED`
+
+Earlier emotion-only attempt at lexicon expansion. Last touched 2026-04-07.
+
+**Why superseded:** Hardcodes form fields directly in `index.html` (+551 lines). The newer `Rn7s5` branch (six days more recent) takes the architecturally opposite approach — dynamic form generation from lexicon data via `regenerateTasteForm`. The two approaches are incompatible, not stackable. Dynamic generation scales to 242 attributes; hardcoding does not.
+
+**File overlap with Rn7s5:** All files in this branch are also in Rn7s5 except `claude-api.js` (+2 lines). Inspect those 2 lines before deleting the branch — if irrelevant, branch can be deleted from origin.
+
+**Action:** Do not merge. Verify `claude-api.js` 2-line diff is non-essential, then `git push origin --delete claude/update-texture-emotions-r0kHi`.
+
+## `claude/review-lexicon-structure-Rn7s5` — `KEEP-MERGE`
+
+Real lexicon expansion target. Last touched 2026-04-13. 16 commits, 22 files, 4,388 lines of churn.
+
+**What it contains:**
+- 7-stage attribute expansion: Appearance 28, Aroma 25, Front of Mouth 17, Mid/Rear Mouth 25, Texture 101, Aftertaste 25, Overall 21 — total 242
+- Emotion expansion across all 7 stages
+- Dynamic form generation (`regenerateTasteForm`)
+- Updates to all dependent files: `emotion-inference.js`, `schema-validation.js`, `industry-benchmarks.js`, `quick-entry.js`, `webhook-integration.js`, analytics, PDF export, import paths
+
+**Two commits flagged as already-live duplicates** per prior session handoff:
+- `912e8b7` — Remove Claude AI branding (already in main)
+- `85d009c` — Slider defaults 5 to 0 (already in main)
+
+These should be benign during merge — git will see the changes already present and no-op them — but watch for unexpected behavior.
+
+**Critical context:** Main currently has the 7-stage *skeleton* but not expanded content. `custom-lexicon.js` on main is 488 lines with `id: 'texture'` at line 70 and `id: 'overall'` at line 98 as empty stage shells. Rn7s5 fills these in. Conflicts are likely at exactly these line ranges.
+
+**High-risk files during merge:**
+- `industry-benchmarks.js` — prior APFS-truncation site; mandatory `tail -3` + `wc -l` + `node -c` verification
+- `app.js` — 504 lines of churn, may have diverged on main
+- `demo-mode.js` — 611 lines of churn
+- `batch-import.js` — 470 lines of churn; multiple other unmerged batch-import branches suggest main has churned here recently
+
+**Prerequisites before Phase 1:**
+- 20+ GiB free disk (`df -h /`)
+- Clean working tree on main
+- Successful `git fetch origin`
+
+**Action:** Merge per `LEXICON_MERGE_PLAN.md`.
+
+---
+
+# Annotations — added 2026-05-04 (Phase 0 diagnosis session)
+
+This section captures verdicts on branches investigated during the lexicon merge planning session. Branches not listed here remain `UNCLEAR` pending future investigation.
+
+## `claude/update-texture-emotions-r0kHi` — `SUPERSEDED`
+
+Earlier emotion-only attempt at lexicon expansion. Last touched 2026-04-07.
+
+**Why superseded:** Hardcodes form fields directly in `index.html` (+551 lines). The newer `Rn7s5` branch (six days more recent) takes the architecturally opposite approach — dynamic form generation from lexicon data via `regenerateTasteForm`. The two approaches are incompatible, not stackable. Dynamic generation scales to 242 attributes; hardcoding does not.
+
+**File overlap with Rn7s5:** All files in this branch are also in Rn7s5 except `claude-api.js` (+2 lines). Inspect those 2 lines before deleting the branch — if irrelevant, branch can be deleted from origin.
+
+**Action:** Do not merge. Verify `claude-api.js` 2-line diff is non-essential, then `git push origin --delete claude/update-texture-emotions-r0kHi`.
+
+## `claude/review-lexicon-structure-Rn7s5` — `KEEP-MERGE`
+
+Real lexicon expansion target. Last touched 2026-04-13. 16 commits, 22 files, 4,388 lines of churn.
+
+**What it contains:**
+- 7-stage attribute expansion: Appearance 28, Aroma 25, Front of Mouth 17, Mid/Rear Mouth 25, Texture 101, Aftertaste 25, Overall 21 — total 242
+- Emotion expansion across all 7 stages
+- Dynamic form generation (`regenerateTasteForm`)
+- Updates to all dependent files: `emotion-inference.js`, `schema-validation.js`, `industry-benchmarks.js`, `quick-entry.js`, `webhook-integration.js`, analytics, PDF export, import paths
+
+**Two commits flagged as already-live duplicates** per prior session handoff:
+- `912e8b7` — Remove Claude AI branding (already in main)
+- `85d009c` — Slider defaults 5 to 0 (already in main)
+
+These should be benign during merge — git will see the changes already present and no-op them — but watch for unexpected behavior.
+
+**Critical context:** Main currently has the 7-stage *skeleton* but not expanded content. `custom-lexicon.js` on main is 488 lines with `id: 'texture'` at line 70 and `id: 'overall'` at line 98 as empty stage shells. Rn7s5 fills these in. Conflicts are likely at exactly these line ranges.
+
+**High-risk files during merge:**
+- `industry-benchmarks.js` — prior APFS-truncation site; mandatory `tail -3` + `wc -l` + `node -c` verification
+- `app.js` — 504 lines of churn, may have diverged on main
+- `demo-mode.js` — 611 lines of churn
+- `batch-import.js` — 470 lines of churn; multiple other unmerged batch-import branches suggest main has churned here recently
+
+**Prerequisites before Phase 1:**
+- 20+ GiB free disk (`df -h /`)
+- Clean working tree on main
+- Successful `git fetch origin`
+
+**Action:** Merge per `LEXICON_MERGE_PLAN.md`.
