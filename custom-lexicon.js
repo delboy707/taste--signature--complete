@@ -113,7 +113,7 @@ const defaultLexicon = {
             name: 'Mid/Rear Mouth',
             order: 4,
             attributes: [
-{ id: 'sweetness-development', label: 'Sweetness Development', technicalTerm: 'Peak Sweetness Intensity', subCategory: 'taste_development', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Development of sweetness in mid palate' },
+                { id: 'sweetness-development', label: 'Sweetness Development', technicalTerm: 'Peak Sweetness Intensity', subCategory: 'taste_development', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Development of sweetness in mid palate' },
                 { id: 'sourness-acidity-development', label: 'Sourness/Acidity Development', technicalTerm: 'Peak Sourness Intensity', subCategory: 'taste_development', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Development of sourness in mid palate' },
                 { id: 'saltiness-development', label: 'Saltiness Development', technicalTerm: 'Peak Saltiness Intensity', subCategory: 'taste_development', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Development of saltiness in mid palate' },
                 { id: 'bitterness-development', label: 'Bitterness Development', technicalTerm: 'Peak Bitterness Intensity', subCategory: 'taste_development', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Development of bitterness in mid palate' },
