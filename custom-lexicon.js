@@ -87,13 +87,24 @@ const defaultLexicon = {
             name: 'Front of Mouth',
             order: 3,
             attributes: [
-                { id: 'sweetness', label: 'Sweetness', type: 'slider', min: 1, max: 10, unit: '', description: 'Sweet taste intensity' },
-                { id: 'sourness', label: 'Sourness', type: 'slider', min: 1, max: 10, unit: '', description: 'Sour/acidic taste' },
-                { id: 'saltiness', label: 'Saltiness', type: 'slider', min: 1, max: 10, unit: '', description: 'Salty taste intensity' },
-                { id: 'texture', label: 'Texture Impact', type: 'slider', min: 1, max: 10, unit: '', description: 'Initial mouthfeel' },
-                { id: 'acidity', label: 'Acidity', type: 'slider', min: 1, max: 10, unit: '', description: 'Sharp acidic notes' },
-                { id: 'spiciness', label: 'Spiciness/Heat', type: 'slider', min: 1, max: 10, unit: '', description: 'Heat and spice intensity' },
-                { id: 'overallIntensity', label: 'Overall Intensity', type: 'slider', min: 1, max: 10, unit: '', description: 'Total front palate impact' }
+                { id: 'sweetness', label: 'Sweetness', technicalTerm: 'Gustatory Sweetness', subCategory: 'basic_tastes', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Sweet taste intensity' },
+                { id: 'sourness-tartness', label: 'Sourness/Tartness', technicalTerm: 'Gustatory Acidity', subCategory: 'basic_tastes', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Sour or acidic taste intensity' },
+                { id: 'saltiness', label: 'Saltiness', technicalTerm: 'Gustatory Salinity', subCategory: 'basic_tastes', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Salty taste intensity' },
+                { id: 'bitterness', label: 'Bitterness', technicalTerm: 'Gustatory Bitterness', subCategory: 'basic_tastes', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Bitter taste intensity' },
+                { id: 'savouriness', label: 'Savouriness', technicalTerm: 'Umami', subCategory: 'basic_tastes', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Savoury or umami taste intensity' },
+                { id: 'spicy-heat', label: 'Spicy Heat', technicalTerm: 'Chemesthetic Pungency', subCategory: 'chemesthetic', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Heat and spice intensity' },
+                { id: 'cooling-sensation', label: 'Cooling Sensation', technicalTerm: 'Chemesthetic Cooling', subCategory: 'chemesthetic', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Cooling sensation in the mouth' },
+                { id: 'carbonation-bite', label: 'Carbonation Bite', technicalTerm: 'CO2 Chemesthetic Stimulation', subCategory: 'chemesthetic', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Biting sensation from carbonation' },
+                { id: 'tingling-numbing', label: 'Tingling/Numbing', technicalTerm: 'Trigeminal Paresthesia', subCategory: 'chemesthetic', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Tingling or numbing sensation' },
+                { id: 'first-hit-speed', label: 'First Hit Speed', technicalTerm: 'Taste Onset Velocity/T_onset', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Speed at which taste sensation arrives' },
+                { id: 'initial-impact-strength', label: 'Initial Impact Strength', technicalTerm: 'First-Bite Intensity', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Strength of the initial taste impact' },
+                { id: 'flavour-burst', label: 'Flavour Burst', technicalTerm: 'Rate of Flavour Development/R_inc', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Rate of flavour development on entry' },
+                { id: 'first-bite-texture', label: 'First-Bite Texture', technicalTerm: 'Initial Fracture/Resistance', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Textural resistance on first bite' },
+                { id: 'temperature-sensation', label: 'Temperature Sensation', technicalTerm: 'Thermal Perception Onset', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Initial temperature sensation in mouth' },
+                { id: 'initial-mouth-watering', label: 'Initial Mouth-Watering', technicalTerm: 'Salivation Response', subCategory: 'initial_impact', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Degree of salivation triggered' },
+                { id: 'overall-initial-impact', label: 'Overall Initial Impact', technicalTerm: 'Front-of-Mouth Intensity', subCategory: 'overall_front', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Total front palate impact' },
+                { id: 'taste-dominance-at-entry', label: 'Taste Dominance at Entry', technicalTerm: 'Initial Taste Sequence', subCategory: 'overall_front', type: 'slider', min: 0, max: 10, defaultValue: 0, unit: '', description: 'Which taste dominates on entry' }
+
             ],
             emotions: ['excitement', 'surprise', 'happiness', 'pleasure', 'interest', 'satisfaction', 'energized', 'delighted', 'amused', 'disappointed', 'disgusted', 'bored', 'confused', 'overwhelmed', 'upset', 'worried']
         },
