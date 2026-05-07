@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.17-lexicon-align';
+const VERSION = '3.4.18-slider-defaults';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
