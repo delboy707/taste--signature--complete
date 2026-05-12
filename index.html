@@ -2828,6 +2828,9 @@
         // Demo Modal Functions
         function openDemoModal() {
             const modal = document.getElementById('demo-modal');
+            /* QEP-DEMO-LAZYLOAD-START */
+            if (typeof window.qepLoadWistia === 'function') { window.qepLoadWistia(); }
+            /* QEP-DEMO-LAZYLOAD-END */
             modal.classList.add('active');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
@@ -2897,6 +2900,9 @@
             s2.type = 'module';
             document.head.appendChild(s2);
         }
+        /* QEP-INTRO-PROMOTE-START */
+        window.qepLoadWistia = loadWistiaScripts;
+        /* QEP-INTRO-PROMOTE-END */
 
         var modal   = document.getElementById('qep-intro-modal');
         var openBtn = document.getElementById('qep-intro-open');
