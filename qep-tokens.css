@@ -1,0 +1,120 @@
+/* ============================================================
+   QEP DESIGN TOKENS -- canonical source of truth
+   Version: 1.0.0  (2026-07-02)
+   Derived from: qep-platform-landing.html (approved design)
+
+   Distribution: copy this file verbatim into each app.
+   Never edit an app's local copy directly -- edit the master,
+   bump the version, re-copy. The version line above is the
+   integrity check when diffing across repos.
+
+   Consumers:
+     - tss-re1 (Brief Translator)      -> src/styles/qep-tokens.css
+     - qep-capture                     -> app/styles/qep-tokens.css
+     - taste-signature (vanilla JS)    -> css/qep-tokens.css
+   ============================================================ */
+
+:root {
+  /* ---------- COLOUR PRIMITIVES ---------- */
+  /* Ink scale (text / structure) */
+  --qep-ink:        #221E18;   /* primary text, dark surfaces */
+  --qep-ink-2:      #4A443B;   /* secondary text */
+  --qep-ink-3:      #736B5E;   /* tertiary text, muted labels */
+
+  /* Ground scale (backgrounds) */
+  --qep-cream:      #F7F3EA;   /* page background */
+  --qep-cream-2:    #FBF8F1;   /* raised cards on cream */
+  --qep-paper:      #FFFFFF;   /* highest surface, inputs */
+
+  /* Gold scale (brand accent) */
+  --qep-gold:        #C2871B;  /* primary accent -- oklch(0.72 0.15 75) */
+  --qep-gold-bright: #E3A93B;  /* accent on dark surfaces, hovers */
+  --qep-gold-deep:   #8A5E12;  /* accent text on light (AA contrast) */
+  --qep-gold-wash:   #F1E4C8;  /* tinted fills, selected states */
+
+  /* Lines */
+  --qep-line:       rgba(34, 30, 24, 0.12);  /* borders, dividers */
+  --qep-line-2:     rgba(34, 30, 24, 0.07);  /* hairlines */
+
+  /* ---------- SEVEN-STAGE SCALE ---------- */
+  /* One colour per consumption stage. Used by: landing wheel,
+     Taste Signature charts, Capture consumer flow, Translator
+     Signature Arc. Do not reorder -- index = stage number. */
+  --qep-stage-1: #ECC976;   /* Appearance */
+  --qep-stage-2: #E3A93B;   /* Aroma */
+  --qep-stage-3: #D7942C;   /* Front of Mouth */
+  --qep-stage-4: #C67C24;   /* Mid / Rear Mouth */
+  --qep-stage-5: #B26420;   /* Texture */
+  --qep-stage-6: #9C4F22;   /* Aftertaste */
+  --qep-stage-7: #7A3E22;   /* Overall */
+
+  /* Text colour that stays readable on each stage colour:
+     stages 1-2 are light (use ink), 3-7 are dark (use cream). */
+  --qep-on-stage-light: #5A4410;
+  --qep-on-stage-dark:  #FBF8F1;
+
+  /* ---------- SEMANTIC ALIASES ---------- */
+  /* Apps should reach for these first; primitives are fallback. */
+  --qep-bg:             var(--qep-cream);
+  --qep-surface:        var(--qep-cream-2);
+  --qep-surface-high:   var(--qep-paper);
+  --qep-text:           var(--qep-ink);
+  --qep-text-secondary: var(--qep-ink-2);
+  --qep-text-muted:     var(--qep-ink-3);
+  --qep-accent:         var(--qep-gold);
+  --qep-accent-text:    var(--qep-gold-deep);   /* gold as TEXT on light bg */
+  --qep-border:         var(--qep-line);
+
+  /* Inverted (dark) blocks -- CTA bands, quote cards */
+  --qep-inverse-bg:     var(--qep-ink);
+  --qep-inverse-text:   var(--qep-cream);
+  --qep-inverse-accent: var(--qep-gold-bright);
+
+  /* Functional states (derived from palette, not imported blues/reds) */
+  --qep-success:        #4F7A3E;
+  --qep-warning:        var(--qep-gold-deep);
+  --qep-danger:         #9C3A22;
+
+  /* ---------- TYPOGRAPHY ---------- */
+  /* Roles are the rule, not a suggestion:
+     serif = headlines + long-form body (warmth)
+     sans  = UI chrome, buttons, labels, nav (confidence)
+     mono  = DATA ONLY -- numbers, indices, codes, column counts */
+  --qep-font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --qep-font-sans:  "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --qep-font-mono:  "IBM Plex Mono", "SF Mono", Consolas, monospace;
+
+  /* Type scale (rem-based, 1rem = 16px) */
+  --qep-text-xs:   0.75rem;    /* 12px -- mono labels, eyebrows */
+  --qep-text-sm:   0.875rem;   /* 14px -- UI chrome, buttons */
+  --qep-text-base: 1rem;       /* 16px -- dense UI body */
+  --qep-text-md:   1.125rem;   /* 18px -- reading body */
+  --qep-text-lg:   1.4375rem;  /* 23px -- card titles */
+  --qep-text-xl:   1.875rem;   /* 30px -- section headings min */
+  --qep-text-2xl:  2.625rem;   /* 42px -- section headings max */
+
+  --qep-tracking-label: 0.14em; /* uppercase mono eyebrows/labels */
+
+  /* ---------- SHAPE & SPACE ---------- */
+  --qep-radius:      14px;     /* cards, panels */
+  --qep-radius-sm:   10px;     /* buttons, inputs */
+  --qep-radius-lg:   22px;     /* hero bands, feature blocks */
+
+  --qep-space-1: 4px;
+  --qep-space-2: 8px;
+  --qep-space-3: 12px;
+  --qep-space-4: 16px;
+  --qep-space-5: 24px;
+  --qep-space-6: 32px;
+  --qep-space-7: 48px;
+  --qep-space-8: 64px;
+
+  /* ---------- ELEVATION & MOTION ---------- */
+  --qep-shadow-card:  0 18px 40px -28px rgba(34, 30, 24, 0.5);
+  --qep-ease:         cubic-bezier(0.2, 0.6, 0.2, 1);
+  --qep-duration:     180ms;
+
+  /* ---------- FOCUS (accessibility) ---------- */
+  --qep-focus-ring:   2px solid var(--qep-gold-deep);
+  --qep-focus-offset: 3px;
+}

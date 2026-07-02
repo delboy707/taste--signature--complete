@@ -2,11 +2,12 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.4.21-watch-demo-lazyload';
+const VERSION = '3.5.0-qep-tokens';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
 const urlsToCache = [
+  '/qep-tokens.css',
   '/styles.css',
   '/mobile-responsive.css',
   '/quick-entry-styles.css',
