@@ -89,12 +89,12 @@ class TemplatesManager {
         const banner = document.createElement('div');
         banner.id = 'template-expert-banner';
         banner.style.cssText = `
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #C2871B 0%, #8A5E12 100%);
             color: white;
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(194, 135, 27, 0.3);
         `;
 
         banner.innerHTML = `
@@ -160,8 +160,8 @@ class TemplatesManager {
         const helper = document.createElement('div');
         helper.className = 'template-guidance';
         helper.style.cssText = `
-            background: #f8f9ff;
-            border-left: 4px solid #667eea;
+            background: #FBF8F1;
+            border-left: 4px solid #C2871B;
             padding: 15px;
             margin-top: 10px;
             border-radius: 6px;
@@ -171,14 +171,14 @@ class TemplatesManager {
         const attributesList = guidance.keyAttributes.map(attr => `<li>${attr}</li>`).join('');
 
         helper.innerHTML = `
-            <div style="font-weight: bold; color: #667eea; margin-bottom: 8px;">
+            <div style="font-weight: bold; color: #C2871B; margin-bottom: 8px;">
                 🎯 Key Attributes to Evaluate:
             </div>
             <ul style="margin: 5px 0 10px 20px; line-height: 1.6;">
                 ${attributesList}
             </ul>
             <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 10px;">
-                <strong style="color: #764ba2;">💡 Expert Tip:</strong>
+                <strong style="color: #8A5E12;">💡 Expert Tip:</strong>
                 <span style="color: #555;">${guidance.expertTips}</span>
             </div>
         `;
@@ -195,13 +195,13 @@ class TemplatesManager {
             suggestionsDiv.style.cssText = `
                 margin-top: 8px;
                 font-size: 12px;
-                color: #667eea;
+                color: #C2871B;
             `;
             suggestionsDiv.innerHTML = `
                 <strong>💡 Common need states for this category:</strong>
                 <div style="margin-top: 5px;">
                     ${template.commonNeedStates.map(ns =>
-                        `<span style="display: inline-block; background: #f0f4ff; padding: 4px 10px; margin: 2px; border-radius: 12px; cursor: pointer;"
+                        `<span style="display: inline-block; background: #F1E4C8; padding: 4px 10px; margin: 2px; border-radius: 12px; cursor: pointer;"
                                onclick="document.getElementById('experience-need-state').value='${ns}'">${ns}</span>`
                     ).join('')}
                 </div>
@@ -222,13 +222,13 @@ class TemplatesManager {
             suggestionsDiv.style.cssText = `
                 margin-top: 8px;
                 font-size: 12px;
-                color: #667eea;
+                color: #C2871B;
             `;
             suggestionsDiv.innerHTML = `
                 <strong>💡 Common emotional triggers for this category:</strong>
                 <div style="margin-top: 5px;">
                     ${template.typicalEmotionalTriggers.map(trigger =>
-                        `<span style="display: inline-block; background: #f0f4ff; padding: 4px 10px; margin: 2px; border-radius: 12px; cursor: pointer;"
+                        `<span style="display: inline-block; background: #F1E4C8; padding: 4px 10px; margin: 2px; border-radius: 12px; cursor: pointer;"
                                onclick="document.getElementById('experience-emotional-triggers').value+=document.getElementById('experience-emotional-triggers').value ? ', ${trigger}' : '${trigger}'">${trigger}</span>`
                     ).join('')}
                 </div>
@@ -291,11 +291,11 @@ class TemplatesManager {
         modal.style.display = 'block';
 
         const templatesHTML = this.availableTemplates.map(t => `
-            <div class="template-card" style="border: 2px solid #e0e7ff; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;"
-                 onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9ff';"
-                 onmouseout="this.style.borderColor='#e0e7ff'; this.style.background='white';"
+            <div class="template-card" style="border: 2px solid #F1E4C8; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;"
+                 onmouseover="this.style.borderColor='#C2871B'; this.style.background='#FBF8F1';"
+                 onmouseout="this.style.borderColor='#F1E4C8'; this.style.background='white';"
                  onclick="window.templatesManager.selectAndApplyTemplate('${t.id}')">
-                <h3 style="margin: 0 0 10px 0; color: #667eea;">${t.name}</h3>
+                <h3 style="margin: 0 0 10px 0; color: #C2871B;">${t.name}</h3>
                 <p style="margin: 0; color: #666; font-size: 13px;">Category: ${t.category}</p>
                 <p style="margin: 5px 0 0 0; font-size: 11px; color: #999;">Expert guidance with 30 years of sensory science</p>
             </div>

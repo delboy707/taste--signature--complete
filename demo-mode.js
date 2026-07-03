@@ -1802,7 +1802,7 @@ class DemoMode {
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #C2871B 0%, #8A5E12 100%);
             color: white;
             padding: 10px;
             text-align: center;
@@ -1815,7 +1815,7 @@ class DemoMode {
             <strong>🎭 Demo Mode Active</strong> -
             You're viewing sample data.
             <button onclick="window.demoMode.deactivateDemoMode(); location.reload();"
-                    style="margin-left: 15px; padding: 5px 15px; background: white; color: #667eea; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    style="margin-left: 15px; padding: 5px 15px; background: white; color: #C2871B; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                 Exit Demo Mode
             </button>
         `;

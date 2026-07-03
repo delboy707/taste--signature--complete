@@ -188,7 +188,7 @@ searchStyles.textContent = `
 }
 
 .search-input-wrapper input:focus {
-    border-color: #667eea;
+    border-color: #C2871B;
     outline: none;
 }
 

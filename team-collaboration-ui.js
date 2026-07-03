@@ -31,28 +31,28 @@ function renderTeamCollaborationDashboard() {
 
             <div class="team-stats-grid">
                 <div class="team-stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">👥</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #C2871B 0%, #8A5E12 100%);">👥</div>
                     <div class="stat-content">
                         <div class="stat-value">${stats.totalMembers}</div>
                         <div class="stat-label">Total Members</div>
                     </div>
                 </div>
                 <div class="team-stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">🔑</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #E3A93B 0%, #f5576c 100%);">🔑</div>
                     <div class="stat-content">
                         <div class="stat-value">${stats.admins}</div>
                         <div class="stat-label">Admins</div>
                     </div>
                 </div>
                 <div class="team-stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🔬</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #E3A93B 0%, #ECC976 100%);">🔬</div>
                     <div class="stat-content">
                         <div class="stat-value">${stats.analysts}</div>
                         <div class="stat-label">Analysts</div>
                     </div>
                 </div>
                 <div class="team-stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">👁️</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4F7A3E 0%, #4F7A3E 100%);">👁️</div>
                     <div class="stat-content">
                         <div class="stat-value">${stats.viewers}</div>
                         <div class="stat-label">Viewers</div>
@@ -70,9 +70,9 @@ function renderTeamCollaborationDashboard() {
     team.members.forEach(member => {
         const isCurrentUser = member.id === currentUser.id;
         const roleColor = {
-            admin: '#667eea',
-            analyst: '#4facfe',
-            viewer: '#43e97b'
+            admin: '#C2871B',
+            analyst: '#E3A93B',
+            viewer: '#4F7A3E'
         }[member.role] || '#999';
 
         html += `
@@ -117,7 +117,7 @@ function renderTeamCollaborationDashboard() {
             <h3>Role Permissions</h3>
             <div class="permissions-grid">
                 <div class="permission-card">
-                    <h4 style="color: #667eea;">👑 Admin</h4>
+                    <h4 style="color: #C2871B;">👑 Admin</h4>
                     <ul>
                         <li>✅ View all products</li>
                         <li>✅ Create & edit products</li>
@@ -128,7 +128,7 @@ function renderTeamCollaborationDashboard() {
                     </ul>
                 </div>
                 <div class="permission-card">
-                    <h4 style="color: #4facfe;">🔬 Analyst</h4>
+                    <h4 style="color: #E3A93B;">🔬 Analyst</h4>
                     <ul>
                         <li>✅ View all products</li>
                         <li>✅ Create & edit products</li>
@@ -139,7 +139,7 @@ function renderTeamCollaborationDashboard() {
                     </ul>
                 </div>
                 <div class="permission-card">
-                    <h4 style="color: #43e97b;">👁️ Viewer</h4>
+                    <h4 style="color: #4F7A3E;">👁️ Viewer</h4>
                     <ul>
                         <li>✅ View shared products only</li>
                         <li>❌ Create or edit</li>

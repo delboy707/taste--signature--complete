@@ -994,13 +994,13 @@ function renderShapeOfTaste(exp) {
             datasets: [{
                 label: 'Intensity Journey',
                 data: intensities,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderColor: '#C2871B',
+                backgroundColor: 'rgba(194, 135, 27, 0.1)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 6,
-                pointBackgroundColor: '#667eea',
+                pointBackgroundColor: '#C2871B',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
             }]
@@ -1072,13 +1072,13 @@ function renderEmotionalJourney(exp) {
             datasets: [{
                 label: 'Emotional Response',
                 data: emotionalData,
-                borderColor: '#764ba2',
-                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                borderColor: '#8A5E12',
+                backgroundColor: 'rgba(138, 94, 18, 0.1)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 6,
-                pointBackgroundColor: '#764ba2',
+                pointBackgroundColor: '#8A5E12',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2
             }]
@@ -1138,7 +1138,7 @@ function renderNeedStateChart() {
             labels: ['Reward', 'Escape', 'Rejuvenation', 'Sociability'],
             datasets: [{
                 data: Object.values(needStateCounts),
-                backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe']
+                backgroundColor: window.QEP_CHART_PALETTE.slice(0, 4)
             }]
         },
         options: {
@@ -1185,7 +1185,7 @@ function renderTriggersChart() {
             datasets: [{
                 label: 'Average Intensity',
                 data: Object.values(avgTriggers),
-                backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe']
+                backgroundColor: window.QEP_CHART_PALETTE.slice(0, 4)
             }]
         },
         options: {
@@ -1369,7 +1369,7 @@ function renderComparisonShapeChart(products) {
     destroyChart('comparisonShape');
 
     const stages = ['Appearance', 'Aroma', 'Front', 'Mid/Rear', 'Texture', 'Aftertaste'];
-    const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
+    const colors = window.QEP_CHART_PALETTE.slice(0, 4);
 
     const datasets = products.map((exp, idx) => ({
         label: exp.productInfo.name,
@@ -1425,7 +1425,7 @@ function renderComparisonTriggers(products) {
 
     destroyChart('comparisonTriggers');
 
-    const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe'];
+    const colors = window.QEP_CHART_PALETTE.slice(0, 4);
 
     const datasets = products.map((p, idx) => ({
         label: p.productInfo.name,
@@ -1646,8 +1646,8 @@ function renderComparisonEmotionRadar(products) {
 
     // Define colors for each product (matching other charts)
     const colors = [
-        { border: '#667eea', bg: 'rgba(102, 126, 234, 0.2)' },
-        { border: '#764ba2', bg: 'rgba(118, 75, 162, 0.2)' },
+        { border: '#E3A93B', bg: 'rgba(227, 169, 59, 0.2)' },
+        { border: '#C67C24', bg: 'rgba(198, 124, 36, 0.2)' },
         { border: '#f093fb', bg: 'rgba(240, 147, 251, 0.2)' },
         { border: '#4facfe', bg: 'rgba(79, 172, 254, 0.2)' }
     ];
@@ -1703,7 +1703,7 @@ function renderComparisonEmotionRadar(products) {
                             size: 12,
                             weight: '600'
                         },
-                        color: '#2c3e50'
+                        color: '#221E18'
                     },
                     grid: {
                         color: 'rgba(0, 0, 0, 0.1)'
@@ -1790,9 +1790,9 @@ function renderComparisonEmotionHeatmap(products) {
             <strong style="display: block; margin-bottom: 10px;">Intensity Scale:</strong>
             <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
                 <span style="padding: 8px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.85rem;">0-1 Low</span>
-                <span style="padding: 8px 12px; background: #bbdefb; color: #1565c0; border-radius: 4px; font-size: 0.85rem;">2-4 Moderate</span>
-                <span style="padding: 8px 12px; background: #64b5f6; color: #0d47a1; border-radius: 4px; font-size: 0.85rem;">5-7 Strong</span>
-                <span style="padding: 8px 12px; background: #2196f3; color: white; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">8-10 Very Strong</span>
+                <span style="padding: 8px 12px; background: #F1E4C8; color: #8A5E12; border-radius: 4px; font-size: 0.85rem;">2-4 Moderate</span>
+                <span style="padding: 8px 12px; background: #E3A93B; color: #5A4410; border-radius: 4px; font-size: 0.85rem;">5-7 Strong</span>
+                <span style="padding: 8px 12px; background: #8A5E12; color: white; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">8-10 Very Strong</span>
             </div>
             <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-light);">
                 Hover over cells to see exact values. Darker blue indicates stronger emotional intensity.
@@ -2053,14 +2053,7 @@ function renderEmotionalMap(exp) {
     });
 
     // Extended color palette for larger emotion sets
-    const colors = [
-        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b',
-        '#fa709a', '#fee140', '#a18cd1', '#fbc2eb', '#84fab0', '#8fd3f4',
-        '#ff9a9e', '#fecfef', '#ffecd2', '#fcb69f', '#a1c4fd', '#c2e9fb',
-        '#d4fc79', '#96e6a1', '#e0c3fc', '#8ec5fc', '#f5576c', '#4facfe',
-        '#667eea', '#764ba2', '#f093fb', '#43e97b', '#00f2fe', '#fa709a',
-        '#fee140'
-    ];
+    const colors = window.QEP_CHART_PALETTE;
 
     // Create datasets for each emotion type
     const datasets = Array.from(emotionTypes).map((emotion, idx) => {
@@ -2128,13 +2121,13 @@ function renderShapeOfEmotion(exp) {
             datasets: [{
                 label: 'Average Emotional Intensity',
                 data: Object.values(avgByStage),
-                borderColor: '#764ba2',
-                backgroundColor: 'rgba(118, 75, 162, 0.2)',
+                borderColor: '#8A5E12',
+                backgroundColor: 'rgba(138, 94, 18, 0.2)',
                 borderWidth: 4,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 8,
-                pointBackgroundColor: '#764ba2',
+                pointBackgroundColor: '#8A5E12',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 3
             }]
@@ -2195,10 +2188,10 @@ function renderEmotionalProfileRadar(exp) {
             datasets: [{
                 label: 'Emotional Profile',
                 data: Object.values(emotionAverages),
-                backgroundColor: 'rgba(118, 75, 162, 0.2)',
-                borderColor: '#764ba2',
+                backgroundColor: 'rgba(138, 94, 18, 0.2)',
+                borderColor: '#8A5E12',
                 borderWidth: 2,
-                pointBackgroundColor: '#764ba2',
+                pointBackgroundColor: '#8A5E12',
                 pointBorderColor: '#fff',
                 pointRadius: 4
             }]
@@ -2527,12 +2520,7 @@ function renderPortfolioCluster() {
     });
 
     // Color by need state
-    const needStateColors = {
-        'reward': '#667eea',
-        'escape': '#764ba2',
-        'rejuvenation': '#4facfe',
-        'sociability': '#f093fb'
-    };
+    const needStateColors = window.QEP_NEED_STATE_COLORS;
 
     const datasets = Object.keys(needStateColors).map(needState => {
         const points = productPoints.filter(p => p.needState === needState);

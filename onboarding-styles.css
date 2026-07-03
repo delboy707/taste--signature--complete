@@ -48,7 +48,7 @@
 .onboarding-header {
     text-align: center;
     padding: 40px 30px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%);
     color: white;
     border-radius: 20px 20px 0 0;
 }
@@ -116,7 +116,7 @@
 }
 
 .goal-card:hover {
-    border-color: #667eea;
+    border-color: var(--qep-gold);
     background: #f0f4ff;
     transform: translateX(4px);
 }
@@ -145,7 +145,7 @@
 
 .goal-arrow {
     font-size: 20px;
-    color: #667eea;
+    color: var(--qep-gold);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -176,9 +176,9 @@
 }
 
 .category-chip:hover {
-    border-color: #667eea;
+    border-color: var(--qep-gold);
     background: #f0f4ff;
-    color: #667eea;
+    color: var(--qep-gold);
     transform: scale(1.05);
 }
 
@@ -205,7 +205,7 @@
 }
 
 .import-option:hover {
-    border-color: #667eea;
+    border-color: var(--qep-gold);
     background: #f0f4ff;
 }
 
@@ -272,7 +272,7 @@
 .onboarding-back {
     background: none;
     border: none;
-    color: #667eea;
+    color: var(--qep-gold);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;

@@ -396,13 +396,13 @@ function generatePortfolioSummaryReport() {
 
         .report-header {
             text-align: center;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #C2871B;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
 
         .report-header h1 {
-            color: #667eea;
+            color: #C2871B;
             margin: 0 0 10px 0;
             font-size: 28px;
         }
@@ -415,7 +415,7 @@ function generatePortfolioSummaryReport() {
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            background: linear-gradient(135deg, #F1E4C8 0%, #FBF8F1 100%);
             padding: 20px;
             border-radius: 8px;
             text-align: center;
@@ -424,7 +424,7 @@ function generatePortfolioSummaryReport() {
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: #667eea;
+            color: #C2871B;
             margin: 10px 0;
         }
 
@@ -441,7 +441,7 @@ function generatePortfolioSummaryReport() {
         }
 
         .product-summary-table th {
-            background: #667eea;
+            background: #C2871B;
             color: white;
             padding: 12px;
             text-align: left;
@@ -510,7 +510,7 @@ function generatePortfolioSummaryReport() {
                     <td><strong>${exp.productInfo.name}</strong></td>
                     <td>${exp.productInfo.brand}</td>
                     <td>${exp.productInfo.category}</td>
-                    <td style="font-weight: 600; color: #667eea;">${calculateOverallScore(exp).toFixed(1)}</td>
+                    <td style="font-weight: 600; color: #C2871B;">${calculateOverallScore(exp).toFixed(1)}</td>
                     <td>${new Date(exp.timestamp).toLocaleDateString()}</td>
                 </tr>
             `).join('')}
@@ -523,7 +523,7 @@ function generatePortfolioSummaryReport() {
     </div>
 
     <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
-        <button onclick="window.print()" style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600;">
+        <button onclick="window.print()" style="padding: 12px 24px; background: #C2871B; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600;">
             Print / Save as PDF
         </button>
         <button onclick="window.close()" style="padding: 12px 24px; background: #999; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; margin-left: 10px;">

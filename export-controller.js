@@ -242,7 +242,7 @@ function showExportNotification(message, type = 'info') {
         top: 80px;
         right: 20px;
         padding: 15px 20px;
-        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#667eea'};
+        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#C2871B'};
         color: white;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);

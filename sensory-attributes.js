@@ -450,16 +450,47 @@ const TEXTURE_SUB_CATEGORY_ORDER = [
     'integrated_multidimensional'
 ];
 
-// Stage color palette (7 stages)
-const STAGE_COLORS = {
-    appearance: '#667eea',
-    aroma: '#764ba2',
-    frontMouth: '#f093fb',
-    midRearMouth: '#f5576c',
-    texture: '#4facfe',
-    aftertaste: '#00f2fe',
-    overall: '#43e97b'
+// Stage color palette (7 stages) - read from QEP tokens (qep-tokens.css),
+// single source of truth. Fallbacks guard against a missing stylesheet.
+const QEP_STAGE_FALLBACK = ['#ECC976', '#E3A93B', '#D7942C', '#C67C24', '#B26420', '#9C4F22', '#7A3E22'];
+function qepStageColors() {
+    const cs = getComputedStyle(document.documentElement);
+    const stage = function(n) {
+        const v = cs.getPropertyValue('--qep-stage-' + n).trim();
+        return v || QEP_STAGE_FALLBACK[n - 1];
+    };
+    return {
+        appearance: stage(1),
+        aroma: stage(2),
+        frontMouth: stage(3),
+        midRearMouth: stage(4),
+        texture: stage(5),
+        aftertaste: stage(6),
+        overall: stage(7)
+    };
+}
+const STAGE_COLORS = qepStageColors();
+
+// Categorical chart palette: warm-weighted, mutually distinct (QEP curated)
+const QEP_CHART_PALETTE = [
+    '#ECC976', '#E3A93B', '#D7942C', '#C67C24', '#B26420', '#9C4F22', '#7A3E22',
+    '#C2871B', '#4F7A3E', '#9C3A22', '#7A8C4E', '#C4693B', '#5A4410', '#A67C52',
+    '#8C7B66', '#D9B98A', '#6B4E3D', '#C9A34E', '#E0A96D', '#B5651D',
+    '#4E5D6B', '#6E5A6E', '#7A8B99', '#556B5D', '#8A8FA3'
+];
+
+// Need-state colours (semantic - must stay mutually distinct)
+const QEP_NEED_STATE_COLORS = {
+    'reward': '#C2871B',
+    'escape': '#7A3E22',
+    'rejuvenation': '#4F7A3E',
+    'sociability': '#9C3A22'
 };
+
+if (typeof window !== 'undefined') {
+    window.QEP_CHART_PALETTE = QEP_CHART_PALETTE;
+    window.QEP_NEED_STATE_COLORS = QEP_NEED_STATE_COLORS;
+}
 
 // Make available globally
 if (typeof window !== 'undefined') {

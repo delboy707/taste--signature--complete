@@ -10,7 +10,7 @@
     top: 12px;
     left: 12px;
     z-index: 1001;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.3);
     padding: 10px 18px;
@@ -18,7 +18,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 20px rgba(194, 135, 27, 0.5), 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.3s;
     display: flex;
     align-items: center;
@@ -45,20 +45,20 @@
 
 .mobile-menu-toggle:active {
     transform: scale(0.95);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(194, 135, 27, 0.3);
 }
 
 .mobile-menu-toggle:hover {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 8px 24px rgba(194, 135, 27, 0.5);
 }
 
 /* Add subtle pulse animation to draw attention */
 @keyframes menuPulse {
     0%, 100% {
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 6px 20px rgba(194, 135, 27, 0.4);
     }
     50% {
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        box-shadow: 0 6px 20px rgba(194, 135, 27, 0.6);
     }
 }
 
@@ -670,7 +670,7 @@ body.menu-open .mobile-menu-toggle .menu-icon {
 }
 
 .camera-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%);
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -823,7 +823,7 @@ body.menu-open .mobile-menu-toggle .menu-icon {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%);
     color: white;
 }
 

@@ -421,8 +421,8 @@ function renderPreferenceMapChart() {
                     label: d.productName,
                     r: Math.sqrt(d.sampleSize) * 2 // Size by sample size
                 })),
-                backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                borderColor: '#667eea',
+                backgroundColor: 'rgba(194, 135, 27, 0.6)',
+                borderColor: '#C2871B',
                 borderWidth: 2
             }]
         },

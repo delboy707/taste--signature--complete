@@ -7,8 +7,8 @@
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(102, 126, 234, 0.2);
-    border-top-color: #667eea;
+    border: 3px solid rgba(194, 135, 27, 0.2);
+    border-top-color: var(--qep-gold);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -36,7 +36,7 @@
 }
 
 .page-loader-text {
-    color: #667eea;
+    color: var(--qep-gold);
     font-weight: 500;
 }
 
@@ -201,7 +201,7 @@
 .toast-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
 .toast-error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
 .toast-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.toast-info { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.toast-info { background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%); }
 
 .toast-close {
     background: none;
@@ -227,7 +227,7 @@
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%);
     border-radius: 3px;
     transition: width 0.3s ease;
 }
@@ -247,7 +247,7 @@
 
 .progress-circle-fill {
     fill: none;
-    stroke: #667eea;
+    stroke: var(--qep-gold);
     stroke-width: 6;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.5s ease;
@@ -276,8 +276,8 @@
 /* Input focus */
 input:focus, textarea:focus, select:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    border-color: var(--qep-gold);
+    box-shadow: 0 0 0 3px rgba(194, 135, 27, 0.2);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -289,7 +289,7 @@ input:focus, textarea:focus, select:focus {
 
 .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(194, 135, 27, 0.4);
 }
 
 .btn-secondary:hover {

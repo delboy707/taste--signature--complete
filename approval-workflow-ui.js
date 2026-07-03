@@ -90,7 +90,7 @@ function renderApprovalCard(approval, context) {
         pending: '#ff9800',
         approved: '#4caf50',
         rejected: '#e74c3c',
-        needs_changes: '#2196f3'
+        needs_changes: '#8A5E12'
     };
 
     const statusIcons = {

@@ -722,15 +722,15 @@ let autoEvalState = {
  */
 function renderAutoEvalToggle() {
     return `
-        <div class="auto-eval-toggle" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; border: 1px solid #93c5fd;">
+        <div class="auto-eval-toggle" style="margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #F1E4C8 0%, #F1E4C8 100%); border-radius: 12px; border: 1px solid #E3A93B;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <label class="toggle-switch">
                     <input type="checkbox" id="auto-eval-toggle" ${autoEvalState.enabled ? 'checked' : ''} onchange="toggleAutoEval(this.checked)">
                     <span class="toggle-slider"></span>
                 </label>
                 <div>
-                    <strong style="color: #1e40af;">🤖 Auto-Evaluation</strong>
-                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #3b82f6;">
+                    <strong style="color: #8A5E12;">🤖 Auto-Evaluation</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #8A5E12;">
                         Automatically infer emotions from sensory data
                     </p>
                 </div>
@@ -787,7 +787,7 @@ function renderAutoEvalPreviewSection() {
                 </div>
             </div>
 
-            <div class="data-type-badge" style="display: inline-block; padding: 8px 16px; background: #1e40af; color: white; border-radius: 20px; font-size: 13px; margin-bottom: 16px;">
+            <div class="data-type-badge" style="display: inline-block; padding: 8px 16px; background: #8A5E12; color: white; border-radius: 20px; font-size: 13px; margin-bottom: 16px;">
                 📊 Data Type: <strong>${formatDataType(preview.dataType)}</strong>
             </div>
 
@@ -1043,8 +1043,8 @@ function showImportSummaryModal(results) {
                         <div style="font-size: 32px; font-weight: bold; color: ${results.failed > 0 ? '#ef4444' : '#9ca3af'};">${results.failed}</div>
                         <div style="font-size: 14px; color: #6b7280;">Failed</div>
                     </div>
-                    <div style="background: #eff6ff; padding: 16px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${Math.round(results.autoEvalStats.averageConfidence * 100)}%</div>
+                    <div style="background: #F1E4C8; padding: 16px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: bold; color: #8A5E12;">${Math.round(results.autoEvalStats.averageConfidence * 100)}%</div>
                         <div style="font-size: 14px; color: #6b7280;">Avg Confidence</div>
                     </div>
                     <div style="background: ${results.autoEvalStats.warningCount > 0 ? '#fef3c7' : '#f3f4f6'}; padding: 16px; border-radius: 12px;">
@@ -1085,9 +1085,9 @@ function closeImportSummaryModal() {
 
 function renderQEPTemplateSection() {
   return '' +
-    '<div class="qep-template-panel" style="margin-top:16px;padding:16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:12px;border:1px solid #7dd3fc;">' +
-      '<h5 style="margin:0 0 8px 0;color:#0c4a6e;">QEP Taste Signature - Full Template</h5>' +
-      '<p style="margin:0 0 12px 0;font-size:13px;color:#075985;">' +
+    '<div class="qep-template-panel" style="margin-top:16px;padding:16px;background:linear-gradient(135deg,#FBF8F1 0%,#FBF8F1 100%);border-radius:12px;border:1px solid #E3A93B;">' +
+      '<h5 style="margin:0 0 8px 0;color:#5A4410;">QEP Taste Signature - Full Template</h5>' +
+      '<p style="margin:0 0 12px 0;font-size:13px;color:#8A5E12;">' +
         'Download the full 262-column QEP template with all 7 stages, 242 attributes and stage emotions. ' +
         'The template is detected automatically on upload.' +
       '</p>' +
@@ -1247,8 +1247,8 @@ function showQEPImportResultPanel(ctx) {
     html += '<div style="background:' + (r.failed > 0 ? "#fef2f2" : "#f3f4f6") + ';padding:16px;border-radius:8px;text-align:center;">';
     html += '<div style="font-size:28px;font-weight:bold;color:' + (r.failed > 0 ? "#ef4444" : "#9ca3af") + ';">' + r.failed + '</div>';
     html += '<div style="font-size:12px;color:#6b7280;">Failed</div></div>';
-    html += '<div style="background:#eff6ff;padding:16px;border-radius:8px;text-align:center;">';
-    html += '<div style="font-size:28px;font-weight:bold;color:#3b82f6;">' + s.attributesFound + '</div>';
+    html += '<div style="background:#F1E4C8;padding:16px;border-radius:8px;text-align:center;">';
+    html += '<div style="font-size:28px;font-weight:bold;color:#8A5E12;">' + s.attributesFound + '</div>';
     html += '<div style="font-size:12px;color:#6b7280;">Attributes / ' + s.attributesExpected + '</div></div>';
     html += '<div style="background:' + (ctx.parseResult.warnings.length > 0 ? "#fef3c7" : "#f3f4f6") + ';padding:16px;border-radius:8px;text-align:center;">';
     html += '<div style="font-size:28px;font-weight:bold;color:' + (ctx.parseResult.warnings.length > 0 ? "#f59e0b" : "#9ca3af") + ';">' + ctx.parseResult.warnings.length + '</div>';

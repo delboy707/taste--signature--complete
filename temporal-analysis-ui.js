@@ -292,11 +292,11 @@ function renderSingleTimeSeriesChart(chartId, series) {
             datasets: [{
                 label: series.attributeLabel,
                 data: data,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderColor: '#C2871B',
+                backgroundColor: 'rgba(194, 135, 27, 0.1)',
                 borderWidth: 2,
                 pointRadius: 4,
-                pointBackgroundColor: '#667eea',
+                pointBackgroundColor: '#C2871B',
                 tension: 0.1
             }]
         },
