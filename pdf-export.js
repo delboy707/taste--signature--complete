@@ -5,7 +5,7 @@ class PDFExporter {
     constructor() {
         this.jsPDF = window.jspdf?.jsPDF;
         this.companyData = null;
-        this.brandColor = '#667eea'; // Default brand color
+        this.brandColor = '#C2871B'; // QEP gold
         this.logoDataUrl = null;
     }
 
@@ -24,7 +24,7 @@ class PDFExporter {
             'dairy': '#90CDF4'
         };
 
-        this.brandColor = industryColors[companyData?.industry] || '#667eea';
+        this.brandColor = '#C2871B'; // QEP gold - single brand colour, industry theming removed
     }
 
     /**
@@ -40,8 +40,8 @@ class PDFExporter {
         yPos = this.addHeader(doc, pageWidth, yPos, 'Product Insight Report');
 
         // Product Information Section
-        yPos = this.addSection(doc, yPos, 'Product Information', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Product Information', (sectionY) => {
+            let y = sectionY;
             doc.setFontSize(11);
             doc.text(`Product: ${experience.productInfo.name}`, 20, y);
             y += 7;
@@ -56,8 +56,8 @@ class PDFExporter {
         });
 
         // Sensory Profile Section
-        yPos = this.addSection(doc, yPos, 'Sensory Profile', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Sensory Profile', (sectionY) => {
+            let y = sectionY;
 
             // Create sensory attributes table
             // Build texture summary for PDF
@@ -97,8 +97,8 @@ class PDFExporter {
         });
 
         // Emotional Profile Section
-        yPos = this.addSection(doc, yPos, 'Emotional Profile', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Emotional Profile', (sectionY) => {
+            let y = sectionY;
 
             // Get top 5 emotions across all stages
             const allEmotions = this.extractTopEmotions(experience, 5);
@@ -121,8 +121,8 @@ class PDFExporter {
         });
 
         // Emotional Triggers
-        yPos = this.addSection(doc, yPos, 'Emotional Triggers', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Emotional Triggers', (sectionY) => {
+            let y = sectionY;
 
             const triggerData = [
                 ['Trigger', 'Rating', 'Impact'],
@@ -186,8 +186,8 @@ class PDFExporter {
         yPos = this.addHeader(doc, pageWidth, yPos, 'Portfolio Analysis Report');
 
         // Overview Section
-        yPos = this.addSection(doc, yPos, 'Portfolio Overview', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Portfolio Overview', (sectionY) => {
+            let y = sectionY;
             doc.setFontSize(11);
             doc.text(`Total Products Analyzed: ${experiences.length}`, 20, y);
             y += 7;
@@ -211,8 +211,8 @@ class PDFExporter {
         });
 
         // Product Summary Table
-        yPos = this.addSection(doc, yPos, 'Product Summary', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Product Summary', (sectionY) => {
+            let y = sectionY;
 
             const productData = [
                 ['Product', 'Brand', 'Need State', 'Satisfaction'],
@@ -242,8 +242,8 @@ class PDFExporter {
             .sort((a, b) => (b.stages?.aftertaste?.emotions?.satisfaction || 0) - (a.stages?.aftertaste?.emotions?.satisfaction || 0))
             .slice(0, 5);
 
-        yPos = this.addSection(doc, yPos, 'Top 5 Products by Satisfaction', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Top 5 Products by Satisfaction', (sectionY) => {
+            let y = sectionY;
 
             topProducts.forEach((exp, idx) => {
                 doc.setFontSize(10);
@@ -295,8 +295,8 @@ class PDFExporter {
         yPos = this.addHeader(doc, pageWidth, yPos, 'Product Comparison Report');
 
         // Products Being Compared
-        yPos = this.addSection(doc, yPos, 'Products Under Comparison', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Products Under Comparison', (sectionY) => {
+            let y = sectionY;
             experiences.forEach((exp, idx) => {
                 doc.setFontSize(11);
                 doc.text(`${idx + 1}. ${exp.productInfo.name} (${exp.productInfo.brand})`, 20, y);
@@ -306,8 +306,8 @@ class PDFExporter {
         });
 
         // Sensory Comparison Table
-        yPos = this.addSection(doc, yPos, 'Sensory Comparison', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Sensory Comparison', (sectionY) => {
+            let y = sectionY;
 
             const comparisonData = [
                 ['Attribute', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
@@ -334,8 +334,8 @@ class PDFExporter {
         });
 
         // Emotional Trigger Comparison
-        yPos = this.addSection(doc, yPos, 'Emotional Triggers Comparison', () => {
-            let y = yPos;
+        yPos = this.addSection(doc, yPos, 'Emotional Triggers Comparison', (sectionY) => {
+            let y = sectionY;
 
             const triggerData = [
                 ['Trigger', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
@@ -432,7 +432,7 @@ class PDFExporter {
 
         yPos += 8;
 
-        return contentCallback ? contentCallback() : yPos;
+        return contentCallback ? contentCallback(yPos) : yPos;
     }
 
     /**

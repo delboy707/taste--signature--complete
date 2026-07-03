@@ -86,13 +86,13 @@ function generatePrintableReport(data, reportType) {
 
         .report-header {
             text-align: center;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #C2871B;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
 
         .report-header h1 {
-            color: #667eea;
+            color: #C2871B;
             margin: 0 0 10px 0;
             font-size: 28px;
         }
@@ -144,8 +144,8 @@ function generatePrintableReport(data, reportType) {
         }
 
         .section h3 {
-            color: #667eea;
-            border-bottom: 2px solid #e3f2fd;
+            color: #C2871B;
+            border-bottom: 2px solid #F1E4C8;
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -157,7 +157,7 @@ function generatePrintableReport(data, reportType) {
         }
 
         .scores-table th {
-            background: #667eea;
+            background: #C2871B;
             color: white;
             padding: 12px;
             text-align: left;
@@ -175,7 +175,7 @@ function generatePrintableReport(data, reportType) {
 
         .score-bar {
             height: 20px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #C2871B 0%, #8A5E12 100%);
             border-radius: 4px;
             position: relative;
         }
@@ -198,8 +198,8 @@ function generatePrintableReport(data, reportType) {
         }
 
         .emotion-chip {
-            background: #e3f2fd;
-            color: #667eea;
+            background: #F1E4C8;
+            color: #C2871B;
             padding: 8px 12px;
             border-radius: 20px;
             text-align: center;
@@ -243,8 +243,8 @@ function generatePrintableReport(data, reportType) {
         }
 
         .badge-above-average {
-            background: #d1ecf1;
-            color: #0c5460;
+            background: #F1E4C8;
+            color: #8A5E12;
         }
 
         .badge-average {
@@ -304,7 +304,7 @@ function generatePrintableReport(data, reportType) {
     </div>
 
     <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
-        <button onclick="window.print()" style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600;">
+        <button onclick="window.print()" style="padding: 12px 24px; background: #C2871B; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600;">
             Print / Save as PDF
         </button>
         <button onclick="window.close()" style="padding: 12px 24px; background: #999; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; margin-left: 10px;">
@@ -455,7 +455,7 @@ function generateComparisonReportContent(products) {
         const overall = calculateOverallScore(product);
         html += `
             <div class="comparison-card">
-                <h4 style="margin: 0 0 10px 0; color: #667eea;">${product.productInfo.name}</h4>
+                <h4 style="margin: 0 0 10px 0; color: #C2871B;">${product.productInfo.name}</h4>
                 <p style="margin: 5px 0; color: #666;"><strong>Brand:</strong> ${product.productInfo.brand}</p>
                 <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${product.productInfo.category}</p>
                 <p style="margin: 5px 0;"><strong>Overall Score:</strong> ${overall.toFixed(1)} / 10</p>

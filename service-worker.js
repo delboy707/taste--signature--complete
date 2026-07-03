@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.6.0-qep-full';
+const VERSION = '3.6.1-qep-exports';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
