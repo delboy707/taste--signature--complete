@@ -102,9 +102,9 @@ body {
 }
 
 .top-bar {
-    background: white;
+    background: var(--qep-cream-2);
     padding: 20px 30px;
-    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--qep-line);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -114,8 +114,9 @@ body {
 }
 
 .page-title h2 {
+    font-family: var(--qep-font-sans);
     font-size: 1.8rem;
-    color: var(--text-dark);
+    color: var(--qep-text);
 }
 
 .top-bar-actions {
