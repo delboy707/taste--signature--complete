@@ -26,7 +26,15 @@ const CLERK_AUTHORIZED_PARTIES = [
 // Initialize Firebase Admin once per cold start (module scope singleton).
 let firebaseApp;
 if (getApps().length === 0) {
-    const privateKey = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+    let privateKey = (process.env.FIREBASE_PRIVATE_KEY || '').trim();
+    // Strip accidental surrounding quotes from env var paste
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+    }
+    // Convert escaped newlines only if the value has no real newlines
+    if (!privateKey.includes('\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+    }
     firebaseApp = initializeApp({
         credential: cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
@@ -75,12 +83,18 @@ module.exports = async function handler(req, res) {
         const sessionToken = authHeader.replace('Bearer ', '');
 
         // Verify the Clerk session token
-        const { data: claims, errors } = await verifyToken(sessionToken, {
-            secretKey: process.env.CLERK_SECRET_KEY,
-            authorizedParties: CLERK_AUTHORIZED_PARTIES
-        });
+        let claims = null;
+        try {
+            const result = await verifyToken(sessionToken, {
+                secretKey: process.env.CLERK_SECRET_KEY,
+                authorizedParties: CLERK_AUTHORIZED_PARTIES
+            });
+            claims = result && result.data ? result.data : result;
+        } catch (verifyError) {
+            claims = null;
+        }
 
-        if (errors || !claims) {
+        if (!claims || !claims.sub) {
             return res.status(401).json({
                 error: {
                     type: 'authentication_error',
