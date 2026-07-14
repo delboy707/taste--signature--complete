@@ -1,0 +1,12 @@
+{
+  "name": "taste-signature-prod-api",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@clerk/backend": "3.11.5",
+    "firebase-admin": "14.1.0"
+  }
+}
