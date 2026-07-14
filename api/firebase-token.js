@@ -12,6 +12,7 @@ const { getAuth } = require('firebase-admin/auth');
 const ALLOWED_ORIGINS = [
     'https://taste-signature-ai-app.firebaseapp.com',
     'https://taste-signature-ai-app.web.app',
+    'https://qeptss.com',
     process.env.ALLOWED_ORIGIN // Set in Vercel env vars for custom domains
 ].filter(Boolean);
 
