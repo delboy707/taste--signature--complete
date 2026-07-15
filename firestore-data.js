@@ -24,24 +24,13 @@ class FirestoreDataManager {
                 const userData = userDoc.data();
                 this.companyId = userData.companyId;
             } else {
-                // Auto-create user document for new users
-                console.log('📝 Creating user document for new user...');
-                const newCompanyRef = this.db.collection('companies').doc();
-                const newCompanyId = newCompanyRef.id;
-                await this.db.collection('users').doc(userId).set({
-                    companyId: newCompanyId,
-                    createdAt: new Date().toISOString(),
-                    tier: 'free'
-                });
-                this.companyId = newCompanyId;
-
-                // Also create the company document
-                await newCompanyRef.set({
-                    name: 'My Company',
-                    ownerId: userId,
-                    createdAt: new Date().toISOString()
-                });
-                console.log('✅ User and company documents created');
+                // Provisioning now happens server-side (see
+                // ensureFirestoreProvisioned in api/firebase-token.js).
+                // A missing user doc here means that step failed or was
+                // skipped - surface it loudly instead of silently
+                // creating a wrong-shaped company doc.
+                console.warn('users/' + userId + ' missing - expected server-side provisioning via /api/firebase-token');
+                return { success: false, error: 'User document not found - expected server-side provisioning' };
             }
 
             if (this.companyId) {
