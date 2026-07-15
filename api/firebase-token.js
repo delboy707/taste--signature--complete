@@ -1,5 +1,6 @@
 // Vercel Serverless Function - Clerk session -> Firebase custom token
 // Verifies an inbound Clerk session token, gates on provisioning status,
+// auto-provisions the Firestore company/user docs on first sign-in,
 // upserts the corresponding Firebase Auth user, and mints a Firebase
 // custom token so the client can call signInWithCustomToken().
 // Runtime: Node.js (>=22, required by firebase-admin@14 - see package.json)
@@ -7,6 +8,7 @@
 const { verifyToken } = require('@clerk/backend');
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 
 // Allowed origins - same pattern as api/claude.js
 const ALLOWED_ORIGINS = [
@@ -47,6 +49,38 @@ if (getApps().length === 0) {
     firebaseApp = getApps()[0];
 }
 const firebaseAuth = getAuth(firebaseApp);
+const firestoreDb = getFirestore(firebaseApp);
+
+// Auto-provision Firestore company/user docs on first sign-in.
+// Idempotent: uses a transaction so a create-if-missing race between two
+// concurrent first requests for the same uid cannot produce two companies.
+async function ensureFirestoreProvisioned(uid, email, displayName) {
+    const userRef = firestoreDb.collection('users').doc(uid);
+
+    await firestoreDb.runTransaction(async (tx) => {
+        const userSnap = await tx.get(userRef);
+        if (userSnap.exists) {
+            // Already provisioned - nothing to do.
+            return;
+        }
+
+        const companyRef = firestoreDb.collection('companies').doc();
+        tx.set(companyRef, {
+            companyName: displayName || email || 'New Company',
+            industry: null,
+            companySize: null,
+            ownerId: uid,
+            createdAt: FieldValue.serverTimestamp()
+        });
+
+        tx.set(userRef, {
+            role: 'owner',
+            companyId: companyRef.id,
+            email: email || null,
+            createdAt: FieldValue.serverTimestamp()
+        });
+    });
+}
 
 module.exports = async function handler(req, res) {
     // Set CORS headers - restrict to allowed origins
@@ -121,6 +155,10 @@ module.exports = async function handler(req, res) {
         // email/name come from the extended Clerk session token template.
         const email = claims.email || undefined;
         const displayName = claims.name || undefined;
+
+        // Auto-provision Firestore company/user docs on first sign-in.
+        // Safe to call every request - it is a no-op once users/{uid} exists.
+        await ensureFirestoreProvisioned(uid, email, displayName);
 
         // Upsert the Firebase Auth user so uid === Clerk sub.
         try {

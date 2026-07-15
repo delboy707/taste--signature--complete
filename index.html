@@ -293,166 +293,27 @@
 <body>
     <!-- Authentication Container -->
     <div id="auth-container" class="auth-container">
-        <!-- Login Form -->
+        <!-- Auth UI lives on the Clerk-hosted portal (qeptss.com). This
+             card only shows a brief redirect message and the demo-mode
+             escape hatch while auth.js's Clerk gate runs. -->
         <div id="login-form" class="auth-card">
             <div class="auth-header">
-                <h1>🎯 Taste Signature</h1>
+                <h1>Taste Signature</h1>
                 <p class="auth-subtitle">Professional Sensory Analysis Platform</p>
             </div>
 
-            <!-- QEP-INTRO-BUTTON-START -->
-            <button type="button" id="qep-intro-open" class="qep-intro-btn" aria-label="Watch platform introduction video">
-                <span class="qep-intro-btn-icon" aria-hidden="true">&#9654;</span>Watch Intro
-            </button>
-            <!-- QEP-INTRO-BUTTON-END -->
-            <form id="form-login" class="auth-form">
-                <h2>Welcome Back</h2>
+            <p class="auth-description" style="text-align: center;">Sign in via the QEP Portal</p>
 
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required autocomplete="email" placeholder="your@email.com">
-                </div>
+            <div id="login-message" class="auth-message"></div>
 
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter your password">
-                </div>
-
-                <div id="login-message" class="auth-message"></div>
-
-                <button type="submit" class="btn-primary btn-auth">Log In</button>
-
-                <div style="text-align: center; margin: 20px 0;">
-                    <button type="button" id="btn-try-demo" class="btn-secondary btn-auth" style="background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%); color: white; border: none;">
-                        🎭 Try Demo Mode
-                    </button>
-                    <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">
-                        Explore the platform with sample data - no signup required
-                    </p>
-                </div>
-
-                <div class="auth-links">
-                    <a href="#" id="link-forgot-password">Forgot password?</a>
-                    <a href="#" id="link-show-signup">Create account</a>
-                </div>
-            </form>
-<!-- QEP-INTRO-COLLAPSIBLE-START -->
-            <details class="qep-intro-collapse" id="qep-intro-details">
-                <summary>See the platform in action</summary>
-                <div class="qep-intro-collapse-body">
-                    <wistia-player media-id="8hicm7c4kn" aspect="2.2966507177033493"></wistia-player>
-                    <p class="qep-intro-collapse-hint">Use the player controls to jump between chapters.</p>
-                </div>
-            </details>
-            <!-- QEP-INTRO-COLLAPSIBLE-END -->
-        </div>
-
-        <!-- Signup Form -->
-        <div id="signup-form" class="auth-card" style="display: none;">
-            <div class="auth-header">
-                <h1>🎯 Taste Signature</h1>
-                <p class="auth-subtitle">Professional Sensory Analysis Platform</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <button type="button" id="btn-try-demo" class="btn-secondary btn-auth" style="background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%); color: white; border: none;">
+                    Try Demo Mode
+                </button>
+                <p style="font-size: 12px; color: var(--text-light); margin-top: 8px;">
+                    Explore the platform with sample data - no signup required
+                </p>
             </div>
-
-            <form id="form-signup" class="auth-form">
-                <h2>Create Company Account</h2>
-                <p class="auth-description">Set up your company's sensory analysis workspace</p>
-
-                <!-- Company Information -->
-                <div class="form-section-header">Company Information</div>
-
-                <div class="form-group">
-                    <label for="signup-company-name">Company Name *</label>
-                    <input type="text" id="signup-company-name" required placeholder="e.g., Acme Foods Inc.">
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-industry">Industry *</label>
-                    <select id="signup-industry" required>
-                        <option value="">Select industry...</option>
-                        <option value="chocolate">Chocolate & Confectionery</option>
-                        <option value="beverages">Beverages</option>
-                        <option value="snacks">Snacks & Savory</option>
-                        <option value="dairy">Dairy</option>
-                        <option value="bakery">Bakery & Cereals</option>
-                        <option value="alcohol">Alcoholic Beverages</option>
-                        <option value="functional">Functional Foods</option>
-                        <option value="flavors">Flavor Houses</option>
-                        <option value="ingredients">Ingredients Suppliers</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-company-size">Company Size *</label>
-                    <select id="signup-company-size" required>
-                        <option value="">Select size...</option>
-                        <option value="1-10">1-10 employees</option>
-                        <option value="11-50">11-50 employees</option>
-                        <option value="51-200">51-200 employees</option>
-                        <option value="201-1000">201-1,000 employees</option>
-                        <option value="1000+">1,000+ employees</option>
-                    </select>
-                </div>
-
-                <!-- Account Administrator -->
-                <div class="form-section-header">Account Administrator</div>
-
-                <div class="form-group">
-                    <label for="signup-name">Full Name *</label>
-                    <input type="text" id="signup-name" required autocomplete="name" placeholder="John Smith">
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-email">Email *</label>
-                    <input type="email" id="signup-email" required autocomplete="email" placeholder="your@email.com">
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-password">Password *</label>
-                    <input type="password" id="signup-password" required autocomplete="new-password" placeholder="Create a strong password">
-                    <div id="password-requirements" class="password-requirements"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-password-confirm">Confirm Password *</label>
-                    <input type="password" id="signup-password-confirm" required autocomplete="new-password" placeholder="Re-enter your password">
-                </div>
-
-                <div id="signup-message" class="auth-message"></div>
-
-                <button type="submit" class="btn-primary btn-auth">Create Company Account</button>
-
-                <div class="auth-links">
-                    <a href="#" id="link-show-login">Already have an account? Log in</a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Forgot Password Form -->
-        <div id="forgot-password-form" class="auth-card" style="display: none;">
-            <div class="auth-header">
-                <h1>🎯 Taste Signature</h1>
-                <p class="auth-subtitle">Reset Your Password</p>
-            </div>
-
-            <form id="form-forgot-password" class="auth-form">
-                <h2>Forgot Password</h2>
-                <p class="auth-description">Enter your email address and we'll send you a link to reset your password.</p>
-
-                <div class="form-group">
-                    <label for="forgot-email">Email</label>
-                    <input type="email" id="forgot-email" required autocomplete="email" placeholder="your@email.com">
-                </div>
-
-                <div id="forgot-message" class="auth-message"></div>
-
-                <button type="submit" class="btn-primary btn-auth">Send Reset Link</button>
-
-                <div class="auth-links">
-                    <a href="#" id="link-back-to-login">Back to login</a>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -2593,95 +2454,13 @@
         }
 
         function initAuthUI() {
-            // Login form
-            document.getElementById('form-login').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
+            // Login/signup/reset now happen on the Clerk-hosted portal;
+            // the only interactive element left in #auth-container is the
+            // demo-mode escape hatch.
+            const demoButton = document.getElementById('btn-try-demo');
+            if (!demoButton) return;
 
-                const result = await window.authManager.login(email, password);
-                showAuthMessage('login-message', result.message || result.warning, result.success ? 'success' : 'error');
-
-                if (result.warning) {
-                    showResendVerification('login-message');
-                }
-            });
-
-            // Signup form
-            document.getElementById('form-signup').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const companyName = document.getElementById('signup-company-name').value;
-                const industry = document.getElementById('signup-industry').value;
-                const companySize = document.getElementById('signup-company-size').value;
-                const name = document.getElementById('signup-name').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
-                const confirmPassword = document.getElementById('signup-password-confirm').value;
-
-                if (password !== confirmPassword) {
-                    showAuthMessage('signup-message', 'Passwords do not match', 'error');
-                    return;
-                }
-
-                const companyData = {
-                    companyName: companyName,
-                    industry: industry,
-                    companySize: companySize
-                };
-
-                const result = await window.authManager.signup(email, password, name, companyData);
-                showAuthMessage('signup-message', result.message, result.success ? 'success' : 'error');
-
-                if (result.success) {
-                    setTimeout(() => {
-                        showLoginForm();
-                    }, 3000);
-                }
-            });
-
-            // Forgot password form
-            document.getElementById('form-forgot-password').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('forgot-email').value;
-
-                const result = await window.authManager.resetPassword(email);
-                showAuthMessage('forgot-message', result.message, result.success ? 'success' : 'error');
-
-                if (result.success) {
-                    setTimeout(() => {
-                        showLoginForm();
-                    }, 3000);
-                }
-            });
-
-            // Password requirements live validation
-            document.getElementById('signup-password').addEventListener('input', (e) => {
-                window.authManager.updatePasswordRequirements(e.target.value, 'password-requirements');
-            });
-
-            // Form navigation links
-            document.getElementById('link-show-signup').addEventListener('click', (e) => {
-                e.preventDefault();
-                showSignupForm();
-            });
-
-            document.getElementById('link-show-login').addEventListener('click', (e) => {
-                e.preventDefault();
-                showLoginForm();
-            });
-
-            document.getElementById('link-back-to-login').addEventListener('click', (e) => {
-                e.preventDefault();
-                showLoginForm();
-            });
-
-            document.getElementById('link-forgot-password').addEventListener('click', (e) => {
-                e.preventDefault();
-                showForgotPasswordForm();
-            });
-
-            // Demo Mode button
-            document.getElementById('btn-try-demo').addEventListener('click', async (e) => {
+            demoButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 try {
                     // Activate demo mode
@@ -2699,7 +2478,7 @@
                         location.reload();
                     }
 
-                    console.log('✅ Demo mode activated - showing sample data');
+                    console.log('Demo mode activated - showing sample data');
 
                     // Show onboarding for first-time demo users
                     setTimeout(() => {
@@ -2708,7 +2487,7 @@
                         }
                     }, 500);
                 } catch (error) {
-                    console.error('❌ Demo mode error:', error);
+                    console.error('Demo mode error:', error);
                     showAuthMessage('login-message', 'Unable to start demo mode. Please try again.', 'error');
                 }
             });
