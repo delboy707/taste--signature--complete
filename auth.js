@@ -9,7 +9,6 @@
 
 const CLERK_FRONTEND_API = 'clerk.qeptss.com';
 const CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsucWVwdHNzLmNvbSQ';
-const CLERK_SIGN_IN_URL = 'https://qeptss.com/sign-in';
 const CLERK_PORTAL_URL = 'https://qeptss.com';
 const DEMO_MODE_KEY = 'taste_demo_mode_active';
 
@@ -128,8 +127,8 @@ class AuthManager {
         await window.Clerk.load();
 
         if (!window.Clerk.session) {
-            window.location.href = CLERK_SIGN_IN_URL;
-            return false;
+            this.showAuthScreen();
+            return true;
         }
 
         const publicMetadata = window.Clerk.user ? window.Clerk.user.publicMetadata : null;

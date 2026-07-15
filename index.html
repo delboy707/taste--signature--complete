@@ -293,18 +293,22 @@
 <body>
     <!-- Authentication Container -->
     <div id="auth-container" class="auth-container">
-        <!-- Auth UI lives on the Clerk-hosted portal (qeptss.com). This
-             card only shows a brief redirect message and the demo-mode
-             escape hatch while auth.js's Clerk gate runs. -->
+        <!-- Auth UI lives on the Clerk-hosted portal (qeptss.com), reached
+             via the button below. The demo-mode button is a self-contained
+             escape hatch that never leaves this page. -->
         <div id="login-form" class="auth-card">
             <div class="auth-header">
                 <h1>Taste Signature</h1>
                 <p class="auth-subtitle">Professional Sensory Analysis Platform</p>
             </div>
 
-            <p class="auth-description" style="text-align: center;">Sign in via the QEP Portal</p>
-
             <div id="login-message" class="auth-message"></div>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="https://qeptss.com/sign-in?redirect_url=https%3A%2F%2Fsignature.qeptss.com" class="btn-primary btn-auth" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">
+                    Sign in via QEP Portal
+                </a>
+            </div>
 
             <div style="text-align: center; margin: 20px 0;">
                 <button type="button" id="btn-try-demo" class="btn-secondary btn-auth" style="background: linear-gradient(135deg, var(--qep-gold) 0%, var(--qep-gold-deep) 100%); color: white; border: none;">
