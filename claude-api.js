@@ -4,7 +4,7 @@
 class ClaudeAI {
     constructor() {
         this.apiUrl = window.AI_CONFIG?.ANTHROPIC_API_URL || '/api/claude';
-        this.model = window.AI_CONFIG?.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+        this.model = window.AI_CONFIG?.CLAUDE_MODEL || 'claude-sonnet-4-6';
         this.isConfigured = true; // All calls go through server proxy
         this.usageTracker = new window.UsageTracker();
     }
