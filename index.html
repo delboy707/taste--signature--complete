@@ -2268,23 +2268,6 @@
 
     <!-- Initialize Authentication & PWA -->
     <script>
-        // EMERGENCY CACHE CLEAR - Run FIRST before anything else
-        (async function emergencyCacheClear() {
-            try {
-                // Clear ALL browser caches
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    if (cacheNames.length > 0) {
-                        console.log('🔥 EMERGENCY: Clearing all caches...', cacheNames);
-                        await Promise.all(cacheNames.map(name => caches.delete(name)));
-                        console.log('✅ All caches cleared! Fresh start.');
-                    }
-                }
-            } catch (e) {
-                console.error('Cache clear error:', e);
-            }
-        })();
-
         // Create auth manager instance
         const authManager = new AuthManager();
 
