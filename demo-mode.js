@@ -1795,6 +1795,9 @@ class DemoMode {
 
     // Show demo mode banner/indicator
     createDemoBanner() {
+        if (document.getElementById('demo-mode-banner')) {
+            return;
+        }
         const banner = document.createElement('div');
         banner.id = 'demo-mode-banner';
         banner.style.cssText = `

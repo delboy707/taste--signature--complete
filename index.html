@@ -2474,6 +2474,12 @@
                     document.getElementById('auth-container').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
 
+                    // Show the demo banner now - the DOMContentLoaded-gated
+                    // auto-show in demo-mode.js already fired before this
+                    // click, so without this call the exit-demo control
+                    // would not appear until the next reload.
+                    window.demoMode.createDemoBanner();
+
                     // Load demo experiences into the app
                     if (typeof window.loadDemoExperiences === 'function') {
                         window.loadDemoExperiences();
