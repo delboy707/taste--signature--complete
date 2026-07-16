@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.6.1-qep-exports';
+const VERSION = '3.6.2-sw-fetch-fix';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
@@ -14,7 +14,8 @@ const urlsToCache = [
   '/ui-polish.css',
   '/manifest.json',
   '/icon-192.svg',
-  '/icon-512.svg'
+  '/icon-512.svg',
+  '/offline.html'
 ];
 
 // Offline fallback page
@@ -77,26 +78,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip Firebase, external APIs, and authentication requests
-  // IMPORTANT: Do not cache any Firebase or authentication-related requests
-  if (event.request.url.includes('firebasestorage.googleapis.com') ||
-      event.request.url.includes('firebaseapp.com') ||
-      event.request.url.includes('firestore.googleapis.com') ||
-      event.request.url.includes('identitytoolkit.googleapis.com') ||
-      event.request.url.includes('securetoken.googleapis.com') ||
-      event.request.url.includes('accounts.google.com') ||
-      event.request.url.includes('googleapis.com/identitytoolkit') ||
-      event.request.url.includes('googleapis.com/securetoken') ||
-      event.request.url.includes('anthropic.com') ||
-      event.request.url.includes('api.anthropic.com') ||
-      event.request.url.includes('/api/') ||
-      event.request.url.includes('gstatic.com') ||
-      event.request.url.includes('cdn.')) {
-    // Always fetch fresh for these resources
-    return fetch(event.request).catch(err => {
-      console.error('Network request failed:', event.request.url, err);
-      throw err;
-    });
+  // Only handle same-origin requests - the SW has no business intercepting
+  // third-party fetches (Firebase, Anthropic, cdnjs, jsdelivr, gstatic,
+  // etc.); let the browser handle those natively.
+  if (new URL(event.request.url).origin !== location.origin) {
+    return;
+  }
+
+  // Same-origin API routes are always POST, already caught by the method
+  // check above - kept as defense-in-depth in case a GET route is ever
+  // added under /api/.
+  if (event.request.url.includes('/api/')) {
+    return;
   }
 
   // Network-first strategy for HTML and JavaScript files
@@ -117,9 +110,14 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => {
-          // Fallback to cache if offline
-          return caches.match(event.request);
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') {
+            const offline = await caches.match(OFFLINE_PAGE);
+            if (offline) return offline;
+          }
+          return new Response(null, { status: 503, statusText: 'Service Unavailable' });
         })
     );
   } else {
@@ -138,8 +136,14 @@ self.addEventListener('fetch', (event) => {
             return response;
           });
         })
-        .catch(() => {
-          return caches.match('/index.html');
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') {
+            const offline = await caches.match(OFFLINE_PAGE);
+            if (offline) return offline;
+          }
+          return new Response(null, { status: 503, statusText: 'Service Unavailable' });
         })
     );
   }
