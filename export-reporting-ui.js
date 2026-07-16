@@ -367,12 +367,35 @@ function generatePortfolioSummaryReport() {
         return;
     }
 
+    let html;
+    try {
+        html = buildPortfolioSummaryHtml(experiences);
+    } catch (error) {
+        console.error('Portfolio summary generation failed:', error);
+        showExportNotification('Failed to generate portfolio summary - see console for details', 'error');
+        return;
+    }
+
     const reportWindow = window.open('', '_blank');
     if (!reportWindow) {
         alert('Please allow popups to generate reports');
         return;
     }
 
+    try {
+        reportWindow.document.write(html);
+        reportWindow.document.close();
+    } catch (error) {
+        console.error('Portfolio summary write failed:', error);
+        if (reportWindow) reportWindow.close();
+        showExportNotification('Failed to display portfolio summary - see console for details', 'error');
+    }
+}
+
+/**
+ * Build the portfolio summary HTML string. Pure - no window/DOM side effects.
+ */
+function buildPortfolioSummaryHtml(experiences) {
     let html = `
 <!DOCTYPE html>
 <html>
@@ -534,8 +557,7 @@ function generatePortfolioSummaryReport() {
 </html>
     `;
 
-    reportWindow.document.write(html);
-    reportWindow.document.close();
+    return html;
 }
 
 // ===== ADD EXPORT BUTTONS TO EXISTING VIEWS =====

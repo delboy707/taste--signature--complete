@@ -54,15 +54,43 @@ async function generateBenchmarkPDFReport(productId, benchmarkId) {
 }
 
 /**
- * Generate printable HTML report (works with browser print-to-PDF)
+ * Generate printable HTML report (works with browser print-to-PDF).
+ * Builds the HTML string first so most failures never open a popup at all;
+ * window.open() stays synchronous with the triggering click either way.
  */
 function generatePrintableReport(data, reportType) {
+    let html;
+    try {
+        html = buildReportHtml(data, reportType);
+    } catch (error) {
+        console.error('Report generation failed:', error);
+        showExportNotification('Failed to generate report - see console for details', 'error');
+        return null;
+    }
+
     const reportWindow = window.open('', '_blank');
     if (!reportWindow) {
         alert('Please allow popups to generate reports');
         return null;
     }
 
+    try {
+        reportWindow.document.write(html);
+        reportWindow.document.close();
+    } catch (error) {
+        console.error('Report write failed:', error);
+        if (reportWindow) reportWindow.close();
+        showExportNotification('Failed to display report - see console for details', 'error');
+        return null;
+    }
+
+    return true;
+}
+
+/**
+ * Build the full report HTML string. Pure - no window/DOM side effects.
+ */
+function buildReportHtml(data, reportType) {
     let html = `
 <!DOCTYPE html>
 <html>
@@ -315,10 +343,7 @@ function generatePrintableReport(data, reportType) {
 </html>
     `;
 
-    reportWindow.document.write(html);
-    reportWindow.document.close();
-
-    return true;
+    return html;
 }
 
 /**
@@ -376,18 +401,18 @@ function generateProductReportContent(experience) {
             <tbody>
     `;
 
-    experience.stages.forEach(stage => {
-        const stageRowspan = stage.attributes.length;
-        stage.attributes.forEach((attr, idx) => {
+    Object.entries(experience.stages).forEach(([stageId, stageData]) => {
+        const attrs = getStageAttributeEntries(stageData);
+        attrs.forEach(([key, value], idx) => {
             html += `<tr>`;
             if (idx === 0) {
-                html += `<td rowspan="${stageRowspan}" style="font-weight: 600; background: #f0f0f0;">${stage.name}</td>`;
+                html += `<td rowspan="${attrs.length}" style="font-weight: 600; background: #f0f0f0;">${getStageLabel(stageId)}</td>`;
             }
             html += `
-                <td>${attr.label}</td>
+                <td>${getAttributeLabel(key)}</td>
                 <td>
-                    <div class="score-bar" style="width: ${attr.value * 10}%;">
-                        <span class="score-value">${attr.value.toFixed(1)}</span>
+                    <div class="score-bar" style="width: ${value * 10}%;">
+                        <span class="score-value">${value.toFixed(1)}</span>
                     </div>
                 </td>
             </tr>
@@ -407,12 +432,13 @@ function generateProductReportContent(experience) {
         <h3>Emotional Response Mapping</h3>
     `;
 
-    experience.stages.forEach(stage => {
-        if (stage.emotions && stage.emotions.length > 0) {
+    Object.entries(experience.stages).forEach(([stageId, stageData]) => {
+        const present = getPresentEmotions(stageData);
+        if (present.length > 0) {
             html += `
-                <h4>${stage.name}</h4>
+                <h4>${getStageLabel(stageId)}</h4>
                 <div class="emotions-grid">
-                    ${stage.emotions.map(em => `<div class="emotion-chip">${em}</div>`).join('')}
+                    ${present.map(([name, value]) => `<div class="emotion-chip">${name} (${value})</div>`).join('')}
                 </div>
             `;
         }
@@ -483,26 +509,24 @@ function generateComparisonReportContent(products) {
             <tbody>
     `;
 
-    // Get all unique attributes across products
+    // Get all unique attributes across products (keyed by stage id + field key)
     const allAttributes = new Map();
-    products[0].stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            const key = `${stage.name}::${attr.label}`;
-            if (!allAttributes.has(key)) {
-                allAttributes.set(key, { stage: stage.name, label: attr.label });
+    Object.entries(products[0].stages).forEach(([stageId, stageData]) => {
+        getStageAttributeEntries(stageData).forEach(([key]) => {
+            const mapKey = `${stageId}::${key}`;
+            if (!allAttributes.has(mapKey)) {
+                allAttributes.set(mapKey, { stageId, key });
             }
         });
     });
 
-    allAttributes.forEach((attrInfo, key) => {
+    allAttributes.forEach(({ stageId, key }) => {
         html += `<tr>`;
-        html += `<td style="font-weight: 600;">${attrInfo.stage}</td>`;
-        html += `<td>${attrInfo.label}</td>`;
+        html += `<td style="font-weight: 600;">${getStageLabel(stageId)}</td>`;
+        html += `<td>${getAttributeLabel(key)}</td>`;
 
         products.forEach(product => {
-            const stage = product.stages.find(s => s.name === attrInfo.stage);
-            const attr = stage ? stage.attributes.find(a => a.label === attrInfo.label) : null;
-            const value = attr ? attr.value : 0;
+            const value = product.stages[stageId]?.[key] ?? 0;
 
             html += `
                 <td>
@@ -620,18 +644,28 @@ function generateBenchmarkReportContent(data) {
  */
 function generateExecutiveSummary(experience) {
     const overall = calculateOverallScore(experience);
-    const topAttributes = experience.stages.flatMap(s => s.attributes)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 3);
 
-    const topEmotions = experience.stages.flatMap(s => s.emotions || [])
-        .slice(0, 5);
+    const allAttrs = [];
+    Object.values(experience.stages).forEach(stageData => {
+        getStageAttributeEntries(stageData).forEach(([key, value]) => {
+            allAttrs.push({ key, value });
+        });
+    });
+    const topAttributes = allAttrs.sort((a, b) => b.value - a.value).slice(0, 3);
+
+    const allEmotions = [];
+    Object.values(experience.stages).forEach(stageData => {
+        getPresentEmotions(stageData).forEach(([name, value]) => {
+            allEmotions.push({ name, value });
+        });
+    });
+    const topEmotions = allEmotions.sort((a, b) => b.value - a.value).slice(0, 5);
 
     let summary = `This product achieved an overall sensory score of ${overall.toFixed(1)} out of 10. `;
-    summary += `Key strengths include ${topAttributes.map(a => a.label.toLowerCase()).join(', ')}. `;
+    summary += `Key strengths include ${topAttributes.map(a => getAttributeLabel(a.key).toLowerCase()).join(', ')}. `;
 
     if (topEmotions.length > 0) {
-        summary += `The product evokes emotional responses such as ${topEmotions.join(', ')}.`;
+        summary += `The product evokes emotional responses such as ${topEmotions.map(e => e.name).join(', ')}.`;
     }
 
     return summary;
@@ -655,17 +689,18 @@ function exportProductToExcel(productId) {
     csv += 'Sensory Attributes\n';
     csv += 'Stage,Attribute,Score (1-10)\n';
 
-    experience.stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            csv += `${stage.name},${attr.label},${attr.value}\n`;
+    Object.entries(experience.stages).forEach(([stageId, stageData]) => {
+        getStageAttributeEntries(stageData).forEach(([key, value]) => {
+            csv += `${getStageLabel(stageId)},${getAttributeLabel(key)},${value}\n`;
         });
     });
 
     csv += '\nEmotional Responses\n';
     csv += 'Stage,Emotions\n';
-    experience.stages.forEach(stage => {
-        if (stage.emotions && stage.emotions.length > 0) {
-            csv += `${stage.name},"${stage.emotions.join(', ')}"\n`;
+    Object.entries(experience.stages).forEach(([stageId, stageData]) => {
+        const present = getPresentEmotions(stageData);
+        if (present.length > 0) {
+            csv += `${getStageLabel(stageId)},"${present.map(([name, value]) => `${name} (${value})`).join(', ')}"\n`;
         }
     });
 
@@ -687,17 +722,20 @@ function exportAllProductsToExcel() {
     let csv = 'Taste Signature - Complete Portfolio Export\n\n';
     csv += 'Product Name,Brand,Category,Date,Overall Score,';
 
-    // Get all unique attributes
+    // Get all unique attributes (stored as stageId::key, resolved to labels for the header)
     const allAttributes = new Set();
     experiences.forEach(exp => {
-        exp.stages.forEach(stage => {
-            stage.attributes.forEach(attr => {
-                allAttributes.add(`${stage.name} - ${attr.label}`);
+        Object.entries(exp.stages).forEach(([stageId, stageData]) => {
+            getStageAttributeEntries(stageData).forEach(([key]) => {
+                allAttributes.add(`${stageId}::${key}`);
             });
         });
     });
 
-    csv += Array.from(allAttributes).join(',') + '\n';
+    csv += Array.from(allAttributes).map(attrKey => {
+        const [stageId, key] = attrKey.split('::');
+        return `${getStageLabel(stageId)} - ${getAttributeLabel(key)}`;
+    }).join(',') + '\n';
 
     // Add data rows
     experiences.forEach(exp => {
@@ -710,10 +748,9 @@ function exportAllProductsToExcel() {
 
         // Add attribute values
         allAttributes.forEach(attrKey => {
-            const [stageName, attrLabel] = attrKey.split(' - ');
-            const stage = exp.stages.find(s => s.name === stageName);
-            const attr = stage ? stage.attributes.find(a => a.label === attrLabel) : null;
-            csv += attr ? `${attr.value.toFixed(2)},` : ',';
+            const [stageId, key] = attrKey.split('::');
+            const value = exp.stages[stageId]?.[key];
+            csv += (typeof value === 'number') ? `${value.toFixed(2)},` : ',';
         });
 
         csv += '\n';
@@ -736,14 +773,13 @@ function exportComparisonToExcel(productIds) {
     csv += 'Attribute,' + products.map(p => p.productInfo.name).join(',') + '\n';
 
     // Get all attributes from first product
-    products[0].stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            csv += `${stage.name} - ${attr.label},`;
+    Object.entries(products[0].stages).forEach(([stageId, stageData]) => {
+        getStageAttributeEntries(stageData).forEach(([key]) => {
+            csv += `${getStageLabel(stageId)} - ${getAttributeLabel(key)},`;
 
             products.forEach(product => {
-                const productStage = product.stages.find(s => s.name === stage.name);
-                const productAttr = productStage ? productStage.attributes.find(a => a.label === attr.label) : null;
-                csv += productAttr ? `${productAttr.value.toFixed(2)},` : ',';
+                const value = product.stages[stageId]?.[key];
+                csv += (typeof value === 'number') ? `${value.toFixed(2)},` : ',';
             });
 
             csv += '\n';
@@ -815,15 +851,52 @@ function exportShapeOfTasteChart(productId) {
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Calculate overall score from experience
+ * Stage id -> display label (e.g. 'frontMouth' -> 'Front of Mouth').
+ * Backed by SENSORY_STAGES from sensory-attributes.js.
+ */
+function getStageLabel(stageId) {
+    const stage = window.SENSORY_STAGES?.find(s => s.id === stageId);
+    return stage ? stage.label : stageId;
+}
+
+/**
+ * Numeric sensory attribute [key, value] pairs for a stage object,
+ * excluding the emotions sub-object.
+ */
+function getStageAttributeEntries(stageData) {
+    return Object.entries(stageData || {}).filter(
+        ([key, value]) => key !== 'emotions' && typeof value === 'number'
+    );
+}
+
+/**
+ * Attribute field key -> display label (e.g. 'visualAppeal' -> 'Visual Appeal').
+ * Backed by keyToAttrId/getAttributeById from sensory-attributes.js.
+ */
+function getAttributeLabel(key) {
+    const attrId = window.keyToAttrId ? window.keyToAttrId(key) : key;
+    const attr = window.getAttributeById ? window.getAttributeById(attrId) : null;
+    return attr ? attr.label : key;
+}
+
+/**
+ * Emotions with a non-zero rating for a stage object, as [name, value] pairs.
+ */
+function getPresentEmotions(stageData) {
+    return Object.entries(stageData?.emotions || {}).filter(([, v]) => v > 0);
+}
+
+/**
+ * Calculate overall score from experience: average of all numeric sensory
+ * attribute values (excluding emotions) across all stages.
  */
 function calculateOverallScore(experience) {
     let total = 0;
     let count = 0;
 
-    experience.stages.forEach(stage => {
-        stage.attributes.forEach(attr => {
-            total += attr.value;
+    Object.values(experience.stages).forEach(stageData => {
+        getStageAttributeEntries(stageData).forEach(([, value]) => {
+            total += value;
             count++;
         });
     });
