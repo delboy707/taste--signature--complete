@@ -970,10 +970,79 @@ function destroyChart(chartKey) {
     }
 }
 
+function isQualitativeTargetOnly(exp) {
+    if (!exp || !exp.stages) return false;
+    const sensoryStageKeys = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste'];
+    return sensoryStageKeys.every(function(key) {
+        const stage = exp.stages[key];
+        if (!stage) return true;
+        return Object.keys(stage).every(function(k) {
+            return k === 'emotions' || k === '_notes' || typeof stage[k] !== 'number';
+        });
+    });
+}
+
+function renderQualitativeTargetOverlay(exp) {
+    const overlay = document.getElementById('shape-chart-qualitative-overlay');
+    if (!overlay) return;
+    overlay.innerHTML = '';
+
+    const stageLabels = [
+        ['appearance', 'Appearance'], ['aroma', 'Aroma'], ['frontMouth', 'Front of Mouth'],
+        ['midRearMouth', 'Mid/Rear Mouth'], ['texture', 'Texture'], ['aftertaste', 'Aftertaste']
+    ];
+
+    const container = document.createElement('div');
+    container.style.cssText = 'padding:16px;background:var(--qep-cream-2);border-radius:14px;';
+
+    const heading = document.createElement('div');
+    heading.style.cssText = 'font-weight:600;color:var(--qep-gold-deep);margin-bottom:8px;';
+    heading.textContent = 'Qualitative Target Taste Signature (Brief Translator export — not numerically measured)';
+    container.appendChild(heading);
+
+    stageLabels.forEach(function(pair) {
+        const key = pair[0];
+        const label = pair[1];
+        const stage = (exp.stages && exp.stages[key]) || {};
+        const notesText = (stage._notes && String(stage._notes).trim()) ? String(stage._notes) : 'Not specified';
+
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--qep-line);';
+
+        const strong = document.createElement('strong');
+        strong.style.color = 'var(--qep-ink)';
+        strong.textContent = label + ': ';
+        row.appendChild(strong);
+
+        const span = document.createElement('span');
+        span.style.color = 'var(--qep-ink-2)';
+        span.textContent = notesText;
+        row.appendChild(span);
+
+        container.appendChild(row);
+    });
+
+    overlay.appendChild(container);
+}
+
 function renderShapeOfTaste(exp) {
     if (!exp || !exp.stages) return;
 
-    const ctx = document.getElementById('shape-chart').getContext('2d');
+    const canvas = document.getElementById('shape-chart');
+    const overlay = document.getElementById('shape-chart-qualitative-overlay');
+
+    if (isQualitativeTargetOnly(exp)) {
+        destroyChart('shape');
+        if (canvas) canvas.style.display = 'none';
+        if (overlay) overlay.style.display = 'block';
+        renderQualitativeTargetOverlay(exp);
+        return;
+    }
+
+    if (canvas) canvas.style.display = 'block';
+    if (overlay) overlay.style.display = 'none';
+
+    const ctx = canvas.getContext('2d');
 
     destroyChart('shape');
 
