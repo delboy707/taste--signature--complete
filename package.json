@@ -7,7 +7,8 @@
   },
   "dependencies": {
     "@clerk/backend": "3.11.5",
-    "firebase-admin": "14.1.0"
+    "firebase-admin": "14.1.0",
+    "lucide": "^1.28.0"
   },
   "overrides": {
     "jose": "5.10.0"
