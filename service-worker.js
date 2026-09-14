@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.6.2-sw-fetch-fix';
+const VERSION = '3.6.3-targets-loaded';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use

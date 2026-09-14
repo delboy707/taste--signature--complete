@@ -46,7 +46,8 @@ function initNavigation() {
         'history': 'Experience History',
         'consumer-panel': 'Consumer Panel',
         'custom-lexicon': 'Custom Lexicon',
-        'industry-benchmarks': 'Industry Benchmarks'
+        'industry-benchmarks': 'Industry Benchmarks',
+        'targets-loaded': 'Targets Loaded (QEP-Capture)'
     };
 
     navItems.forEach(item => {
@@ -84,6 +85,7 @@ function initNavigation() {
             if (viewName === 'team-collaboration') renderTeamCollaborationDashboard();
             if (viewName === 'approvals') renderApprovalsDashboard();
             if (viewName === 'history') updateHistory();
+            if (viewName === 'targets-loaded') renderTargetsLoadedDashboard();
         });
     });
 }

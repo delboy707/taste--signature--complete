@@ -3,8 +3,8 @@
 // key is safe to commit here (RLS-gated, no service-role key, same
 // posture as firebase-config.js).
 //
-// DEV project (fmfjihpatkooldhrerui) only. Do not point this at
-// production without an explicit decision to do so.
+// DEV project (fmfjihpatkooldhrerui) only - checkpoint (c). Do not point
+// this at production without an explicit decision to do so.
 
 const QEP_CAPTURE_CONFIG = {
     SUPABASE_URL: 'https://fmfjihpatkooldhrerui.supabase.co',
@@ -20,7 +20,11 @@ const QEP_CAPTURE_CONFIG = {
 
     // Dual-write gate - flip to false-by-default until explicitly rolled
     // out. Do not enable against production without an explicit decision.
-    ENABLE_SUPABASE_DUAL_WRITE: false
+    ENABLE_SUPABASE_DUAL_WRITE: false,
+
+    // Dev-only feature flag - flip to false before any merge that could
+    // reach production until this feature has been explicitly reviewed.
+    ENABLE_TARGETS_LOADED: true
 };
 
 if (typeof window !== 'undefined') {
