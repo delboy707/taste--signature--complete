@@ -24,7 +24,7 @@ const QEP_CAPTURE_CONFIG = {
 
     // Dev-only feature flag - flip to false before any merge that could
     // reach production until this feature has been explicitly reviewed.
-    ENABLE_TARGETS_LOADED: true
+    ENABLE_TARGETS_LOADED: false
 };
 
 if (typeof window !== 'undefined') {
