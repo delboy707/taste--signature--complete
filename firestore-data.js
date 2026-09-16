@@ -14,6 +14,16 @@ const { diffKey, computeUpsertDiff, chunk: chunkArray } =
 // needed to tell the two schemes apart, no heuristics.
 const LEGACY_DOC_ID_PREFIX = 'exp_';
 
+// Rollout gate (incremental-save-config.js). `global` covers Node tests;
+// `window` covers the browser. Default (missing/empty allowlist) is the
+// OLD delete-all/reinsert-all behavior for every company - see
+// MIGRATION_RUNBOOK.md for the intended rollout order.
+function isIncrementalSaveEnabled(companyId) {
+    const scope = typeof window !== 'undefined' ? window : global;
+    const allowlist = (scope.INCREMENTAL_SAVE_CONFIG && scope.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS) || [];
+    return Array.isArray(allowlist) && allowlist.includes(companyId);
+}
+
 class FirestoreDataManager {
     constructor() {
         this.db = null;
@@ -45,6 +55,57 @@ class FirestoreDataManager {
             }
             await batch.commit();
         }
+    }
+
+    /**
+     * Like _commitInChunks, but a stale update() (a doc deleted elsewhere
+     * since this instance last knew about it - see saveExperiences())
+     * must not take an entire batch of otherwise-unrelated edits down
+     * with it. Batches commit as a whole first, same as _commitInChunks;
+     * only a chunk that fails with 'not-found' is retried op-by-op, so
+     * the exact doc(s) responsible for the failure can be identified and
+     * skipped while everything else in that chunk still lands. Any error
+     * OTHER than 'not-found' (permission-denied, network, etc.) still
+     * propagates and fails the whole save, unchanged from before - only
+     * "someone else deleted this specific doc" gets this softer handling.
+     *
+     * Returns { committedCount, orphanedIds } - orphanedIds are doc ids
+     * that no longer exist; the caller drops them from its own baseline
+     * and the app removes them from the in-memory array with a notice,
+     * rather than ever re-attempting to resurrect them.
+     */
+    async _commitOpsResilient(ops) {
+        const orphanedIds = [];
+        let committedCount = 0;
+
+        for (const opsChunk of chunkArray(ops)) {
+            try {
+                const batch = this.db.batch();
+                for (const op of opsChunk) {
+                    if (op.type === 'set') batch.set(op.ref, op.data);
+                    else if (op.type === 'update') batch.update(op.ref, op.data);
+                    else batch.delete(op.ref);
+                }
+                await batch.commit();
+                committedCount += opsChunk.length;
+            } catch (error) {
+                if (error.code !== 'not-found') throw error;
+
+                for (const op of opsChunk) {
+                    try {
+                        if (op.type === 'set') await op.ref.set(op.data);
+                        else if (op.type === 'update') await op.ref.update(op.data);
+                        else await op.ref.delete();
+                        committedCount += 1;
+                    } catch (singleError) {
+                        if (singleError.code !== 'not-found') throw singleError;
+                        orphanedIds.push(op.ref.id);
+                    }
+                }
+            }
+        }
+
+        return { committedCount, orphanedIds };
     }
 
     /**
@@ -222,13 +283,20 @@ class FirestoreDataManager {
      *   2. If another tab deleted this doc since we last knew about it,
      *      .update() on a missing doc throws instead of silently
      *      recreating it - turning a silent resurrection into a loud,
-     *      catchable failure. The whole containing batch fails with it
-     *      (Firestore batches are all-or-nothing), so an unrelated
-     *      legitimate change queued in the same batch would need a retry
-     *      on the next save rather than landing immediately - an accepted
-     *      trade-off against silently reviving deleted data.
+     *      catchable failure, isolated to that one doc (see
+     *      _commitOpsResilient) so it can't take unrelated edits in the
+     *      same save down with it. The caller (app.js) is expected to
+     *      drop `orphanedIds` from its own array and tell the user.
+     *
+     * Gated by incremental-save-config.js's ALLOWLISTED_COMPANY_IDS: a
+     * company not on the allowlist gets _saveExperiencesLegacy() instead
+     * (the original, unmodified delete-all/reinsert-all behavior) -
+     * unaffected by anything in this file until explicitly opted in.
      */
     async saveExperiences(experiences) {
+        if (!isIncrementalSaveEnabled(this.companyId)) {
+            return this._saveExperiencesLegacy(experiences);
+        }
         try {
             await this._ensureMigrated(experiences);
 
@@ -251,18 +319,64 @@ class FirestoreDataManager {
                 return { type: isNew ? 'set' : 'update', ref: collection.doc(id), data };
             });
 
+            let orphanedIds = [];
             if (ops.length > 0) {
-                await this._commitInChunks(ops);
+                const result = await this._commitOpsResilient(ops);
+                orphanedIds = result.orphanedIds;
             }
 
-            // Only adopt the new baseline after a successful commit - if
-            // the commit above threw, _lastSyncedById is left as it was,
+            // Orphaned ids don't exist in Firestore - drop them from the
+            // baseline entirely so a future save neither treats them as
+            // "already known" (update) nor as unchanged.
+            for (const id of orphanedIds) newSnapshot.delete(id);
+
+            // Only adopt the new baseline after the commit - if it threw
+            // (a non-not-found error), _lastSyncedById is left as it was,
             // so a retry re-attempts the same (correct) diff rather than
             // silently thinking a failed write already landed.
             this._lastSyncedById = newSnapshot;
 
-            console.log(`✅ Synced ${ops.length}/${experiences.length} changed experience(s) to Firestore`);
-            return { success: true, count: ops.length };
+            const writtenCount = ops.length - orphanedIds.length;
+            console.log(
+                `✅ Synced ${writtenCount}/${experiences.length} changed experience(s) to Firestore` +
+                (orphanedIds.length > 0 ? `, ${orphanedIds.length} skipped (deleted elsewhere)` : '')
+            );
+            return { success: true, count: writtenCount, orphanedIds };
+
+        } catch (error) {
+            console.error('Firestore save error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Original save behavior, unmodified: delete every existing doc,
+     * recreate all of them under fresh random ids. Used for any company
+     * NOT on the incremental-save allowlist - see saveExperiences().
+     */
+    async _saveExperiencesLegacy(experiences) {
+        try {
+            const batch = this.db.batch();
+            const collection = this.getExperiencesCollection();
+
+            const existing = await collection.get();
+            existing.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            experiences.forEach((exp, index) => {
+                const docRef = collection.doc(`exp_${Date.now()}_${index}`);
+                batch.set(docRef, {
+                    ...exp,
+                    addedBy: this.userId,
+                    companyId: this.companyId,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            await batch.commit();
+            console.log(`✅ Saved ${experiences.length} experiences to Firestore (legacy path - company not in incremental-save allowlist)`);
+            return { success: true, count: experiences.length };
 
         } catch (error) {
             console.error('Firestore save error:', error);

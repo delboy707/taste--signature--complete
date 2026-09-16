@@ -1,3 +1,29 @@
+// PROPOSAL ONLY - NOT DEPLOYED, NOT USED BY ANY CODE IN THIS REPO.
+//
+// This is the hardening that used to be baked directly into the repo's
+// checked-in firestore.rules, undeployed, silently drifted from what's
+// actually live (see MIGRATION_RUNBOOK.md). Pulled out here so
+// firestore.rules can be an honest, verbatim copy of the live rules
+// (firestore.rules.live) with nothing extra mixed in.
+//
+// Three changes relative to live, each independent and separately
+// reviewable - none of them are needed by, or applied as part of, the
+// incremental-save migration:
+//
+//   1. companies/{companyId} update: restricts company-settings updates
+//      to the company's ownerId, not any company member.
+//   2. experiences/{experienceId} create: validates productInfo.name
+//      shape/length.
+//   3. experiences/{experienceId} update: requires
+//      request.resource.data.updatedBy == request.auth.uid. NOTE: if
+//      this is ever adopted, confirm every write path sets updatedBy
+//      first (this migration's saveExperiences() already does, as a
+//      descriptive field, but nothing currently depends on the rule
+//      enforcing it).
+//
+// Deploy only as its own deliberate change, with its own review - not
+// bundled into an unrelated migration.
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -23,8 +49,9 @@ service cloud.firestore {
       // Allow read if user belongs to this company
       allow read: if belongsToCompany(companyId);
 
-      // Allow company owner to update company settings
-      allow update: if belongsToCompany(companyId);
+      // (1) Allow ONLY the company owner to update company settings
+      allow update: if belongsToCompany(companyId)
+                    && resource.data.ownerId == request.auth.uid;
 
       // Allow create only during signup (user creates their own company)
       allow create: if request.auth != null
@@ -33,10 +60,18 @@ service cloud.firestore {
       // Company experiences - shared by all users in the company
       match /experiences/{experienceId} {
         allow read: if belongsToCompany(companyId);
+        // (2) Validate productInfo shape/length on create
         allow create: if belongsToCompany(companyId)
                       && request.resource.data.companyId == companyId
-                      && request.resource.data.addedBy == request.auth.uid;
-        allow update: if belongsToCompany(companyId);
+                      && request.resource.data.addedBy == request.auth.uid
+                      && request.resource.data.productInfo is map
+                      && (!("name" in request.resource.data.productInfo) ||
+                          (request.resource.data.productInfo.name is string
+                           && request.resource.data.productInfo.name.size() > 0
+                           && request.resource.data.productInfo.name.size() <= 500));
+        // (3) Require updatedBy on update
+        allow update: if belongsToCompany(companyId)
+                      && request.resource.data.updatedBy == request.auth.uid;
         allow delete: if belongsToCompany(companyId);
       }
 
@@ -65,12 +100,3 @@ service cloud.firestore {
     }
   }
 }
-
-// SECURITY NOTES:
-// 1. Multi-company isolation: Users can ONLY access data from their own company
-// 2. Company membership check: Uses user document to verify companyId
-// 3. Unauthenticated users cannot read or write any data
-// 4. Users cannot access other companies' data
-// 5. All writes require authentication AND company membership
-// 6. Company experiences are shared among all company members (single login per company for MVP)
-// 7. Future-proof: Ready for multi-user teams within companies

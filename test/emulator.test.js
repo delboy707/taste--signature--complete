@@ -67,9 +67,17 @@ async function makeSignedInCompanyUser(companyId) {
   return { uid, manager };
 }
 
+// Every test in this suite except the two explicit rollout-gate tests
+// below exercises the NEW incremental-save path - so freshCompanyId()
+// auto-allowlists each company it creates. The two gate tests manage
+// global.INCREMENTAL_SAVE_CONFIG themselves to prove the default
+// (empty allowlist) path independently.
+global.INCREMENTAL_SAVE_CONFIG = { ALLOWLISTED_COMPANY_IDS: [] };
+
 async function freshCompanyId() {
   const ref = adminDb.collection('companies').doc();
   await ref.set({ companyName: 'Test Co', ownerId: 'n/a', createdAt: adminFirestore.FieldValue.serverTimestamp() });
+  global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS.push(ref.id);
   return ref.id;
 }
 
@@ -227,6 +235,35 @@ async function main() {
     assert.equal(legacyGone.exists, false);
   });
 
+  await t('migration crash between create and addedBy-correction: next run repairs it (idempotent)', async () => {
+    const companyId = await freshCompanyId();
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const { uid: userA } = await makeSignedInCompanyUser(companyId);
+
+    // Simulate a crash AFTER step 1 (create, addedBy=self) but BEFORE
+    // step 2 (correct addedBy) and step 3 (delete legacy) of a previous
+    // migration attempt run by some other, now-irrelevant identity.
+    // Both the half-migrated new-scheme doc AND the still-undeleted
+    // legacy doc are left behind - exactly what a crash there produces.
+    await expCollection.doc('exp_1670000000000_0').set({ ...exp(120, 'Crash-prone doc'), addedBy: userA, companyId });
+    await expCollection.doc('120').set({ ...exp(120, 'Crash-prone doc'), addedBy: 'crashed_migration_runner', updatedBy: 'crashed_migration_runner', companyId });
+
+    // A fresh manager instance (as if the page reloaded after the crash)
+    // re-detects the still-present legacy doc and re-runs the full
+    // migration - it must repair addedBy, not just leave it wrong.
+    const { manager } = await makeSignedInCompanyUser(companyId);
+    const result = await manager.saveExperiences([exp(120, 'Crash-prone doc')]);
+    assert.equal(result.success, true, result.error);
+
+    const finalSnap = await expCollection.get();
+    assert.equal(finalSnap.size, 1, 'no duplicate left behind from the half-migrated attempt');
+    const finalDoc = await expCollection.doc('120').get();
+    assert.equal(finalDoc.data().addedBy, userA, 'addedBy repaired back to the TRUE original author, not left as crashed_migration_runner');
+
+    const legacyGone = await expCollection.doc('exp_1670000000000_0').get();
+    assert.equal(legacyGone.exists, false, 'legacy doc finally cleaned up on the repair run');
+  });
+
   await t('3b: concurrent migration by two instances - no duplicates, no data loss', async () => {
     const companyId = await freshCompanyId();
     const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
@@ -281,14 +318,51 @@ async function main() {
     // Tab B, unaware, edits its own stale copy and saves. Because tab B's
     // _lastSyncedById already had #100 (from its own loadExperiences()
     // call above), saveExperiences() writes it with .update(), not
-    // .set() - and .update() on a doc that no longer exists throws,
-    // so the whole save must fail loudly rather than silently recreate it.
+    // .set() - and .update() on a doc that no longer exists throws
+    // 'not-found', which is now handled softly: the save still succeeds
+    // overall, #100 comes back as orphaned (skipped, never resurrected),
+    // and count reflects that nothing was actually written.
     const editedStale = exp(100, 'Shared - edited by tab B, unaware it was deleted');
     const saveResult = await tabB.saveExperiences([editedStale]);
-    assert.equal(saveResult.success, false, 'must fail, not silently resurrect the deleted doc');
+    assert.equal(saveResult.success, true, 'a stale delete/edit race must not fail the whole save');
+    assert.deepEqual(saveResult.orphanedIds, ['100']);
+    assert.equal(saveResult.count, 0, 'nothing was actually written for the orphaned doc');
 
     snap = await expCollection.get();
     assert.equal(snap.size, 0, 'still deleted - no resurrection happened');
+  });
+
+  await t('3c-resilient: one stale doc must never fail an unrelated edit in the same save', async () => {
+    const companyId = await freshCompanyId();
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const { uid } = await makeSignedInCompanyUser(companyId);
+
+    const tabA = new FirestoreDataManager();
+    const tabB = new FirestoreDataManager();
+    await tabA.initialize(clientDb, uid);
+    await tabB.initialize(clientDb, uid);
+
+    await tabA.saveExperiences([exp(110, 'Will be deleted'), exp(111, 'Untouched')]);
+    await tabA.loadExperiences();
+    await tabB.loadExperiences();
+
+    await tabA.deleteExperience(110);
+
+    // Tab B saves TWO changes in one call: a stale edit to the
+    // now-deleted #110, AND a brand-new, completely unrelated addition.
+    // Both land in the same batch chunk (well under 500 ops) - the
+    // deleted doc's failure must not take the new addition down with it.
+    const staleEdit = exp(110, 'Edited after deletion, unaware');
+    const brandNew = exp(112, 'Genuinely new, unrelated');
+    const result = await tabB.saveExperiences([staleEdit, exp(111, 'Untouched'), brandNew]);
+
+    assert.equal(result.success, true);
+    assert.deepEqual(result.orphanedIds, ['110']);
+    assert.equal(result.count, 1, 'only #112 was actually new/changed and written');
+
+    const snap = await expCollection.get();
+    const ids = snap.docs.map(d => d.id).sort();
+    assert.deepEqual(ids, ['111', '112'], '#110 stays deleted, #111 untouched, #112 (unrelated) landed despite #110\'s conflict');
   });
 
   await t('600 experiences chunk into multiple batches and all persist', async () => {
@@ -397,6 +471,53 @@ async function main() {
     assert.ok(reloadedRetest, 'retest experience survived the round trip');
     assert.equal(reloadedRetest.isRetest, true);
     assert.equal(reloadedRetest.originalTestId, 70, 'the link back to the original test id is intact');
+  });
+
+  await t('rollout gate: company NOT in the allowlist gets the OLD legacy behavior', async () => {
+    const companyId = await freshCompanyId();
+    // Undo freshCompanyId()'s auto-allowlisting for this one test - this
+    // is exactly the default state every company starts in.
+    global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS =
+      global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS.filter(id => id !== companyId);
+
+    const { manager } = await makeSignedInCompanyUser(companyId);
+    const result = await manager.saveExperiences([exp(200, 'A'), exp(201, 'B')]);
+    assert.equal(result.success, true, result.error);
+    assert.equal(result.count, 2);
+    assert.equal(result.orphanedIds, undefined, 'legacy path has no concept of orphanedIds');
+
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const snap = await expCollection.get();
+    assert.equal(snap.size, 2);
+    const legacySchemeIds = snap.docs.filter(d => d.id.startsWith('exp_'));
+    assert.equal(legacySchemeIds.length, 2, 'still using the old exp_<ts>_<index> doc-id scheme, unchanged');
+
+    // Second save with the SAME content: the old behavior always
+    // deletes-and-recreates everything, unlike the new diff-based path.
+    const secondResult = await manager.saveExperiences([exp(200, 'A'), exp(201, 'B')]);
+    assert.equal(secondResult.count, 2, 'legacy path rewrites everything every time, even unchanged content');
+    const secondSnap = await expCollection.get();
+    const newDocIds = secondSnap.docs.map(d => d.id);
+    assert.ok(
+      newDocIds.every(id => !legacySchemeIds.map(d => d.id).includes(id)),
+      'every doc got a fresh id on the second save - old delete-all/reinsert-all behavior confirmed'
+    );
+  });
+
+  await t('rollout gate: company IN the allowlist gets the NEW incremental behavior', async () => {
+    const companyId = await freshCompanyId(); // auto-allowlisted
+    const { manager } = await makeSignedInCompanyUser(companyId);
+
+    const first = await manager.saveExperiences([exp(210, 'A'), exp(211, 'B')]);
+    assert.equal(first.count, 2);
+
+    const second = await manager.saveExperiences([exp(210, 'A'), exp(211, 'B')]);
+    assert.equal(second.count, 0, 'no-op resave writes nothing - the new incremental path, not the old one');
+
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const snap = await expCollection.get();
+    const ids = snap.docs.map(d => d.id).sort();
+    assert.deepEqual(ids, ['210', '211'], 'deterministic new-scheme doc ids, not exp_<ts>_<index>');
   });
 
   const failed = results.filter(r => !r.ok);

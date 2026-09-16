@@ -12,8 +12,17 @@
 // bypasses Firestore rules entirely.
 //
 // Usage:
-//   GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json \
+//   FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/outside/this/repo/service-account.json \
 //     node scripts/export-experiences-backup.js
+//
+// The service account key path is REQUIRED via that env var - there is
+// no fallback to an implicit credential chain, and no default path, so a
+// forgotten/misconfigured env var fails loudly instead of silently
+// picking up whatever credentials happen to be ambient. The script
+// refuses to run at all if the resolved key path is inside this repo's
+// own working tree, even if .gitignore would have caught it before a
+// commit - defense in depth against ever handling a real key that's
+// sitting somewhere it could be accidentally committed.
 //
 // Writes one JSON file per company to ./backups/<companyId>.json,
 // containing every document currently in that company's `experiences`
@@ -23,30 +32,52 @@
 
 const fs = require('fs');
 const path = require('path');
-const { initializeApp, cert, applicationDefault } = require('firebase-admin/app');
+const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
 const OUT_DIR = path.join(__dirname, '..', 'backups');
+const REPO_ROOT = path.resolve(__dirname, '..');
+
+function resolveServiceAccountPath() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (!raw) {
+    console.error(
+      'FIREBASE_SERVICE_ACCOUNT_PATH is not set. Point it at your service ' +
+      'account JSON key file, e.g.:\n' +
+      '  FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/service-account.json node scripts/export-experiences-backup.js'
+    );
+    process.exit(1);
+  }
+
+  const resolved = path.resolve(raw);
+
+  if (!fs.existsSync(resolved)) {
+    console.error(`Service account key not found at: ${resolved}`);
+    process.exit(1);
+  }
+
+  // Refuse to run if the key lives anywhere inside this repo's own
+  // working tree - a real credential has no business sitting somewhere
+  // `git add -A` could ever pick it up, .gitignore or not.
+  const relativeToRepo = path.relative(REPO_ROOT, resolved);
+  const isInsideRepo = relativeToRepo && !relativeToRepo.startsWith('..') && !path.isAbsolute(relativeToRepo);
+  if (isInsideRepo) {
+    console.error(
+      `Refusing to run: the service account key at\n  ${resolved}\n` +
+      `is inside this repo (${REPO_ROOT}).\n` +
+      'Move it somewhere outside the repo (e.g. ~/.secrets/) and point ' +
+      'FIREBASE_SERVICE_ACCOUNT_PATH there instead.'
+    );
+    process.exit(1);
+  }
+
+  return resolved;
+}
 
 function initAdminApp() {
-  // Mirrors api/firebase-token.js's own credential handling for
-  // consistency, but reads real credentials (not the emulator) - this
-  // script is meant to run against the real project, once, by hand.
-  if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY.trim();
-    if (privateKey.startsWith('"') && privateKey.endsWith('"')) privateKey = privateKey.slice(1, -1);
-    if (!privateKey.includes('\n')) privateKey = privateKey.replace(/\\n/g, '\n');
-    return initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey,
-      }),
-    });
-  }
-  // Falls back to GOOGLE_APPLICATION_CREDENTIALS pointing at a service
-  // account JSON file, the more common local-script path.
-  return initializeApp({ credential: applicationDefault() });
+  const keyPath = resolveServiceAccountPath();
+  const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+  return initializeApp({ credential: cert(serviceAccount) });
 }
 
 async function main() {
