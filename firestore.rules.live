@@ -1,3 +1,11 @@
+// Snapshot of the ACTUALLY DEPLOYED Firestore rules, copied by hand from
+// the Firebase console (Taste Signature AI App > Firestore > Rules),
+// revision dated Nov 28 2025 11:13 AM - the current live revision as of
+// 2026-09-16. Not deployed from here, not auto-synced - the repo's own
+// firestore.rules had drifted from this (see MIGRATION_RUNBOOK.md for
+// the diff). Re-copy this file by hand if the console shows a newer
+// revision before trusting it again.
+
 rules_version = '2';
 
 service cloud.firestore {

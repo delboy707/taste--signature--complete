@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test:diff": "node test/diff.test.js",
-    "test:emulator": "firebase emulators:exec --only firestore \"node test/emulator.test.js\""
+    "test:emulator": "firebase emulators:exec --only firestore,auth \"node test/emulator.test.js\""
   },
   "overrides": {
     "jose": "5.10.0"

@@ -169,18 +169,17 @@ async function main() {
     assert.equal(snap.size, 0);
   });
 
-  await t('old-scheme migration: backs up, removes legacy docs, no duplicates/orphans', async () => {
+  await t('old-scheme migration: removes legacy docs, no duplicates/orphans, no backup write', async () => {
     const companyId = await freshCompanyId();
     const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const { uid, manager } = await makeSignedInCompanyUser(companyId);
 
-    // Seed 2 legacy-scheme docs directly (bypassing the app entirely, as
-    // if this company had been saving since before this change shipped).
-    await expCollection.doc('exp_1700000000000_0').set({ ...exp(40, 'Legacy A'), addedBy: 'someone', companyId });
-    await expCollection.doc('exp_1700000000000_1').set({ ...exp(41, 'Legacy B'), addedBy: 'someone', companyId });
+    // Seed 2 legacy-scheme docs directly, added by the same user who will
+    // run the migration - the "different author" case is tested separately
+    // in 3a below.
+    await expCollection.doc('exp_1700000000000_0').set({ ...exp(40, 'Legacy A'), addedBy: uid, companyId });
+    await expCollection.doc('exp_1700000000000_1').set({ ...exp(41, 'Legacy B'), addedBy: uid, companyId });
 
-    const { manager } = await makeSignedInCompanyUser(companyId);
-    // The in-memory array is what the app would have loaded+possibly
-    // edited; migration rewrites exactly this set under the new scheme.
     const result = await manager.saveExperiences([exp(40, 'Legacy A'), exp(41, 'Legacy B'), exp(42, 'New C')]);
     assert.equal(result.success, true);
 
@@ -188,18 +187,108 @@ async function main() {
     const finalIds = finalSnap.docs.map(d => d.id).sort();
     assert.deepEqual(finalIds, ['40', '41', '42'], 'only new-scheme ids remain, no legacy ids, no duplicates');
 
-    const backupSnap = await adminDb
-      .collection('companies').doc(companyId)
-      .collection(`experiences_backup_${new Date().toISOString().slice(0, 10)}`)
-      .get();
-    assert.equal(backupSnap.size, 2, 'backup holds exactly the 2 legacy docs that existed pre-migration');
-    const backupIds = backupSnap.docs.map(d => d.id).sort();
-    assert.deepEqual(backupIds, ['exp_1700000000000_0', 'exp_1700000000000_1']);
+    // No client-side backup collection - migration ships with zero
+    // firestore.rules changes (see MIGRATION_RUNBOOK.md); backup is a
+    // pre-migration firebase-admin export run by Derek, not app code.
+    const backupCollections = await adminDb.collection('companies').doc(companyId).listCollections();
+    assert.ok(
+      !backupCollections.some(c => c.id.startsWith('experiences_backup_')),
+      'no experiences_backup_* collection was created by the app'
+    );
 
     // A second save must not re-trigger migration (no legacy docs left,
     // and _migrationChecked is already true for this manager instance).
     const second = await manager.saveExperiences([exp(40, 'Legacy A'), exp(41, 'Legacy B'), exp(42, 'New C')]);
     assert.equal(second.count, 0, 'nothing to write - already migrated and unchanged');
+  });
+
+  await t('3a: migration preserves the ORIGINAL author when a different user runs it', async () => {
+    const companyId = await freshCompanyId();
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+
+    // Two real, distinct company members - live's create rule requires
+    // request.resource.data.addedBy == request.auth.uid, so this is the
+    // scenario that would break a naive delete+recreate-as-one-create.
+    const { uid: userA } = await makeSignedInCompanyUser(companyId);
+    const { manager: managerB, uid: userB } = await makeSignedInCompanyUser(companyId);
+    assert.notEqual(userA, userB);
+
+    await expCollection.doc('exp_1690000000000_0').set({ ...exp(80, 'Original by A'), addedBy: userA, companyId });
+
+    const result = await managerB.saveExperiences([exp(80, 'Original by A')]);
+    assert.equal(result.success, true, `migration by a different user must not be rejected: ${result.error}`);
+
+    const finalDoc = await expCollection.doc('80').get();
+    assert.ok(finalDoc.exists);
+    assert.equal(finalDoc.data().addedBy, userA, 'addedBy must still be the ORIGINAL author, not whoever ran the migration');
+    assert.equal(finalDoc.data().updatedBy, userB, 'updatedBy correctly reflects who actually touched it just now');
+
+    const legacyGone = await expCollection.doc('exp_1690000000000_0').get();
+    assert.equal(legacyGone.exists, false);
+  });
+
+  await t('3b: concurrent migration by two instances - no duplicates, no data loss', async () => {
+    const companyId = await freshCompanyId();
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const { uid } = await makeSignedInCompanyUser(companyId);
+
+    await expCollection.doc('exp_1680000000000_0').set({ ...exp(90, 'Concurrent A'), addedBy: uid, companyId });
+    await expCollection.doc('exp_1680000000000_1').set({ ...exp(91, 'Concurrent B'), addedBy: uid, companyId });
+
+    // Two independent manager instances (e.g. two tabs), same user, both
+    // discovering the same legacy docs at the same time.
+    const instance1 = new FirestoreDataManager();
+    const instance2 = new FirestoreDataManager();
+    await instance1.initialize(clientDb, uid);
+    await instance2.initialize(clientDb, uid);
+
+    const experiences = [exp(90, 'Concurrent A'), exp(91, 'Concurrent B')];
+    const [r1, r2] = await Promise.all([
+      instance1.saveExperiences(experiences),
+      instance2.saveExperiences(experiences),
+    ]);
+    assert.equal(r1.success, true, r1.error);
+    assert.equal(r2.success, true, r2.error);
+
+    const finalSnap = await expCollection.get();
+    const finalIds = finalSnap.docs.map(d => d.id).sort();
+    assert.deepEqual(finalIds, ['90', '91'], 'exactly the 2 expected docs - no duplicates from the race, no legacy leftovers');
+    const byId = new Map(finalSnap.docs.map(d => [d.id, d.data()]));
+    assert.equal(byId.get('90').addedBy, uid);
+    assert.equal(byId.get('91').addedBy, uid);
+  });
+
+  await t('3c: tab A deletes, tab B edits the stale copy and saves - no resurrection', async () => {
+    const companyId = await freshCompanyId();
+    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
+    const { uid } = await makeSignedInCompanyUser(companyId);
+
+    const tabA = new FirestoreDataManager();
+    const tabB = new FirestoreDataManager();
+    await tabA.initialize(clientDb, uid);
+    await tabB.initialize(clientDb, uid);
+
+    await tabA.saveExperiences([exp(100, 'Shared')]);
+    await tabA.loadExperiences();
+    await tabB.loadExperiences(); // both tabs now know about #100
+
+    // Tab A deletes it.
+    const delResult = await tabA.deleteExperience(100);
+    assert.equal(delResult.success, true);
+    let snap = await expCollection.get();
+    assert.equal(snap.size, 0, 'deleted for real');
+
+    // Tab B, unaware, edits its own stale copy and saves. Because tab B's
+    // _lastSyncedById already had #100 (from its own loadExperiences()
+    // call above), saveExperiences() writes it with .update(), not
+    // .set() - and .update() on a doc that no longer exists throws,
+    // so the whole save must fail loudly rather than silently recreate it.
+    const editedStale = exp(100, 'Shared - edited by tab B, unaware it was deleted');
+    const saveResult = await tabB.saveExperiences([editedStale]);
+    assert.equal(saveResult.success, false, 'must fail, not silently resurrect the deleted doc');
+
+    snap = await expCollection.get();
+    assert.equal(snap.size, 0, 'still deleted - no resurrection happened');
   });
 
   await t('600 experiences chunk into multiple batches and all persist', async () => {

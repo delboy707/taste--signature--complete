@@ -28,18 +28,19 @@ class FirestoreDataManager {
     }
 
     /**
-     * Commit a list of {type: 'set'|'delete', ref, data?} operations,
-     * split into <=500-op batches (Firestore's hard limit), committed
-     * sequentially. Batches are atomic individually, not as a group -
-     * a crash between batches can leave a partial state, same exposure
-     * the previous single-batch code already had once past 500 ops,
-     * just never reachable before.
+     * Commit a list of {type: 'set'|'update'|'delete', ref, data?}
+     * operations, split into <=500-op batches (Firestore's hard limit),
+     * committed sequentially. Batches are atomic individually, not as a
+     * group - a crash between batches can leave a partial state, same
+     * exposure the previous single-batch code already had once past 500
+     * ops, just never reachable before.
      */
     async _commitInChunks(ops) {
         for (const opsChunk of chunkArray(ops)) {
             const batch = this.db.batch();
             for (const op of opsChunk) {
                 if (op.type === 'set') batch.set(op.ref, op.data);
+                else if (op.type === 'update') batch.update(op.ref, op.data);
                 else batch.delete(op.ref);
             }
             await batch.commit();
@@ -50,15 +51,28 @@ class FirestoreDataManager {
      * One-time migration off the legacy "exp_<ts>_<index>" doc-id scheme.
      * Runs at most once per manager instance (this._migrationChecked) and
      * is a no-op for companies already on the new scheme (the common
-     * case after the first migrated save). Before deleting anything, the
-     * full current collection is copied to
-     * companies/{companyId}/experiences_backup_{yyyy-mm-dd} - a plain
-     * collection copy, not a Firestore export, so it is itself subject to
-     * the same 500-op chunking.
+     * case after the first migrated save).
      *
-     * `experiences` is the caller's current in-memory array - used to
-     * write the new-scheme docs so the migration and the save that
-     * triggered it happen together, not as two separate round trips.
+     * No client-side backup write here (see firestore.rules - live is on
+     * the Spark plan, no managed export, and the migration is designed to
+     * ship with ZERO rules changes; a backup subcollection would need a
+     * new rule, which is exactly what this design avoids). The backup is
+     * a firebase-admin export script run once by Derek before rollout -
+     * see MIGRATION_RUNBOOK.md.
+     *
+     * addedBy preservation: live's `experiences` create rule requires
+     * request.resource.data.addedBy == request.auth.uid, so a doc
+     * originally created by a different user (e.g. migrated by user B,
+     * added by user A) cannot be freshly CREATED at the new doc id with
+     * addedBy left as A - that create would be rejected outright. Fix:
+     * create the new doc with addedBy = self (satisfies create), then
+     * immediately correct it with a separate UPDATE call restoring the
+     * true original addedBy - live's update rule has no field
+     * restrictions at all, so this is allowed. The create and the
+     * correcting update MUST be separate Firestore calls, not ops in the
+     * same batch: rules evaluate every operation in a batch against the
+     * state before the whole batch started, so a same-batch create+update
+     * of the same brand-new doc would both be evaluated as `create`.
      */
     async _ensureMigrated(experiences) {
         if (this._migrationChecked) return;
@@ -71,48 +85,61 @@ class FirestoreDataManager {
 
         console.log(`🔄 Migrating ${legacyDocs.length} legacy-scheme experience doc(s) for company ${this.companyId}...`);
 
-        // 1. Backup the FULL current collection (legacy docs and any
-        // already-new-scheme docs alike) before touching anything.
-        const today = new Date().toISOString().slice(0, 10);
-        const backupCollection = this.db
-            .collection('companies').doc(this.companyId)
-            .collection(`experiences_backup_${today}`);
-        const backupOps = snapshot.docs.map(doc => ({
-            type: 'set',
-            ref: backupCollection.doc(doc.id),
-            data: doc.data(),
-        }));
-        await this._commitInChunks(backupOps);
+        // 1. Create every new-scheme doc, addedBy = self (satisfies the
+        // create rule). Uses the CURRENT in-memory content for each id if
+        // present (the user may have edited before this save), falling
+        // back to the legacy doc's own stored content otherwise.
+        const currentById = new Map(experiences.map(exp => [String(exp.id), exp]));
 
-        // 2. Delete every legacy-scheme doc.
+        const createOps = legacyDocs.map(doc => {
+            const legacyData = doc.data();
+            const content = currentById.get(String(legacyData.id)) || legacyData;
+            return {
+                type: 'set',
+                ref: collection.doc(String(legacyData.id)),
+                data: {
+                    ...content,
+                    addedBy: this.userId,
+                    updatedBy: this.userId,
+                    companyId: this.companyId,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                },
+            };
+        });
+        await this._commitInChunks(createOps);
+
+        // 2. Correct addedBy back to the true original creator, wherever
+        // it differs from whoever happened to run this migration. A
+        // plain UPDATE - no field restrictions to satisfy.
+        const correctionOps = legacyDocs
+            .map(doc => ({ doc, originalAddedBy: doc.data().addedBy }))
+            .filter(({ originalAddedBy }) => originalAddedBy && originalAddedBy !== this.userId)
+            .map(({ doc, originalAddedBy }) => ({
+                type: 'update',
+                ref: collection.doc(String(doc.data().id)),
+                data: { addedBy: originalAddedBy },
+            }));
+        if (correctionOps.length > 0) {
+            await this._commitInChunks(correctionOps);
+        }
+
+        // 3. Only now delete the legacy docs - the new-scheme copies are
+        // already fully written and corrected.
         const deleteOps = legacyDocs.map(doc => ({ type: 'delete', ref: doc.ref }));
         await this._commitInChunks(deleteOps);
 
-        // 3. Re-write the current experiences under the new deterministic
-        // scheme. Any doc already on the new scheme (not in legacyDocs)
-        // is left untouched here - it gets picked up by the normal diff
-        // in saveExperiences() right after this returns.
-        const rewriteOps = experiences.map(exp => ({
-            type: 'set',
-            ref: collection.doc(String(exp.id)),
-            data: {
-                ...exp,
-                addedBy: this.userId,
-                updatedBy: this.userId, // see saveExperiences() - satisfies rules' update branch too
-                companyId: this.companyId,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            },
-        }));
-        await this._commitInChunks(rewriteOps);
-
         // These are now known-persisted under the new scheme; the
         // immediately-following saveExperiences() diff should not
-        // re-write them again as if they were still dirty.
-        for (const exp of experiences) {
-            this._lastSyncedById.set(String(exp.id), diffKey(exp));
+        // re-write them again as if they were still dirty, and should
+        // treat them as "already existing" (update, not set) from here on.
+        for (const doc of legacyDocs) {
+            const legacyData = doc.data();
+            const id = String(legacyData.id);
+            const content = currentById.get(id) || legacyData;
+            this._lastSyncedById.set(id, diffKey(content));
         }
 
-        console.log(`✅ Migration complete: ${legacyDocs.length} legacy doc(s) backed up to experiences_backup_${today} and removed.`);
+        console.log(`✅ Migration complete: ${legacyDocs.length} legacy doc(s) moved to the new scheme and removed.`);
     }
 
     /**
@@ -184,6 +211,22 @@ class FirestoreDataManager {
      * actions make. An experience absent from `experiences` because
      * another tab hasn't loaded it yet, or because of a stale local
      * array, is therefore never mistaken for "the user deleted it."
+     *
+     * CREATE vs UPDATE matters here, not just for rules: an id this
+     * instance already believes exists (present in _lastSyncedById
+     * before this call) is written with .update(), never .set(). Two
+     * reasons:
+     *   1. addedBy must only ever be set on genuine creation - writing it
+     *      on every save would silently overwrite the true original
+     *      author whenever a different company member edits and saves.
+     *   2. If another tab deleted this doc since we last knew about it,
+     *      .update() on a missing doc throws instead of silently
+     *      recreating it - turning a silent resurrection into a loud,
+     *      catchable failure. The whole containing batch fails with it
+     *      (Firestore batches are all-or-nothing), so an unrelated
+     *      legitimate change queued in the same batch would need a retry
+     *      on the next save rather than landing immediately - an accepted
+     *      trade-off against silently reviving deleted data.
      */
     async saveExperiences(experiences) {
         try {
@@ -192,26 +235,21 @@ class FirestoreDataManager {
             const collection = this.getExperiencesCollection();
             const { toUpsert, newSnapshot } = computeUpsertDiff(experiences, this._lastSyncedById);
 
-            const ops = toUpsert.map(exp => ({
-                type: 'set',
-                ref: collection.doc(String(exp.id)),
-                data: {
+            const ops = toUpsert.map(exp => {
+                const id = String(exp.id);
+                const isNew = !this._lastSyncedById.has(id);
+                const data = {
                     ...exp,
-                    addedBy: this.userId,
-                    // Also required by firestore.rules' `update` branch
-                    // (experiences/{id} allow update: ... &&
-                    // request.resource.data.updatedBy == auth.uid). The old
-                    // delete-then-recreate-under-a-new-id code never
-                    // actually triggered an "update" in the rules' sense
-                    // (every write was a fresh doc, always evaluated as
-                    // `create`), so this requirement was dormant - a
-                    // deterministic doc id now hits it on every edit of an
-                    // existing experience.
+                    // Descriptive audit field only - NOT required by
+                    // firestore.rules (live's update rule has no field
+                    // checks at all). Safe to include on every write.
                     updatedBy: this.userId,
                     companyId: this.companyId,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                },
-            }));
+                };
+                if (isNew) data.addedBy = this.userId; // only on genuine creation
+                return { type: isNew ? 'set' : 'update', ref: collection.doc(id), data };
+            });
 
             if (ops.length > 0) {
                 await this._commitInChunks(ops);
