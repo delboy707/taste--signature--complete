@@ -28,3 +28,19 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Firebase emulator artifacts (test/emulator.test.js - never a real project)
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
+# Service account keys - never committed, regardless of where they land
+# (scripts/export-experiences-backup.js also refuses to run against one
+# found inside the repo, as a second layer of defence)
+*serviceAccount*.json
+*service-account*.json
+firebase-adminsdk*.json
+
+# Output of scripts/export-experiences-backup.js - real production data
+backups/

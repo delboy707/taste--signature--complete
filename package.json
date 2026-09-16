@@ -10,6 +10,14 @@
     "firebase-admin": "14.1.0",
     "lucide": "^1.28.0"
   },
+  "devDependencies": {
+    "firebase": "^11.0.0",
+    "firebase-tools": "^15.0.0"
+  },
+  "scripts": {
+    "test:diff": "node test/diff.test.js",
+    "test:emulator": "firebase emulators:exec --only firestore,auth \"node test/emulator.test.js\""
+  },
   "overrides": {
     "jose": "5.10.0"
   }
