@@ -825,6 +825,14 @@ async function saveData() {
             const result = await firestoreManager.saveExperiences(experiences);
             if (result.success) {
                 console.log('✅ Data saved to cloud');
+                // Supabase dual-write (Option A) - fire-and-forget, never
+                // awaited here: it must never delay or fail this save.
+                // Diffs against its own last-pushed snapshot internally,
+                // so only new/changed experiences are actually sent.
+                // No-op unless ENABLE_SUPABASE_DUAL_WRITE is true.
+                if (window.SignatureSupabaseSync) {
+                    window.SignatureSupabaseSync.syncSignatureExperiences(experiences);
+                }
                 // A doc in `orphanedIds` was deleted by someone else (another
                 // tab/teammate) between when we last knew about it and this
                 // save - saveExperiences() already skipped writing it rather
@@ -2023,6 +2031,11 @@ async function deleteExperience(id) {
                 console.error('Failed to delete from cloud:', result.error);
             }
         }
+        // Explicit delete only - same fire-and-forget contract as the push
+        // in saveData(). No-op unless ENABLE_SUPABASE_DUAL_WRITE is true.
+        if (window.SignatureSupabaseSync) {
+            window.SignatureSupabaseSync.deleteSignatureProfile(id, experiences);
+        }
         saveData();
         updateHistory();
         updateDashboard();
@@ -2046,6 +2059,7 @@ if (exportDataBtn) {
 // ===== CLEAR DATA =====
 document.getElementById('clear-data').addEventListener('click', async () => {
     if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
+        const idsBeingCleared = experiences.map(e => e.id);
         experiences = [];
         // Explicit bulk delete - same reasoning as deleteExperience(): a
         // save with an empty array must not be what clears Firestore.
@@ -2054,6 +2068,13 @@ document.getElementById('clear-data').addEventListener('click', async () => {
             if (!result.success) {
                 console.error('Failed to clear cloud data:', result.error);
             }
+        }
+        // Explicit bulk delete only - same fire-and-forget contract as the
+        // push in saveData(). No-op unless ENABLE_SUPABASE_DUAL_WRITE is true.
+        if (window.SignatureSupabaseSync) {
+            idsBeingCleared.forEach(id => {
+                window.SignatureSupabaseSync.deleteSignatureProfile(id, experiences);
+            });
         }
         saveData();
         updateHistory();
