@@ -64,6 +64,16 @@ service cloud.firestore {
         allow read: if belongsToCompany(companyId);
         allow write: if belongsToCompany(companyId);
       }
+
+      // One-time incremental-save migration backups
+      // (companies/{companyId}/experiences_backup_{yyyy-mm-dd}/{docId}).
+      // Collection name isn't static (dated), so it's matched by prefix
+      // rather than the literal `match /experiences_backup_x/` this repo
+      // uses for fixed collection names elsewhere in this file.
+      match /{backupCollection}/{docId} {
+        allow read, write: if belongsToCompany(companyId)
+                            && backupCollection.matches('^experiences_backup_.*$');
+      }
     }
 
     // Deny all other access

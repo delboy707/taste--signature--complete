@@ -1993,9 +1993,18 @@ function updateHistory() {
         `).join('');
 }
 
-function deleteExperience(id) {
+async function deleteExperience(id) {
     if (confirm('Are you sure you want to delete this experience?')) {
         experiences = experiences.filter(e => e.id !== id);
+        // Explicit delete - saveExperiences() never infers a deletion from
+        // an id's absence, so the removal itself must be told to Firestore
+        // directly, not left for the next save to "notice".
+        if (isCloudSyncEnabled && firestoreManager) {
+            const result = await firestoreManager.deleteExperience(id);
+            if (!result.success) {
+                console.error('Failed to delete from cloud:', result.error);
+            }
+        }
         saveData();
         updateHistory();
         updateDashboard();
@@ -2017,9 +2026,17 @@ if (exportDataBtn) {
 }
 
 // ===== CLEAR DATA =====
-document.getElementById('clear-data').addEventListener('click', () => {
+document.getElementById('clear-data').addEventListener('click', async () => {
     if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
         experiences = [];
+        // Explicit bulk delete - same reasoning as deleteExperience(): a
+        // save with an empty array must not be what clears Firestore.
+        if (isCloudSyncEnabled && firestoreManager) {
+            const result = await firestoreManager.clearAllData();
+            if (!result.success) {
+                console.error('Failed to clear cloud data:', result.error);
+            }
+        }
         saveData();
         updateHistory();
         updateDashboard();
