@@ -33,7 +33,13 @@ const QEP_CAPTURE_CONFIG = {
 
     // Feature flag - keep false until this feature is reviewed for
     // production. Dev-only for TSS Phase 1 checkpoint (c).
-    ENABLE_TARGETS_LOADED: false
+    ENABLE_TARGETS_LOADED: false,
+
+    // qep-capture's own app (not its Supabase project) - base URL for the
+    // "Test in Capture" handoff link on a locked version
+    // (?version=<project_version id>). Point at http://localhost:3000 to
+    // test against a qep-capture dev server running locally.
+    CAPTURE_APP_URL: 'https://capture.qeptss.com'
 };
 
 if (typeof window !== 'undefined') {
