@@ -270,6 +270,11 @@ let quickEntryState = {
     formData: {}
 };
 
+// Which Quick Entry slider ids the user has actually moved this session -
+// lets an untouched slider save as null instead of its 5 (or 3 for
+// purchase intent) default. See touched-fields.js.
+let quickEntryTouched = window.TouchedFields.createTouchedTracker();
+
 /**
  * Initialize Quick Entry module
  */
@@ -551,6 +556,7 @@ function attachQuickEntryListeners() {
     // Slider value updates and +/- buttons
     document.querySelectorAll('#quick-entry-form-section input[type="range"]').forEach(slider => {
         slider.addEventListener('input', () => {
+            TouchedFields.markTouched(quickEntryTouched, slider.id);
             const valSpan = document.getElementById(`${slider.id}-val`);
             if (valSpan) valSpan.textContent = slider.value;
         });
@@ -562,6 +568,8 @@ function attachQuickEntryListeners() {
             const sliderId = btn.dataset.slider;
             const slider = document.getElementById(sliderId);
             if (!slider) return;
+
+            TouchedFields.markTouched(quickEntryTouched, sliderId);
 
             const step = parseInt(slider.step) || 1;
             const min = parseInt(slider.min);
@@ -656,6 +664,11 @@ function selectCategory(categoryKey) {
 /**
  * Apply template defaults to sliders
  */
+// Sets slider .value directly (no 'input' event) - deliberately does NOT
+// mark these touched. A category template's numbers are a guessed
+// starting point, not the panelist's own rating; if they submit without
+// actually moving a slider, that field should save as null, not the
+// template's guess.
 function applyTemplateDefaults(defaults) {
     const mappings = {
         'quick-visual': defaults.appearance?.visualAppeal,
@@ -698,6 +711,7 @@ function resetQuickEntry() {
         selectedEmotions: [],
         formData: {}
     };
+    TouchedFields.resetTouchedTracker(quickEntryTouched);
 
     // Reset form fields
     document.getElementById('quick-product-name').value = '';
@@ -754,52 +768,57 @@ function submitQuickEntry() {
         },
         stages: {
             appearance: {
-                visualAppeal: parseInt(document.getElementById('quick-visual').value),
-                colorIntensity: parseInt(document.getElementById('quick-visual').value),
-                overallIntensity: parseInt(document.getElementById('quick-visual').value),
+                visualAppeal: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-visual', document.getElementById('quick-visual').value),
+                colorIntensity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-visual', document.getElementById('quick-visual').value),
+                overallIntensity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-visual', document.getElementById('quick-visual').value),
                 emotions: buildEmotionObject(['anticipation', 'desire', 'excitement'])
             },
             aroma: {
-                intensity: parseInt(document.getElementById('quick-aroma').value),
-                sweetness: parseInt(document.getElementById('quick-sweetness').value),
-                complexity: parseInt(document.getElementById('quick-aroma').value),
-                overallIntensity: parseInt(document.getElementById('quick-aroma').value),
+                intensity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aroma', document.getElementById('quick-aroma').value),
+                sweetness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-sweetness', document.getElementById('quick-sweetness').value),
+                complexity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aroma', document.getElementById('quick-aroma').value),
+                overallIntensity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aroma', document.getElementById('quick-aroma').value),
                 emotions: buildEmotionObject(['pleasure', 'comfort', 'nostalgia'])
             },
             frontMouth: {
-                sweetness: parseInt(document.getElementById('quick-sweetness').value),
-                sourness: parseInt(document.getElementById('quick-sourness').value),
-                saltiness: parseInt(document.getElementById('quick-salty').value),
-                texture: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                sweetness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-sweetness', document.getElementById('quick-sweetness').value),
+                sourness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-sourness', document.getElementById('quick-sourness').value),
+                saltiness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-salty', document.getElementById('quick-salty').value),
+                texture: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-texture', document.getElementById('quick-texture').value),
+                // Not slider-backed - Quick Entry never asks for this rating, so it is
+                // never a real value, touched or not.
+                overallIntensity: null,
                 emotions: buildEmotionObject(['excitement', 'satisfaction'])
             },
             midRearMouth: {
-                bitterness: parseInt(document.getElementById('quick-bitterness').value),
-                umami: parseInt(document.getElementById('quick-salty').value),
-                richness: parseInt(document.getElementById('quick-texture').value),
-                creaminess: parseInt(document.getElementById('quick-texture').value),
-                overallIntensity: 5,
+                bitterness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-bitterness', document.getElementById('quick-bitterness').value),
+                umami: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-salty', document.getElementById('quick-salty').value),
+                richness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-texture', document.getElementById('quick-texture').value),
+                creaminess: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-texture', document.getElementById('quick-texture').value),
+                overallIntensity: null,
                 emotions: buildEmotionObject(['indulgence', 'comfort', 'satisfaction'])
             },
             aftertaste: {
-                duration: parseInt(document.getElementById('quick-aftertaste').value),
-                pleasantness: parseInt(document.getElementById('quick-aftertaste').value),
-                cleanness: 5,
-                overallIntensity: parseInt(document.getElementById('quick-aftertaste').value),
+                duration: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aftertaste', document.getElementById('quick-aftertaste').value),
+                pleasantness: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aftertaste', document.getElementById('quick-aftertaste').value),
+                cleanness: null,
+                overallIntensity: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-aftertaste', document.getElementById('quick-aftertaste').value),
                 emotions: buildEmotionObject(['satisfaction', 'completeness'])
             }
         },
         needState: quickEntryState.selectedNeedState,
         emotionalTriggers: {
+            // moreishness/refreshment reflect an actual chip selection (7) vs. not (5) -
+            // that's a real signal, not an untouched default, so it is left as-is.
             moreishness: quickEntryState.selectedEmotions.includes('moreishness') ? 7 : 5,
             refreshment: quickEntryState.selectedEmotions.includes('refreshment') ? 7 : 5,
-            melt: 5,
-            crunch: 5
+            // Not slider-backed - Quick Entry never asks about these.
+            melt: null,
+            crunch: null
         },
         quickEmotions: quickEntryState.selectedEmotions,
-        overallSatisfaction: parseInt(document.getElementById('quick-satisfaction').value),
-        purchaseIntent: parseInt(document.getElementById('quick-purchase').value),
+        overallSatisfaction: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-satisfaction', document.getElementById('quick-satisfaction').value),
+        purchaseIntent: TouchedFields.touchedIntValue(quickEntryTouched, 'quick-purchase', document.getElementById('quick-purchase').value),
         notes: document.getElementById('quick-notes').value.trim()
     };
 
@@ -889,4 +908,5 @@ window.renderQuickEntryView = renderQuickEntryView;
 window.resetQuickEntry = resetQuickEntry;
 window.submitQuickEntry = submitQuickEntry;
 window.changeCategory = changeCategory;
+window.selectCategory = selectCategory;
 window.CATEGORY_TEMPLATES = CATEGORY_TEMPLATES;

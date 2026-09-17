@@ -16,6 +16,8 @@
   },
   "scripts": {
     "test:diff": "node test/diff.test.js",
+    "test:touched-fields": "node test/touched-fields.test.js",
+    "test:quick-entry-touched": "node test/quick-entry-touched.test.js",
     "test:emulator": "firebase emulators:exec --only firestore,auth \"node test/emulator.test.js\""
   },
   "overrides": {
