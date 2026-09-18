@@ -5,6 +5,10 @@ let currentStage = 1;
 const totalStages = 8;
 let firestoreManager = null;
 let isCloudSyncEnabled = false;
+// Which main-form slider ids the user has actually interacted with this
+// session - lets an untouched slider save as null instead of its HTML
+// default. See touched-fields.js.
+let mainFormTouched = window.TouchedFields.createTouchedTracker();
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -316,6 +320,12 @@ function navigateStage(direction) {
 function initSliders() {
     const sliders = document.querySelectorAll('input[type="range"]');
     sliders.forEach(slider => {
+        // Mark touched regardless of whether this slider has a value-display
+        // span - the untouched/touched distinction must never depend on that.
+        slider.addEventListener('input', (e) => {
+            TouchedFields.markTouched(mainFormTouched, e.target.id);
+        });
+
         const valueSpan = document.getElementById(`${slider.id}-val`);
         if (valueSpan) {
             slider.addEventListener('input', (e) => {
@@ -377,6 +387,13 @@ function loadFormDraft() {
                 const valueSpan = document.getElementById(`${id}-val`);
                 if (valueSpan && element.type === 'range') {
                     valueSpan.textContent = value;
+                }
+                // A resumed draft's sliders were set programmatically, not via
+                // the 'input' event initSliders() listens on - mark them
+                // touched explicitly so resuming a draft never silently nulls
+                // out a rating the user already made before autosaving.
+                if (element.type === 'range') {
+                    TouchedFields.markTouched(mainFormTouched, id);
                 }
             } else if (id === 'need-state') {
                 const radio = document.querySelector(`input[name="need-state"][value="${value}"]`);
@@ -494,190 +511,190 @@ function handleFormSubmit(e) {
                 attrs.forEach(attr => {
                     const elemId = `${prefix}-${attr.id}`;
                     const elem = document.getElementById(elemId);
-                    stageData[attrIdToKey(attr.id)] = parseInt(elem?.value || 0);
+                    stageData[attrIdToKey(attr.id)] = TouchedFields.touchedIntValue(mainFormTouched, elemId, elem?.value);
                 });
                 stages[stageId] = stageData;
             });
 
             // Add emotions for each stage (collected separately from emotion sliders)
             stages.appearance.emotions = {
-                anticipation: parseInt(document.getElementById('appearance-anticipation')?.value || 0),
-                curiosity: parseInt(document.getElementById('appearance-curiosity')?.value || 0),
-                desire: parseInt(document.getElementById('appearance-desire')?.value || 0),
-                eager: parseInt(document.getElementById('appearance-eager')?.value || 0),
-                excitement: parseInt(document.getElementById('appearance-excitement')?.value || 0),
-                happiness: parseInt(document.getElementById('appearance-happiness')?.value || 0),
-                interest: parseInt(document.getElementById('appearance-interest')?.value || 0),
-                pleased: parseInt(document.getElementById('appearance-pleased')?.value || 0),
-                surprise: parseInt(document.getElementById('appearance-surprise')?.value || 0),
-                attracted: parseInt(document.getElementById('appearance-attracted')?.value || 0),
-                disappointed: parseInt(document.getElementById('appearance-disappointed')?.value || 0),
-                disgusted: parseInt(document.getElementById('appearance-disgusted')?.value || 0),
-                indifferent: parseInt(document.getElementById('appearance-indifferent')?.value || 0),
-                suspicious: parseInt(document.getElementById('appearance-suspicious')?.value || 0),
-                worried: parseInt(document.getElementById('appearance-worried')?.value || 0),
-                anxious: parseInt(document.getElementById('appearance-anxious')?.value || 0),
-                confused: parseInt(document.getElementById('appearance-confused')?.value || 0),
-                bored: parseInt(document.getElementById('appearance-bored')?.value || 0)
+                anticipation: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-anticipation', document.getElementById('appearance-anticipation')?.value),
+                curiosity: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-curiosity', document.getElementById('appearance-curiosity')?.value),
+                desire: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-desire', document.getElementById('appearance-desire')?.value),
+                eager: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-eager', document.getElementById('appearance-eager')?.value),
+                excitement: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-excitement', document.getElementById('appearance-excitement')?.value),
+                happiness: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-happiness', document.getElementById('appearance-happiness')?.value),
+                interest: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-interest', document.getElementById('appearance-interest')?.value),
+                pleased: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-pleased', document.getElementById('appearance-pleased')?.value),
+                surprise: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-surprise', document.getElementById('appearance-surprise')?.value),
+                attracted: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-attracted', document.getElementById('appearance-attracted')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-disappointed', document.getElementById('appearance-disappointed')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-disgusted', document.getElementById('appearance-disgusted')?.value),
+                indifferent: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-indifferent', document.getElementById('appearance-indifferent')?.value),
+                suspicious: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-suspicious', document.getElementById('appearance-suspicious')?.value),
+                worried: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-worried', document.getElementById('appearance-worried')?.value),
+                anxious: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-anxious', document.getElementById('appearance-anxious')?.value),
+                confused: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-confused', document.getElementById('appearance-confused')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'appearance-bored', document.getElementById('appearance-bored')?.value)
             };
 
             stages.aroma.emotions = {
-                pleasure: parseInt(document.getElementById('aroma-pleasure')?.value || 0),
-                comfort: parseInt(document.getElementById('aroma-comfort')?.value || 0),
-                nostalgia: parseInt(document.getElementById('aroma-nostalgia')?.value || 0),
-                happiness: parseInt(document.getElementById('aroma-happiness')?.value || 0),
-                energized: parseInt(document.getElementById('aroma-energized')?.value || 0),
-                relaxed: parseInt(document.getElementById('aroma-relaxed')?.value || 0),
-                intrigued: parseInt(document.getElementById('aroma-intrigued')?.value || 0),
-                refreshed: parseInt(document.getElementById('aroma-refreshed')?.value || 0),
-                desire: parseInt(document.getElementById('aroma-desire')?.value || 0),
-                warm: parseInt(document.getElementById('aroma-warm')?.value || 0),
-                soothed: parseInt(document.getElementById('aroma-soothed')?.value || 0),
-                surprised: parseInt(document.getElementById('aroma-surprised')?.value || 0),
-                interested: parseInt(document.getElementById('aroma-interested')?.value || 0),
-                calm: parseInt(document.getElementById('aroma-calm')?.value || 0),
-                disgusted: parseInt(document.getElementById('aroma-disgusted')?.value || 0),
-                irritated: parseInt(document.getElementById('aroma-irritated')?.value || 0),
-                worried: parseInt(document.getElementById('aroma-worried')?.value || 0),
-                disappointed: parseInt(document.getElementById('aroma-disappointed')?.value || 0),
-                indifferent: parseInt(document.getElementById('aroma-indifferent')?.value || 0),
-                anxious: parseInt(document.getElementById('aroma-anxious')?.value || 0),
-                repulsed: parseInt(document.getElementById('aroma-repulsed')?.value || 0)
+                pleasure: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-pleasure', document.getElementById('aroma-pleasure')?.value),
+                comfort: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-comfort', document.getElementById('aroma-comfort')?.value),
+                nostalgia: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-nostalgia', document.getElementById('aroma-nostalgia')?.value),
+                happiness: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-happiness', document.getElementById('aroma-happiness')?.value),
+                energized: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-energized', document.getElementById('aroma-energized')?.value),
+                relaxed: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-relaxed', document.getElementById('aroma-relaxed')?.value),
+                intrigued: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-intrigued', document.getElementById('aroma-intrigued')?.value),
+                refreshed: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-refreshed', document.getElementById('aroma-refreshed')?.value),
+                desire: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-desire', document.getElementById('aroma-desire')?.value),
+                warm: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-warm', document.getElementById('aroma-warm')?.value),
+                soothed: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-soothed', document.getElementById('aroma-soothed')?.value),
+                surprised: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-surprised', document.getElementById('aroma-surprised')?.value),
+                interested: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-interested', document.getElementById('aroma-interested')?.value),
+                calm: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-calm', document.getElementById('aroma-calm')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-disgusted', document.getElementById('aroma-disgusted')?.value),
+                irritated: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-irritated', document.getElementById('aroma-irritated')?.value),
+                worried: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-worried', document.getElementById('aroma-worried')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-disappointed', document.getElementById('aroma-disappointed')?.value),
+                indifferent: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-indifferent', document.getElementById('aroma-indifferent')?.value),
+                anxious: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-anxious', document.getElementById('aroma-anxious')?.value),
+                repulsed: TouchedFields.touchedIntValue(mainFormTouched, 'aroma-repulsed', document.getElementById('aroma-repulsed')?.value)
             };
 
             stages.frontMouth.emotions = {
-                excitement: parseInt(document.getElementById('front-excitement')?.value || 0),
-                surprise: parseInt(document.getElementById('front-surprise')?.value || 0),
-                happiness: parseInt(document.getElementById('front-happiness')?.value || 0),
-                pleasure: parseInt(document.getElementById('front-pleasure')?.value || 0),
-                interest: parseInt(document.getElementById('front-interest')?.value || 0),
-                satisfaction: parseInt(document.getElementById('front-satisfaction')?.value || 0),
-                energized: parseInt(document.getElementById('front-energized')?.value || 0),
-                delighted: parseInt(document.getElementById('front-delighted')?.value || 0),
-                amused: parseInt(document.getElementById('front-amused')?.value || 0),
-                disappointed: parseInt(document.getElementById('front-disappointed')?.value || 0),
-                disgusted: parseInt(document.getElementById('front-disgusted')?.value || 0),
-                bored: parseInt(document.getElementById('front-bored')?.value || 0),
-                confused: parseInt(document.getElementById('front-confused')?.value || 0),
-                overwhelmed: parseInt(document.getElementById('front-overwhelmed')?.value || 0),
-                upset: parseInt(document.getElementById('front-upset')?.value || 0),
-                worried: parseInt(document.getElementById('front-worried')?.value || 0)
+                excitement: TouchedFields.touchedIntValue(mainFormTouched, 'front-excitement', document.getElementById('front-excitement')?.value),
+                surprise: TouchedFields.touchedIntValue(mainFormTouched, 'front-surprise', document.getElementById('front-surprise')?.value),
+                happiness: TouchedFields.touchedIntValue(mainFormTouched, 'front-happiness', document.getElementById('front-happiness')?.value),
+                pleasure: TouchedFields.touchedIntValue(mainFormTouched, 'front-pleasure', document.getElementById('front-pleasure')?.value),
+                interest: TouchedFields.touchedIntValue(mainFormTouched, 'front-interest', document.getElementById('front-interest')?.value),
+                satisfaction: TouchedFields.touchedIntValue(mainFormTouched, 'front-satisfaction', document.getElementById('front-satisfaction')?.value),
+                energized: TouchedFields.touchedIntValue(mainFormTouched, 'front-energized', document.getElementById('front-energized')?.value),
+                delighted: TouchedFields.touchedIntValue(mainFormTouched, 'front-delighted', document.getElementById('front-delighted')?.value),
+                amused: TouchedFields.touchedIntValue(mainFormTouched, 'front-amused', document.getElementById('front-amused')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'front-disappointed', document.getElementById('front-disappointed')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'front-disgusted', document.getElementById('front-disgusted')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'front-bored', document.getElementById('front-bored')?.value),
+                confused: TouchedFields.touchedIntValue(mainFormTouched, 'front-confused', document.getElementById('front-confused')?.value),
+                overwhelmed: TouchedFields.touchedIntValue(mainFormTouched, 'front-overwhelmed', document.getElementById('front-overwhelmed')?.value),
+                upset: TouchedFields.touchedIntValue(mainFormTouched, 'front-upset', document.getElementById('front-upset')?.value),
+                worried: TouchedFields.touchedIntValue(mainFormTouched, 'front-worried', document.getElementById('front-worried')?.value)
             };
 
             stages.midRearMouth.emotions = {
-                satisfaction: parseInt(document.getElementById('mid-satisfaction')?.value || 0),
-                pleasure: parseInt(document.getElementById('mid-pleasure')?.value || 0),
-                indulgence: parseInt(document.getElementById('mid-indulgence')?.value || 0),
-                comfort: parseInt(document.getElementById('mid-comfort')?.value || 0),
-                calm: parseInt(document.getElementById('mid-calm')?.value || 0),
-                warmth: parseInt(document.getElementById('mid-warmth')?.value || 0),
-                joy: parseInt(document.getElementById('mid-joy')?.value || 0),
-                loving: parseInt(document.getElementById('mid-loving')?.value || 0),
-                adventurous: parseInt(document.getElementById('mid-adventurous')?.value || 0),
-                energized: parseInt(document.getElementById('mid-energized')?.value || 0),
-                secure: parseInt(document.getElementById('mid-secure')?.value || 0),
-                nostalgic: parseInt(document.getElementById('mid-nostalgic')?.value || 0),
-                guilty: parseInt(document.getElementById('mid-guilty')?.value || 0),
-                bored: parseInt(document.getElementById('mid-bored')?.value || 0),
-                disgusted: parseInt(document.getElementById('mid-disgusted')?.value || 0),
-                disappointed: parseInt(document.getElementById('mid-disappointed')?.value || 0),
-                aggressive: parseInt(document.getElementById('mid-aggressive')?.value || 0),
-                overwhelmed: parseInt(document.getElementById('mid-overwhelmed')?.value || 0),
-                dissatisfied: parseInt(document.getElementById('mid-dissatisfied')?.value || 0),
-                sad: parseInt(document.getElementById('mid-sad')?.value || 0)
+                satisfaction: TouchedFields.touchedIntValue(mainFormTouched, 'mid-satisfaction', document.getElementById('mid-satisfaction')?.value),
+                pleasure: TouchedFields.touchedIntValue(mainFormTouched, 'mid-pleasure', document.getElementById('mid-pleasure')?.value),
+                indulgence: TouchedFields.touchedIntValue(mainFormTouched, 'mid-indulgence', document.getElementById('mid-indulgence')?.value),
+                comfort: TouchedFields.touchedIntValue(mainFormTouched, 'mid-comfort', document.getElementById('mid-comfort')?.value),
+                calm: TouchedFields.touchedIntValue(mainFormTouched, 'mid-calm', document.getElementById('mid-calm')?.value),
+                warmth: TouchedFields.touchedIntValue(mainFormTouched, 'mid-warmth', document.getElementById('mid-warmth')?.value),
+                joy: TouchedFields.touchedIntValue(mainFormTouched, 'mid-joy', document.getElementById('mid-joy')?.value),
+                loving: TouchedFields.touchedIntValue(mainFormTouched, 'mid-loving', document.getElementById('mid-loving')?.value),
+                adventurous: TouchedFields.touchedIntValue(mainFormTouched, 'mid-adventurous', document.getElementById('mid-adventurous')?.value),
+                energized: TouchedFields.touchedIntValue(mainFormTouched, 'mid-energized', document.getElementById('mid-energized')?.value),
+                secure: TouchedFields.touchedIntValue(mainFormTouched, 'mid-secure', document.getElementById('mid-secure')?.value),
+                nostalgic: TouchedFields.touchedIntValue(mainFormTouched, 'mid-nostalgic', document.getElementById('mid-nostalgic')?.value),
+                guilty: TouchedFields.touchedIntValue(mainFormTouched, 'mid-guilty', document.getElementById('mid-guilty')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'mid-bored', document.getElementById('mid-bored')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'mid-disgusted', document.getElementById('mid-disgusted')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'mid-disappointed', document.getElementById('mid-disappointed')?.value),
+                aggressive: TouchedFields.touchedIntValue(mainFormTouched, 'mid-aggressive', document.getElementById('mid-aggressive')?.value),
+                overwhelmed: TouchedFields.touchedIntValue(mainFormTouched, 'mid-overwhelmed', document.getElementById('mid-overwhelmed')?.value),
+                dissatisfied: TouchedFields.touchedIntValue(mainFormTouched, 'mid-dissatisfied', document.getElementById('mid-dissatisfied')?.value),
+                sad: TouchedFields.touchedIntValue(mainFormTouched, 'mid-sad', document.getElementById('mid-sad')?.value)
             };
 
             // Texture stage emotions (25-term expanded list)
             stages.texture.emotions = {
-                satisfied: parseInt(document.getElementById('tex-satisfied')?.value || 0),
-                pleased: parseInt(document.getElementById('tex-pleased')?.value || 0),
-                comforted: parseInt(document.getElementById('tex-comforted')?.value || 0),
-                indulged: parseInt(document.getElementById('tex-indulged')?.value || 0),
-                calmRelaxed: parseInt(document.getElementById('tex-calmRelaxed')?.value || 0),
-                nostalgic: parseInt(document.getElementById('tex-nostalgic')?.value || 0),
-                secure: parseInt(document.getElementById('tex-secure')?.value || 0),
-                excited: parseInt(document.getElementById('tex-excited')?.value || 0),
-                energized: parseInt(document.getElementById('tex-energized')?.value || 0),
-                delighted: parseInt(document.getElementById('tex-delighted')?.value || 0),
-                refreshed: parseInt(document.getElementById('tex-refreshed')?.value || 0),
-                interested: parseInt(document.getElementById('tex-interested')?.value || 0),
-                playful: parseInt(document.getElementById('tex-playful')?.value || 0),
-                pleasantlySurprised: parseInt(document.getElementById('tex-pleasantlySurprised')?.value || 0),
-                disgusted: parseInt(document.getElementById('tex-disgusted')?.value || 0),
-                disappointed: parseInt(document.getElementById('tex-disappointed')?.value || 0),
-                frustrated: parseInt(document.getElementById('tex-frustrated')?.value || 0),
-                annoyedIrritated: parseInt(document.getElementById('tex-annoyedIrritated')?.value || 0),
-                bored: parseInt(document.getElementById('tex-bored')?.value || 0),
-                uncomfortable: parseInt(document.getElementById('tex-uncomfortable')?.value || 0),
-                anxiousUneasy: parseInt(document.getElementById('tex-anxiousUneasy')?.value || 0),
-                unpleasantlySurprised: parseInt(document.getElementById('tex-unpleasantlySurprised')?.value || 0),
-                putOff: parseInt(document.getElementById('tex-putOff')?.value || 0),
-                tiredFatigued: parseInt(document.getElementById('tex-tiredFatigued')?.value || 0),
-                overwhelmed: parseInt(document.getElementById('tex-overwhelmed')?.value || 0)
+                satisfied: TouchedFields.touchedIntValue(mainFormTouched, 'tex-satisfied', document.getElementById('tex-satisfied')?.value),
+                pleased: TouchedFields.touchedIntValue(mainFormTouched, 'tex-pleased', document.getElementById('tex-pleased')?.value),
+                comforted: TouchedFields.touchedIntValue(mainFormTouched, 'tex-comforted', document.getElementById('tex-comforted')?.value),
+                indulged: TouchedFields.touchedIntValue(mainFormTouched, 'tex-indulged', document.getElementById('tex-indulged')?.value),
+                calmRelaxed: TouchedFields.touchedIntValue(mainFormTouched, 'tex-calmRelaxed', document.getElementById('tex-calmRelaxed')?.value),
+                nostalgic: TouchedFields.touchedIntValue(mainFormTouched, 'tex-nostalgic', document.getElementById('tex-nostalgic')?.value),
+                secure: TouchedFields.touchedIntValue(mainFormTouched, 'tex-secure', document.getElementById('tex-secure')?.value),
+                excited: TouchedFields.touchedIntValue(mainFormTouched, 'tex-excited', document.getElementById('tex-excited')?.value),
+                energized: TouchedFields.touchedIntValue(mainFormTouched, 'tex-energized', document.getElementById('tex-energized')?.value),
+                delighted: TouchedFields.touchedIntValue(mainFormTouched, 'tex-delighted', document.getElementById('tex-delighted')?.value),
+                refreshed: TouchedFields.touchedIntValue(mainFormTouched, 'tex-refreshed', document.getElementById('tex-refreshed')?.value),
+                interested: TouchedFields.touchedIntValue(mainFormTouched, 'tex-interested', document.getElementById('tex-interested')?.value),
+                playful: TouchedFields.touchedIntValue(mainFormTouched, 'tex-playful', document.getElementById('tex-playful')?.value),
+                pleasantlySurprised: TouchedFields.touchedIntValue(mainFormTouched, 'tex-pleasantlySurprised', document.getElementById('tex-pleasantlySurprised')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'tex-disgusted', document.getElementById('tex-disgusted')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'tex-disappointed', document.getElementById('tex-disappointed')?.value),
+                frustrated: TouchedFields.touchedIntValue(mainFormTouched, 'tex-frustrated', document.getElementById('tex-frustrated')?.value),
+                annoyedIrritated: TouchedFields.touchedIntValue(mainFormTouched, 'tex-annoyedIrritated', document.getElementById('tex-annoyedIrritated')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'tex-bored', document.getElementById('tex-bored')?.value),
+                uncomfortable: TouchedFields.touchedIntValue(mainFormTouched, 'tex-uncomfortable', document.getElementById('tex-uncomfortable')?.value),
+                anxiousUneasy: TouchedFields.touchedIntValue(mainFormTouched, 'tex-anxiousUneasy', document.getElementById('tex-anxiousUneasy')?.value),
+                unpleasantlySurprised: TouchedFields.touchedIntValue(mainFormTouched, 'tex-unpleasantlySurprised', document.getElementById('tex-unpleasantlySurprised')?.value),
+                putOff: TouchedFields.touchedIntValue(mainFormTouched, 'tex-putOff', document.getElementById('tex-putOff')?.value),
+                tiredFatigued: TouchedFields.touchedIntValue(mainFormTouched, 'tex-tiredFatigued', document.getElementById('tex-tiredFatigued')?.value),
+                overwhelmed: TouchedFields.touchedIntValue(mainFormTouched, 'tex-overwhelmed', document.getElementById('tex-overwhelmed')?.value)
             };
 
             stages.aftertaste.emotions = {
-                satisfaction: parseInt(document.getElementById('after-satisfaction')?.value || 0),
-                completeness: parseInt(document.getElementById('after-completeness')?.value || 0),
-                happiness: parseInt(document.getElementById('after-happiness')?.value || 0),
-                craving: parseInt(document.getElementById('after-craving')?.value || 0),
-                calm: parseInt(document.getElementById('after-calm')?.value || 0),
-                comforted: parseInt(document.getElementById('after-comforted')?.value || 0),
-                pleased: parseInt(document.getElementById('after-pleased')?.value || 0),
-                refreshed: parseInt(document.getElementById('after-refreshed')?.value || 0),
-                nostalgic: parseInt(document.getElementById('after-nostalgic')?.value || 0),
-                surprised: parseInt(document.getElementById('after-surprised')?.value || 0),
-                disappointed: parseInt(document.getElementById('after-disappointed')?.value || 0),
-                disgusted: parseInt(document.getElementById('after-disgusted')?.value || 0),
-                guilty: parseInt(document.getElementById('after-guilty')?.value || 0),
-                worried: parseInt(document.getElementById('after-worried')?.value || 0),
-                dissatisfied: parseInt(document.getElementById('after-dissatisfied')?.value || 0),
-                bored: parseInt(document.getElementById('after-bored')?.value || 0),
-                regret: parseInt(document.getElementById('after-regret')?.value || 0)
+                satisfaction: TouchedFields.touchedIntValue(mainFormTouched, 'after-satisfaction', document.getElementById('after-satisfaction')?.value),
+                completeness: TouchedFields.touchedIntValue(mainFormTouched, 'after-completeness', document.getElementById('after-completeness')?.value),
+                happiness: TouchedFields.touchedIntValue(mainFormTouched, 'after-happiness', document.getElementById('after-happiness')?.value),
+                craving: TouchedFields.touchedIntValue(mainFormTouched, 'after-craving', document.getElementById('after-craving')?.value),
+                calm: TouchedFields.touchedIntValue(mainFormTouched, 'after-calm', document.getElementById('after-calm')?.value),
+                comforted: TouchedFields.touchedIntValue(mainFormTouched, 'after-comforted', document.getElementById('after-comforted')?.value),
+                pleased: TouchedFields.touchedIntValue(mainFormTouched, 'after-pleased', document.getElementById('after-pleased')?.value),
+                refreshed: TouchedFields.touchedIntValue(mainFormTouched, 'after-refreshed', document.getElementById('after-refreshed')?.value),
+                nostalgic: TouchedFields.touchedIntValue(mainFormTouched, 'after-nostalgic', document.getElementById('after-nostalgic')?.value),
+                surprised: TouchedFields.touchedIntValue(mainFormTouched, 'after-surprised', document.getElementById('after-surprised')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'after-disappointed', document.getElementById('after-disappointed')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'after-disgusted', document.getElementById('after-disgusted')?.value),
+                guilty: TouchedFields.touchedIntValue(mainFormTouched, 'after-guilty', document.getElementById('after-guilty')?.value),
+                worried: TouchedFields.touchedIntValue(mainFormTouched, 'after-worried', document.getElementById('after-worried')?.value),
+                dissatisfied: TouchedFields.touchedIntValue(mainFormTouched, 'after-dissatisfied', document.getElementById('after-dissatisfied')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'after-bored', document.getElementById('after-bored')?.value),
+                regret: TouchedFields.touchedIntValue(mainFormTouched, 'after-regret', document.getElementById('after-regret')?.value)
             };
 
             stages.overall.emotions = {
-                satisfaction: parseInt(document.getElementById('overall-satisfaction')?.value || 0),
-                happiness: parseInt(document.getElementById('overall-happiness')?.value || 0),
-                pleasure: parseInt(document.getElementById('overall-pleasure')?.value || 0),
-                enjoyment: parseInt(document.getElementById('overall-enjoyment')?.value || 0),
-                comfort: parseInt(document.getElementById('overall-comfort')?.value || 0),
-                calm: parseInt(document.getElementById('overall-calm')?.value || 0),
-                warmth: parseInt(document.getElementById('overall-warmth')?.value || 0),
-                joy: parseInt(document.getElementById('overall-joy')?.value || 0),
-                nostalgia: parseInt(document.getElementById('overall-nostalgia')?.value || 0),
-                energized: parseInt(document.getElementById('overall-energized')?.value || 0),
-                loving: parseInt(document.getElementById('overall-loving')?.value || 0),
-                gratitude: parseInt(document.getElementById('overall-gratitude')?.value || 0),
-                proud: parseInt(document.getElementById('overall-proud')?.value || 0),
-                adventurous: parseInt(document.getElementById('overall-adventurous')?.value || 0),
-                indulgent: parseInt(document.getElementById('overall-indulgent')?.value || 0),
-                interested: parseInt(document.getElementById('overall-interested')?.value || 0),
-                relaxed: parseInt(document.getElementById('overall-relaxed')?.value || 0),
-                secure: parseInt(document.getElementById('overall-secure')?.value || 0),
-                desire: parseInt(document.getElementById('overall-desire')?.value || 0),
-                surprised: parseInt(document.getElementById('overall-surprised')?.value || 0),
-                disappointed: parseInt(document.getElementById('overall-disappointed')?.value || 0),
-                disgusted: parseInt(document.getElementById('overall-disgusted')?.value || 0),
-                bored: parseInt(document.getElementById('overall-bored')?.value || 0),
-                guilty: parseInt(document.getElementById('overall-guilty')?.value || 0),
-                worried: parseInt(document.getElementById('overall-worried')?.value || 0),
-                dissatisfied: parseInt(document.getElementById('overall-dissatisfied')?.value || 0),
-                sad: parseInt(document.getElementById('overall-sad')?.value || 0),
-                regret: parseInt(document.getElementById('overall-regret')?.value || 0),
-                angry: parseInt(document.getElementById('overall-angry')?.value || 0),
-                anxious: parseInt(document.getElementById('overall-anxious')?.value || 0),
-                confused: parseInt(document.getElementById('overall-confused')?.value || 0)
+                satisfaction: TouchedFields.touchedIntValue(mainFormTouched, 'overall-satisfaction', document.getElementById('overall-satisfaction')?.value),
+                happiness: TouchedFields.touchedIntValue(mainFormTouched, 'overall-happiness', document.getElementById('overall-happiness')?.value),
+                pleasure: TouchedFields.touchedIntValue(mainFormTouched, 'overall-pleasure', document.getElementById('overall-pleasure')?.value),
+                enjoyment: TouchedFields.touchedIntValue(mainFormTouched, 'overall-enjoyment', document.getElementById('overall-enjoyment')?.value),
+                comfort: TouchedFields.touchedIntValue(mainFormTouched, 'overall-comfort', document.getElementById('overall-comfort')?.value),
+                calm: TouchedFields.touchedIntValue(mainFormTouched, 'overall-calm', document.getElementById('overall-calm')?.value),
+                warmth: TouchedFields.touchedIntValue(mainFormTouched, 'overall-warmth', document.getElementById('overall-warmth')?.value),
+                joy: TouchedFields.touchedIntValue(mainFormTouched, 'overall-joy', document.getElementById('overall-joy')?.value),
+                nostalgia: TouchedFields.touchedIntValue(mainFormTouched, 'overall-nostalgia', document.getElementById('overall-nostalgia')?.value),
+                energized: TouchedFields.touchedIntValue(mainFormTouched, 'overall-energized', document.getElementById('overall-energized')?.value),
+                loving: TouchedFields.touchedIntValue(mainFormTouched, 'overall-loving', document.getElementById('overall-loving')?.value),
+                gratitude: TouchedFields.touchedIntValue(mainFormTouched, 'overall-gratitude', document.getElementById('overall-gratitude')?.value),
+                proud: TouchedFields.touchedIntValue(mainFormTouched, 'overall-proud', document.getElementById('overall-proud')?.value),
+                adventurous: TouchedFields.touchedIntValue(mainFormTouched, 'overall-adventurous', document.getElementById('overall-adventurous')?.value),
+                indulgent: TouchedFields.touchedIntValue(mainFormTouched, 'overall-indulgent', document.getElementById('overall-indulgent')?.value),
+                interested: TouchedFields.touchedIntValue(mainFormTouched, 'overall-interested', document.getElementById('overall-interested')?.value),
+                relaxed: TouchedFields.touchedIntValue(mainFormTouched, 'overall-relaxed', document.getElementById('overall-relaxed')?.value),
+                secure: TouchedFields.touchedIntValue(mainFormTouched, 'overall-secure', document.getElementById('overall-secure')?.value),
+                desire: TouchedFields.touchedIntValue(mainFormTouched, 'overall-desire', document.getElementById('overall-desire')?.value),
+                surprised: TouchedFields.touchedIntValue(mainFormTouched, 'overall-surprised', document.getElementById('overall-surprised')?.value),
+                disappointed: TouchedFields.touchedIntValue(mainFormTouched, 'overall-disappointed', document.getElementById('overall-disappointed')?.value),
+                disgusted: TouchedFields.touchedIntValue(mainFormTouched, 'overall-disgusted', document.getElementById('overall-disgusted')?.value),
+                bored: TouchedFields.touchedIntValue(mainFormTouched, 'overall-bored', document.getElementById('overall-bored')?.value),
+                guilty: TouchedFields.touchedIntValue(mainFormTouched, 'overall-guilty', document.getElementById('overall-guilty')?.value),
+                worried: TouchedFields.touchedIntValue(mainFormTouched, 'overall-worried', document.getElementById('overall-worried')?.value),
+                dissatisfied: TouchedFields.touchedIntValue(mainFormTouched, 'overall-dissatisfied', document.getElementById('overall-dissatisfied')?.value),
+                sad: TouchedFields.touchedIntValue(mainFormTouched, 'overall-sad', document.getElementById('overall-sad')?.value),
+                regret: TouchedFields.touchedIntValue(mainFormTouched, 'overall-regret', document.getElementById('overall-regret')?.value),
+                angry: TouchedFields.touchedIntValue(mainFormTouched, 'overall-angry', document.getElementById('overall-angry')?.value),
+                anxious: TouchedFields.touchedIntValue(mainFormTouched, 'overall-anxious', document.getElementById('overall-anxious')?.value),
+                confused: TouchedFields.touchedIntValue(mainFormTouched, 'overall-confused', document.getElementById('overall-confused')?.value)
             };
 
             return stages;
         })(),
         needState: document.querySelector('input[name="need-state"]:checked').value,
         emotionalTriggers: {
-            moreishness: parseInt(document.getElementById('trigger-moreishness').value),
-            refreshment: parseInt(document.getElementById('trigger-refreshment').value),
-            melt: parseInt(document.getElementById('trigger-melt').value),
-            crunch: parseInt(document.getElementById('trigger-crunch').value)
+            moreishness: TouchedFields.touchedIntValue(mainFormTouched, 'trigger-moreishness', document.getElementById('trigger-moreishness').value),
+            refreshment: TouchedFields.touchedIntValue(mainFormTouched, 'trigger-refreshment', document.getElementById('trigger-refreshment').value),
+            melt: TouchedFields.touchedIntValue(mainFormTouched, 'trigger-melt', document.getElementById('trigger-melt').value),
+            crunch: TouchedFields.touchedIntValue(mainFormTouched, 'trigger-crunch', document.getElementById('trigger-crunch').value)
         },
         notes: document.getElementById('notes').value
     };
@@ -693,6 +710,7 @@ function handleFormSubmit(e) {
 
     // Reset form
     document.getElementById('taste-form').reset();
+    TouchedFields.resetTouchedTracker(mainFormTouched);
     currentStage = 1;
     document.querySelectorAll('.form-stage').forEach(stage => stage.classList.remove('active'));
     document.querySelectorAll('.stage-indicator').forEach(indicator => {
@@ -2287,11 +2305,15 @@ function renderEmotionalProfileRadar(exp) {
     const ctx = document.getElementById('emotional-profile-radar').getContext('2d');
     destroyChart('emotionalRadar');
 
-    // Aggregate all emotions across all stages
+    // Aggregate all emotions across all stages. Same typeof guard used
+    // throughout export-reporting.js/temporal-analysis.js - excludes null
+    // (untouched/unrated) values instead of letting them coerce to 0 and
+    // silently drag the average down.
     const allEmotions = {};
     Object.values(exp.stages).forEach(stage => {
         if (stage.emotions) {
             Object.entries(stage.emotions).forEach(([emotion, value]) => {
+                if (typeof value !== 'number') return;
                 if (!allEmotions[emotion]) allEmotions[emotion] = [];
                 allEmotions[emotion].push(value);
             });
