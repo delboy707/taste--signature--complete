@@ -107,6 +107,21 @@ what that cost us.
 
 ## Working discipline
 
+### Task scope
+
+Deliver what was asked, at the scope intended. Make routine judgment calls
+yourself; check in only when different readings would lead to materially
+different work. If a better approach exists, say so in one sentence and
+continue as asked rather than quietly widening or transforming the task.
+Finish the whole task; stop short of actions clearly beyond it.
+
+### Subagent delegation
+
+Delegate to a subagent only for large, genuinely independent, parallelizable
+work (e.g. a wide multi-file investigation). Don't delegate work you can
+finish in a handful of tool calls, and don't use subagents to verify your
+own work. If one subagent suffices, use one, not several. Keep spawn counts low.
+
 ### Patch scripts only — no full-file rewrites
 
 Full-file rewrites of large files (`app.js`, `index.html`, `industry-benchmarks.js`)

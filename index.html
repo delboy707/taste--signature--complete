@@ -398,6 +398,12 @@
                             <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg></span>
                             <span>Temporal Analysis</span>
                         </a>
+                        <!-- Dev-only, feature-flagged (QEP_CAPTURE_CONFIG.ENABLE_TARGETS_LOADED) -
+                             see targets-loaded-ui.js, which hides this unless the flag is on. -->
+                        <a href="#" class="nav-item" id="nav-item-targets-loaded" data-view="targets-loaded" style="display: none;">
+                            <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20"/><path d="M2 12h20"/></svg></span>
+                            <span>Targets Loaded</span>
+                        </a>
                     </div>
                 </div>
 
@@ -2148,6 +2154,11 @@
                     <div id="lexicon-container"></div>
                 </div>
 
+                <!-- Targets Loaded View (QEP-Capture, dev-only, feature-flagged) -->
+                <div id="view-targets-loaded" class="view">
+                    <div id="targets-loaded-content"></div>
+                </div>
+
                 <!-- Industry Benchmarks View -->
                 <div id="view-industry-benchmarks" class="view">
                     <div id="benchmarks-container"></div>
@@ -2213,7 +2224,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    <!-- Supabase JS - dual-write bridge into qep-capture (dev-only, gated) -->
+    <!-- Supabase JS - shared bridge into qep-capture's tss_shared schema.
+         qep-capture-config.js/qep-capture-client.js are shared by both the
+         dual-write (signature-supabase-sync.js) and the read-only Targets
+         Loaded view (targets-loaded.js, loaded later below) - dev-only,
+         both independently feature-flagged off by default. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="qep-capture-config.js"></script>
     <script src="qep-capture-client.js"></script>
@@ -2275,6 +2290,12 @@
     <script src="templates-manager.js"></script>
     <script src="quick-entry.js"></script>
     <script src="sensory-attributes.js"></script>
+
+    <!-- Targets Loaded (QEP-Capture, dev-only, feature-flagged) - shared
+         qep-capture-config.js/qep-capture-client.js loaded earlier above -->
+    <script src="targets-loaded.js"></script>
+    <script src="targets-loaded-ui.js"></script>
+
     <script src="app.js"></script>
 
     <!-- Initialize Authentication & PWA -->

@@ -1,11 +1,13 @@
 // ===== QEP-CAPTURE SUPABASE CLIENT =====
-// Bridge into qep-capture's tss_shared schema, used by
-// signature-supabase-sync.js for the Supabase dual-write (migration
-// 0026's upsert_signature_profile/soft_delete_signature_profile RPCs).
-// Anon key only, no service-role key - RLS is the sole access gate.
-// There is no server-side runtime here to hide the client construction
-// behind - everything is client-side, which is fine because the anon
-// key isn't a secret.
+// Shared bridge into qep-capture's tss_shared schema. Two consumers:
+// signature-supabase-sync.js (Supabase dual-write, migration 0026's
+// upsert_signature_profile/soft_delete_signature_profile RPCs) and
+// targets-loaded.js (read-only "Targets loaded" feature, TSS Phase 1
+// checkpoint c). Mirrors tss-re1's src/lib/qep-capture/server.ts
+// pattern: anon key only, no service-role key, RLS is the sole access
+// gate. The one difference is this app has no server-side runtime to
+// hide the client construction behind - everything here is
+// client-side, which is fine because the anon key isn't a secret.
 //
 // Auth reuses the Clerk session auth.js already established
 // (window.Clerk.session.getToken(), same call auth.js makes for the
