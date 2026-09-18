@@ -4,7 +4,7 @@
 // The comparison/chunking logic lives in save-diff.js (pure, no Firestore
 // dependency, unit-tested on its own) - loaded as window.SaveDiff in the
 // browser (see index.html script order), required directly in Node tests.
-const { diffKey, computeUpsertDiff, chunk: chunkArray } =
+const { diffKey: computeDiffKey, computeUpsertDiff: buildUpsertDiff, chunk: chunkArray } =
     (typeof module !== 'undefined' && module.exports) ? require('./save-diff.js') : window.SaveDiff;
 
 // Legacy doc ids (pre-incremental-save) look like "exp_<timestamp>_<index>".
@@ -30,7 +30,7 @@ class FirestoreDataManager {
         this.userId = null;
         this.companyId = null;
         this.isInitialized = false;
-        // id (String(experience.id)) -> diffKey(experience), as last known
+        // id (String(experience.id)) -> computeDiffKey(experience), as last known
         // persisted to Firestore. Empty until the first load/save; an
         // empty map is correct (nothing to diff against yet), not an error.
         this._lastSyncedById = new Map();
@@ -197,7 +197,7 @@ class FirestoreDataManager {
             const legacyData = doc.data();
             const id = String(legacyData.id);
             const content = currentById.get(id) || legacyData;
-            this._lastSyncedById.set(id, diffKey(content));
+            this._lastSyncedById.set(id, computeDiffKey(content));
         }
 
         console.log(`✅ Migration complete: ${legacyDocs.length} legacy doc(s) moved to the new scheme and removed.`);
@@ -301,7 +301,7 @@ class FirestoreDataManager {
             await this._ensureMigrated(experiences);
 
             const collection = this.getExperiencesCollection();
-            const { toUpsert, newSnapshot } = computeUpsertDiff(experiences, this._lastSyncedById);
+            const { toUpsert, newSnapshot } = buildUpsertDiff(experiences, this._lastSyncedById);
 
             const ops = toUpsert.map(exp => {
                 const id = String(exp.id);
@@ -405,7 +405,7 @@ class FirestoreDataManager {
             // now, so the very next saveExperiences() call - even with zero
             // edits - writes nothing instead of treating every loaded
             // experience as new.
-            this._lastSyncedById = new Map(experiences.map(exp => [String(exp.id), diffKey(exp)]));
+            this._lastSyncedById = new Map(experiences.map(exp => [String(exp.id), computeDiffKey(exp)]));
 
             console.log(`✅ Loaded ${experiences.length} experiences from Firestore`);
             return { success: true, experiences: experiences };
