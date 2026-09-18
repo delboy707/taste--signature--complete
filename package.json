@@ -16,8 +16,11 @@
   },
   "scripts": {
     "test:diff": "node test/diff.test.js",
+    "test:diff": "node test/diff.test.js",
+    "test:supabase-sync": "node test/signature-supabase-sync.test.js",
     "test:touched-fields": "node test/touched-fields.test.js",
     "test:quick-entry-touched": "node test/quick-entry-touched.test.js",
+    "test:emulator": "firebase emulators:exec --only firestore,auth \"node test/emulator.test.js\"",
     "test:emulator": "firebase emulators:exec --only firestore,auth \"node test/emulator.test.js\""
   },
   "overrides": {

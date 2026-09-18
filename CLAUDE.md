@@ -258,3 +258,81 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - Pricing: ~$1k/mo or ~$8k/yr enterprise tiers
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
+
+## Status 2026-09-16
+
+Handoff note - Signature to Supabase dual-write (Option A) and related
+TSS Phase 1/2 work. Read this before picking either thread back up.
+
+### Dev migrations applied (0022-0027) - none in production
+All applied directly to qep-capture's dev Supabase project
+(`fmfjihpatkooldhrerui`) via the Supabase MCP, tested via rolled-back
+transactions. Production (`xrkjkhehiwxaesignvty`) has none of these yet -
+Derek pushes production migrations, never delegated. Full detail lives in
+qep-capture's own CLAUDE.md; the two relevant to this app are:
+- 0026 - `tss_shared.signature_profiles` / `signature_profile_values`,
+  `upsert_signature_profile()` / `soft_delete_signature_profile()` RPCs.
+- 0027 - resurrection guard: `upsert_signature_profile()` now raises
+  `'profile was deleted'` instead of silently recreating a row over a
+  soft-deleted one.
+
+### This app
+- PR #34 (`fix/incremental-save`) is **merged to main**. The new
+  incremental save path exists and is tested, but is **off** in
+  practice - `incremental-save-config.js`'s `ALLOWLISTED_COMPANY_IDS` is
+  still empty, so every company gets the original delete-all/reinsert-all
+  behavior unchanged.
+- Pre-merge backup already taken: 68 experiences across 10 companies,
+  stored outside the repo (Admin SDK export, Spark plan has no managed
+  export).
+- **Parked**: adding a real test company to the allowlist (rollout step
+  3). Blocked - Clerk's email verification rejected the `+`-addressed
+  Gmail alias meant for this. Needs a different test identity before
+  that step can proceed.
+- `feat/supabase-dual-write` branch: **committed locally, not pushed**,
+  no PR. `ENABLE_SUPABASE_DUAL_WRITE: false` in `qep-capture-config.js` -
+  no behavior change until explicitly flipped. Includes the
+  `SUPABASE_ENV: 'dev'` guard (self-disables if ever loaded on
+  `signature.qeptss.com` while still pointed at the dev project).
+
+### Open items
+- **CSP blocker**: `vercel.json`'s `connect-src` has no `supabase.co`
+  entry. Must be added before dual-write can ever actually be turned on
+  in a deployed environment - today it's silently inert since the flag
+  is off, but flipping the flag without this change first would just
+  produce CSP-blocked fetches, queued forever in the retry queue.
+- **Org membership for Signature users**: unresolved. qep-capture's
+  `tss_shared.provision_org()` is platform-admin-only, manually invoked
+  (currently only wired to Brief's Lock flow) - a Signature company has
+  no corresponding `tss_shared.organisations`/`memberships` row today, so
+  every dual-written `signature_profiles` row lands with `org_id = null`
+  (owner-only visibility) until this is deliberately decided one way or
+  the other (extend `provision_org`, or a self-service path on sign-in).
+- **"Test in Capture" handoff (Phase 2)**: not started - the deeper
+  cross-app flow (Brief -> Signature -> Capture) beyond the current
+  data-plumbing phase.
+- **Results-ready view**: not started - where/how a user is told a
+  Capture study's results are ready to compare against their Signature/
+  Brief target.
+- **(d) Data quality checks**, including the known **262 vs 266 export
+  column drift** between Capture's export contract and what's actually
+  being produced/consumed somewhere in the chain - needs a proper audit,
+  not yet done.
+
+### Rules of the road (don't relitigate these)
+- `firestore.rules` **is** the live, deployed copy (verified against the
+  Firebase console, Nov 28 2025 revision) - not this repo's old, drifted
+  version. Any future rules change starts from this file as ground truth.
+- Signature's own org-id-derivation trigger lives in qep-capture
+  (`signature_profiles_set_org_id`, migration 0026) and is `SECURITY
+  INVOKER` (the Postgres default - no explicit clause). That's
+  load-bearing: it must run as the calling user so `auth.jwt()` reflects
+  the real caller. It calls the separate `SECURITY DEFINER` helper
+  `tss_shared.auth_user_org_ids()` internally, which is deliberately
+  where the elevated read of `tss_shared.memberships` is isolated. Don't
+  add `SECURITY DEFINER` to it without understanding why that split
+  exists.
+- `firestore.rules.hardening-proposal` exists (three rule tightenings
+  pulled out of what used to be silently undeployed in this repo's rules)
+  but is **not deployed and must not be deployed without an explicit
+  review** - it's a proposal, not a queued change.
