@@ -94,6 +94,11 @@ function renderTargetsLoadedResult(result) {
         })
         .join('');
 
+    const testInCaptureHtml =
+        version.status === 'locked'
+            ? `<a href="${escapeHtml(buildCaptureHandoffUrl(version.id))}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="display: inline-block; margin-bottom: 16px; text-decoration: none;">Test in Capture</a>`
+            : '';
+
     return `
         <div class="card">
             <h3 style="margin-top: 0;">${escapeHtml(project.name)}</h3>
@@ -101,6 +106,7 @@ function renderTargetsLoadedResult(result) {
                 ${escapeHtml(project.categoryName)} &middot; v${version.versionNumber} &middot;
                 ${escapeHtml(version.status)}${version.lockedAt ? ' &middot; locked ' + escapeHtml(new Date(version.lockedAt).toLocaleDateString()) : ''}
             </p>
+            ${testInCaptureHtml}
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
@@ -115,6 +121,13 @@ function renderTargetsLoadedResult(result) {
             </table>
         </div>
     `;
+}
+
+function buildCaptureHandoffUrl(versionId) {
+    const base =
+        (window.QEP_CAPTURE_CONFIG && window.QEP_CAPTURE_CONFIG.CAPTURE_APP_URL) ||
+        'https://capture.qeptss.com';
+    return `${base}/handoff?version=${encodeURIComponent(versionId)}`;
 }
 
 function escapeHtml(str) {

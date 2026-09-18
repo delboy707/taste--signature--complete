@@ -24,7 +24,13 @@ const QEP_CAPTURE_CONFIG = {
 
     // Dev-only feature flag - flip to false before any merge that could
     // reach production until this feature has been explicitly reviewed.
-    ENABLE_TARGETS_LOADED: false
+    ENABLE_TARGETS_LOADED: false,
+
+    // qep-capture's own app (not its Supabase project) - base URL for the
+    // "Test in Capture" handoff link. Defaults to production; set to
+    // http://localhost:3000 locally to test against a qep-capture dev
+    // server instead.
+    CAPTURE_APP_URL: 'https://capture.qeptss.com'
 };
 
 if (typeof window !== 'undefined') {
