@@ -20,9 +20,10 @@ const SUPABASE_RETRY_QUEUE_KEY = 'signatureSupabaseRetryQueue';
 const SUPABASE_RETRY_QUEUE_MAX = 50; // capped by distinct id - never grows unbounded
 const PROD_HOSTNAME = 'signature.qeptss.com';
 
-const SaveDiff = (typeof require !== 'undefined')
-  ? require('./save-diff.js')
-  : (typeof window !== 'undefined' ? window.SaveDiff : null);
+function _saveDiff() {
+  if (typeof require !== 'undefined') return require('./save-diff.js');
+  return (typeof window !== 'undefined') ? window.SaveDiff : null;
+}
 
 // In-memory only, per page load - same posture as firestore-data.js's
 // own _lastSyncedById. Independent of Firestore's baseline: this one
@@ -171,9 +172,9 @@ async function flushSignatureSupabaseQueue(experiences) {
 // experiences are queued and sent - a legacy save that rewrites every
 // doc every time does not turn into a full-payload push every time.
 async function syncSignatureExperiences(experiences) {
-    if (!isSupabaseDualWriteEnabled() || !SaveDiff) return;
+    if (!isSupabaseDualWriteEnabled() || !_saveDiff()) return;
 
-    const { toUpsert, newSnapshot } = SaveDiff.computeUpsertDiff(experiences, _lastPushedSnapshot);
+    const { toUpsert, newSnapshot } = _saveDiff().computeUpsertDiff(experiences, _lastPushedSnapshot);
     for (const exp of toUpsert) {
         _upsertQueueEntry(String(exp.id), 'push');
     }
