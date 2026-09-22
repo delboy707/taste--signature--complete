@@ -130,12 +130,6 @@ function buildCaptureHandoffUrl(versionId) {
     return `${base}/handoff?version=${encodeURIComponent(versionId)}`;
 }
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str == null ? '' : String(str);
-    return div.innerHTML;
-}
-
 // Hide the nav entry entirely unless the dev-only feature flag is on.
 document.addEventListener('DOMContentLoaded', () => {
     const navItem = document.getElementById('nav-item-targets-loaded');

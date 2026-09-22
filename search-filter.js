@@ -1,12 +1,6 @@
 // ===== SEARCH & FILTER =====
 // Quick search and filtering for product history
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-}
-
 const SearchFilter = {
     currentFilters: {
         search: '',

@@ -9,19 +9,6 @@ if (typeof window.claudeAI === 'undefined') {
 }
 
 /**
- * Escape HTML special characters to prevent XSS
- */
-function escapeHtml(str) {
-    if (typeof str !== 'string') return str;
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-/**
  * Initialize chat interface
  */
 function initializeChatUI() {
