@@ -3,24 +3,27 @@
 // key is safe to commit here (RLS-gated, no service-role key, same
 // posture as firebase-config.js).
 //
-// DEV project (fmfjihpatkooldhrerui) only - checkpoint (c). Do not point
-// this at production without an explicit decision to do so.
+// PROD project (xrkjkhehiwxaesignvty). Dual-write go-live: this now
+// points at production, matching SUPABASE_ENV below. Reverting either
+// value alone (without the other) is exactly what the env guard in
+// signature-supabase-sync.js exists to catch - see its comment.
 
 const QEP_CAPTURE_CONFIG = {
-    SUPABASE_URL: 'https://fmfjihpatkooldhrerui.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZmppaHBhdGtvb2xkaHJlcnVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNDc5MzIsImV4cCI6MjEwNDYyMzkzMn0.1c-Enjr2jD_RAjIINlnlK9lAtIDgthTwaU6qQDrNOrc',
+    SUPABASE_URL: 'https://xrkjkhehiwxaesignvty.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhya2praGVoaXd4YWVzaWdudnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyOTA5OTMsImV4cCI6MjA5Nzg2Njk5M30.cBLGPsFpUx1CIATMl7KsAsb4yygYJZnqrj9mZD7lNkU',
 
     // Which Supabase project SUPABASE_URL above actually points at -
-    // 'dev' here (fmfjihpatkooldhrerui). signature-supabase-sync.js
+    // 'prod' here (xrkjkhehiwxaesignvty). signature-supabase-sync.js
     // self-disables if this is 'dev' AND the app is running on the
     // production hostname (signature.qeptss.com), so a copy of this
     // file with a stale/wrong value can't write real customer data
-    // into the dev database.
-    SUPABASE_ENV: 'dev',
+    // into the dev database. With SUPABASE_ENV='prod' that guard no
+    // longer applies - dual-write is live against the real database.
+    SUPABASE_ENV: 'prod',
 
-    // Dual-write gate - flip to false-by-default until explicitly rolled
-    // out. Do not enable against production without an explicit decision.
-    ENABLE_SUPABASE_DUAL_WRITE: false,
+    // Dual-write gate - live. Do not flip back to false without an
+    // explicit decision to pause the rollout.
+    ENABLE_SUPABASE_DUAL_WRITE: true,
 
     // Dev-only feature flag - flip to false before any merge that could
     // reach production until this feature has been explicitly reviewed.
