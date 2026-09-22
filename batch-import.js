@@ -16,16 +16,11 @@ let batchImportData = {
 };
 
 // ===== CSV PARSING =====
-
-/**
- * Sanitize CSV cell value to prevent formula injection
- * Strips leading =, +, -, @, \t, \r characters from cell values
- */
-function sanitizeCsvValue(value) {
-    if (typeof value !== 'string') return value;
-    // Strip formula injection characters from the start of cell values
-    return value.replace(/^[=+\-@\t\r]+/, '');
-}
+//
+// parseCSVLine() and sanitizeCsvValue() now live in csv-utils.js (shared
+// with consumer-panel.js) - see that file for the canonical
+// implementation. csv-utils.js is loaded before this file in index.html,
+// so both remain available here as plain globals.
 
 /**
  * Parse CSV file
@@ -57,37 +52,6 @@ function parseCSVFile(csvText) {
     }
 
     return { headers, rows };
-}
-
-/**
- * Parse a single CSV line (handles quoted values)
- */
-function parseCSVLine(line) {
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const nextChar = line[i + 1];
-
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                current += '"';
-                i++; // Skip next quote
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            values.push(sanitizeCsvValue(current.trim()));
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-
-    values.push(sanitizeCsvValue(current.trim()));
-    return values;
 }
 
 // ===== EXCEL PARSING =====
