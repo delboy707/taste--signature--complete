@@ -125,30 +125,10 @@ function importConsumerPanelCSV(csvText, productId, panelDate) {
     return panelData;
 }
 
-/**
- * Parse CSV line handling quoted values
- */
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-
-    result.push(current.trim());
-    return result;
-}
+// parseCSVLine() lives in csv-utils.js (shared with batch-import.js) - see
+// that file for the canonical RFC4180-correct implementation. csv-utils.js
+// is loaded before this file in index.html, so it remains available here
+// as a plain global.
 
 /**
  * Calculate aggregate statistics from consumer responses
