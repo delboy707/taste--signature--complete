@@ -54,7 +54,12 @@ const firestoreDb = getFirestore(firebaseApp);
 // Auto-provision Firestore company/user docs on first sign-in.
 // Idempotent: uses a transaction so a create-if-missing race between two
 // concurrent first requests for the same uid cannot produce two companies.
-async function ensureFirestoreProvisioned(uid, email, displayName) {
+//
+// orgId (Stage 3b): when present, users who share a Clerk org share one
+// Firestore company via the orgCompanyMap/{orgId} -> companyId lookup,
+// instead of each getting their own company. orgId absent is today's
+// per-user behavior, unchanged.
+async function ensureFirestoreProvisioned(uid, email, displayName, orgId) {
     const userRef = firestoreDb.collection('users').doc(uid);
 
     await firestoreDb.runTransaction(async (tx) => {
@@ -64,6 +69,47 @@ async function ensureFirestoreProvisioned(uid, email, displayName) {
             return;
         }
 
+        if (orgId) {
+            const orgCompanyRef = firestoreDb.collection('orgCompanyMap').doc(orgId);
+            const orgCompanySnap = await tx.get(orgCompanyRef);
+
+            if (orgCompanySnap.exists) {
+                // Org already has a company - join it as a member, create no company.
+                tx.set(userRef, {
+                    role: 'member',
+                    companyId: orgCompanySnap.data().companyId,
+                    email: email || null,
+                    createdAt: FieldValue.serverTimestamp()
+                });
+                return;
+            }
+
+            // First member of this org - create the company as usual, and
+            // record the org -> company mapping for the next member.
+            const companyRef = firestoreDb.collection('companies').doc();
+            tx.set(companyRef, {
+                companyName: displayName || email || 'New Company',
+                industry: null,
+                companySize: null,
+                ownerId: uid,
+                createdAt: FieldValue.serverTimestamp()
+            });
+
+            tx.set(orgCompanyRef, {
+                companyId: companyRef.id,
+                createdAt: FieldValue.serverTimestamp()
+            });
+
+            tx.set(userRef, {
+                role: 'owner',
+                companyId: companyRef.id,
+                email: email || null,
+                createdAt: FieldValue.serverTimestamp()
+            });
+            return;
+        }
+
+        // No org claim - today's behavior, unchanged.
         const companyRef = firestoreDb.collection('companies').doc();
         tx.set(companyRef, {
             companyName: displayName || email || 'New Company',
@@ -156,9 +202,15 @@ module.exports = async function handler(req, res) {
         const email = claims.email || undefined;
         const displayName = claims.name || undefined;
 
+        // Nested claims.o.id is the active-organization claim Clerk sets when
+        // setActive({ organization }) ran client-side (see auth.js Stage 3a);
+        // claims.org_id is a flat fallback for older/differently-configured
+        // token templates. Absent for users with no active org.
+        const orgId = (claims.o && claims.o.id) || claims.org_id || null;
+
         // Auto-provision Firestore company/user docs on first sign-in.
         // Safe to call every request - it is a no-op once users/{uid} exists.
-        await ensureFirestoreProvisioned(uid, email, displayName);
+        await ensureFirestoreProvisioned(uid, email, displayName, orgId);
 
         // Upsert the Firebase Auth user so uid === Clerk sub.
         try {
