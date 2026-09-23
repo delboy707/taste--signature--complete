@@ -13,9 +13,24 @@ service cloud.firestore {
     // User profiles - users can only access their own profile
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      // Server-only: the Admin SDK (api/firebase-token.js,
+      // ensureFirestoreProvisioned()) provisions users/{uid} on first
+      // sign-in and bypasses Security Rules entirely, so this never blocks
+      // legitimate provisioning - it only blocks a client from creating a
+      // user doc directly.
+      allow create: if false;
+
+      // A signed-in user may update their own doc, but never companyId or
+      // role - those are server-assigned only (see
+      // ensureFirestoreProvisioned() in api/firebase-token.js).
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny(['companyId', 'role']);
+
+      // No client path deletes a user doc (confirmed by grep across all
+      // non-api/ .js files) - deny it outright.
+      allow delete: if false;
     }
 
     // Company data - only users belonging to the company can access

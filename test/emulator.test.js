@@ -67,6 +67,28 @@ async function makeSignedInCompanyUser(companyId) {
   return { uid, manager };
 }
 
+// Signs in as a fresh uid whose users/{uid} doc already exists (seeded via
+// the Admin SDK, which bypasses rules - mirroring how api/firebase-token.js
+// actually provisions it), and hands back a CLIENT SDK ref to that same
+// doc for exercising firestore.rules' users/{userId} block directly.
+async function makeSignedInUserWithOwnDoc(companyId, extra = {}) {
+  uidCounter += 1;
+  const uid = `user_${Date.now()}_${uidCounter}`;
+  await adminDb.collection('users').doc(uid).set({ companyId, role: 'owner', ...extra });
+  const customToken = await adminAuthInstance.createCustomToken(uid);
+  await clientApp.auth().signInWithCustomToken(customToken);
+  return { uid, userDocRef: clientDb.collection('users').doc(uid) };
+}
+
+// Asserts a client SDK call rejects with the real emulator's
+// PERMISSION_DENIED - not just any rejection.
+async function assertPermissionDenied(promise, message) {
+  await assert.rejects(promise, (err) => {
+    assert.equal(err.code, 'permission-denied', `expected permission-denied, got ${err.code}: ${err.message}`);
+    return true;
+  }, message);
+}
+
 // Every test in this suite except the two explicit rollout-gate tests
 // below exercises the NEW incremental-save path - so freshCompanyId()
 // auto-allowlists each company it creates. The two gate tests manage
@@ -518,6 +540,71 @@ async function main() {
     const snap = await expCollection.get();
     const ids = snap.docs.map(d => d.id).sort();
     assert.deepEqual(ids, ['210', '211'], 'deterministic new-scheme doc ids, not exp_<ts>_<index>');
+  });
+
+  // --- firestore.rules users/{userId} lockdown (fix/users-rules-lockdown) ---
+
+  await t('users/{uid} rules: client update of companyId is DENIED', async () => {
+    const companyId = await freshCompanyId();
+    const otherCompanyId = await freshCompanyId();
+    const { userDocRef } = await makeSignedInUserWithOwnDoc(companyId);
+    await assertPermissionDenied(
+      userDocRef.update({ companyId: otherCompanyId }),
+      'updating companyId on own user doc must be rejected by rules'
+    );
+  });
+
+  await t('users/{uid} rules: client update of role is DENIED', async () => {
+    const companyId = await freshCompanyId();
+    const { userDocRef } = await makeSignedInUserWithOwnDoc(companyId);
+    await assertPermissionDenied(
+      userDocRef.update({ role: 'member' }),
+      'updating role on own user doc must be rejected by rules'
+    );
+  });
+
+  await t('users/{uid} rules: client update of a non-locked field is ALLOWED', async () => {
+    const companyId = await freshCompanyId();
+    const { uid, userDocRef } = await makeSignedInUserWithOwnDoc(companyId);
+    await userDocRef.update({ displayName: 'Updated Name' });
+    const snap = await adminDb.collection('users').doc(uid).get();
+    assert.equal(snap.data().displayName, 'Updated Name', 'non-locked field update should land');
+    assert.equal(snap.data().companyId, companyId, 'companyId untouched by this update');
+  });
+
+  await t('users/{uid} rules: client create of own user doc is DENIED', async () => {
+    uidCounter += 1;
+    const uid = `user_${Date.now()}_${uidCounter}`;
+    const token = await adminAuthInstance.createCustomToken(uid);
+    await clientApp.auth().signInWithCustomToken(token);
+    const ref = clientDb.collection('users').doc(uid);
+    await assertPermissionDenied(
+      ref.set({ companyId: 'whatever', role: 'owner' }),
+      'client-side creation of users/{uid} must be rejected - only the Admin SDK provisions it'
+    );
+  });
+
+  await t('users/{uid} rules: client delete of own user doc is DENIED', async () => {
+    const companyId = await freshCompanyId();
+    const { userDocRef } = await makeSignedInUserWithOwnDoc(companyId);
+    await assertPermissionDenied(
+      userDocRef.delete(),
+      'deleting own user doc must be rejected by rules'
+    );
+  });
+
+  await t('users/{uid} rules lockdown: company access via belongsToCompany still ALLOWED', async () => {
+    const companyId = await freshCompanyId();
+    const { manager } = await makeSignedInCompanyUser(companyId);
+
+    const result = await manager.saveExperiences([exp(900, 'Regression check')]);
+    assert.equal(result.success, true, result.error);
+
+    const companyDoc = await clientDb.collection('companies').doc(companyId).get();
+    assert.ok(companyDoc.exists, 'company doc still readable via belongsToCompany after users/{uid} lockdown');
+
+    const expSnap = await clientDb.collection('companies').doc(companyId).collection('experiences').get();
+    assert.equal(expSnap.size, 1, 'company experiences still readable via belongsToCompany after users/{uid} lockdown');
   });
 
   const failed = results.filter(r => !r.ok);
