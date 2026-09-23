@@ -131,6 +131,25 @@ class AuthManager {
             return true;
         }
 
+        // Stage 3a: activate the user's org so the session token carries the
+        // 'o' claim (see tss-re1/qep-capture migrations). Only when exactly
+        // one membership exists - zero is left to the memberships-table
+        // fallback, and more than one is never guessed at. Must never block
+        // sign-in, so any failure here is swallowed and logged only.
+        try {
+            const memberships = window.Clerk.user ? window.Clerk.user.organizationMemberships : null;
+            if (memberships && memberships.length === 1) {
+                const org = memberships[0].organization;
+                if (!window.Clerk.organization || window.Clerk.organization.id !== org.id) {
+                    await window.Clerk.setActive({ organization: org.id });
+                }
+            } else if (memberships && memberships.length > 1) {
+                console.warn('Clerk gate: user belongs to more than one organization, not activating any automatically:', memberships.map(m => m.organization.id));
+            }
+        } catch (error) {
+            console.warn('Clerk gate: failed to activate organization:', error);
+        }
+
         const publicMetadata = window.Clerk.user ? window.Clerk.user.publicMetadata : null;
         if (!publicMetadata || publicMetadata.provisioned !== true) {
             window.location.href = CLERK_PORTAL_URL;
