@@ -17,32 +17,18 @@ function freshTargetsLoaded(clientFactory) {
     return require('../targets-loaded.js');
 }
 
-// Builds a tiny chainable query stub: .from(table).select(...).eq(...).eq(...).maybeSingle()
-// `tables` maps table name -> a function(filters) -> { data, error } for a
-// single-row lookup, or -> { data, error } (array) when `.maybeSingle()` is
-// never called (list queries, e.g. targets/version_stage_notes).
-function makeClient({ tables = {}, rpcImpl = null } = {}) {
-    function builder(tableName) {
-        const state = { table: tableName, filters: {} };
-        const chain = {
-            select() { return chain; },
-            eq(col, val) { state.filters[col] = val; return chain; },
-            maybeSingle: async () => (tables[tableName] ? tables[tableName](state.filters, 'single') : { data: null, error: null }),
-            // Awaiting the chain directly (no .maybeSingle()) - used for
-            // list-shaped queries (targets, version_stage_notes).
-            then(resolve, reject) {
-                Promise.resolve(tables[tableName] ? tables[tableName](state.filters, 'list') : { data: [], error: null }).then(resolve, reject);
-            },
-        };
-        return chain;
-    }
-    return {
-        from: (t) => builder(t),
-        schema: () => ({
-            from: (t) => builder(t),
-            rpc: async (name, params) => (rpcImpl ? rpcImpl(name, params) : { data: null, error: { message: `unexpected rpc ${name}` } }),
-        }),
-    };
+// Schema-strict client (test/helpers/strict-supabase.js): a tss_shared table
+// queried without .schema('tss_shared') fails exactly like PostgREST does
+// ("Could not find the table 'public.projects' in the schema cache"), and every
+// such mistake is recorded in LAST_VIOLATIONS so tests can assert on it.
+const { makeStrictClient } = require('./helpers/strict-supabase');
+let LAST_VIOLATIONS = [];
+let LAST_QUERIES = [];
+function makeClient(opts = {}) {
+    const { client, violations, queries } = makeStrictClient(opts);
+    LAST_VIOLATIONS = violations;
+    LAST_QUERIES = queries;
+    return client;
 }
 
 const VALID_PROJECT_ID = '11111111-1111-1111-1111-111111111111';
@@ -134,12 +120,21 @@ test('fetchLockedProjects surfaces a client-construction failure (e.g. Supabase 
 // fetchQepCaptureTargetsByVersion
 // ------------------------------------------------------------
 
+// Fixture target rows may carry a `qep_attribute` object for readability; the
+// mock serves it the way the real database does: tss_shared.targets returns
+// the bare row, and the attribute lives in public.qep_attribute keyed by id.
 function versionTargetTables({ projectRow, versionRow, targetRows = [], noteRows = [], categoryRow = { name: 'Beverages' } }) {
+    const attributes = {};
+    for (const r of targetRows) if (r.qep_attribute) attributes[r.variable_key] = { id: r.variable_key, ...r.qep_attribute };
     return {
         projects: (filters) => ({ data: filters.id === projectRow?.id ? projectRow : null, error: null }),
         project_versions: (filters) => ({ data: versionRow && filters.id === versionRow.id ? versionRow : null, error: null }),
         categories: () => ({ data: categoryRow, error: null }),
-        targets: () => ({ data: targetRows, error: null }),
+        targets: () => ({ data: targetRows.map(({ qep_attribute, ...bare }) => bare), error: null }),
+        qep_attribute: (filters) => {
+            const ids = (filters.id && filters.id.in) || [];
+            return { data: ids.filter(id => attributes[id]).map(id => attributes[id]), error: null };
+        },
         version_stage_notes: () => ({ data: noteRows, error: null }),
     };
 }
@@ -197,4 +192,38 @@ test('fetchQepCaptureTargets (manual fallback) still works via project.current_v
     const result = await fetchQepCaptureTargets(VALID_PROJECT_ID);
     assert.equal(result.project.name, 'Zesty Cola');
     assert.equal(result.version.id, VALID_VERSION_ID);
+});
+
+// ------------------------------------------------------------
+// Schema correctness (regression: 2026-09-24 "Could not find the table
+// 'public.projects' in the schema cache")
+// ------------------------------------------------------------
+
+test('every query targets the schema its table lives in (tss_shared tables via .schema(\'tss_shared\'))', async () => {
+    const projectRow = { id: VALID_PROJECT_ID, name: 'Zesty Cola', category_id: 'cat-1', current_version_id: VALID_VERSION_ID };
+    const versionRow = { id: VALID_VERSION_ID, version_number: 4, status: 'locked', locked_at: '2026-01-01T00:00:00Z' };
+    const targetRows = [{ variable_key: 'ap_emo_excitement', role: 'primary', intensity: 'high', qep_attribute: { label: 'Excitement', stage_key: 'ap', emotion_concept_id: 'excitement' } }];
+
+    for (const run of [
+        (m) => m.fetchQepCaptureTargetsByVersion(VALID_PROJECT_ID, VALID_VERSION_ID),
+        (m) => m.fetchQepCaptureTargets(VALID_PROJECT_ID),
+    ]) {
+        const mod = freshTargetsLoaded(() => makeClient({ tables: versionTargetTables({ projectRow, versionRow, targetRows }) }));
+        const result = await run(mod);
+        assert.equal(result.error, undefined, `load failed: ${result.error}`);
+        assert.deepEqual(LAST_VIOLATIONS, []);
+        const seen = LAST_QUERIES.map(q => `${q.schema}.${q.table}`).sort();
+        for (const t of ['tss_shared.projects', 'tss_shared.project_versions', 'tss_shared.targets', 'tss_shared.version_stage_notes', 'public.categories', 'public.qep_attribute']) {
+            assert.ok(seen.includes(t), `expected a query on ${t}; saw ${seen.join(', ')}`);
+        }
+    }
+});
+
+test('strict mock: an unscoped tss_shared query fails the way PostgREST does', async () => {
+    const { client, violations } = makeStrictClient({});
+    const { error } = await client.from('projects').select('id').eq('id', VALID_PROJECT_ID).maybeSingle();
+    assert.match(error.message, /Could not find the table 'public\.projects' in the schema cache/);
+    assert.equal(violations.length, 1);
+    const rpc = await client.rpc('list_locked_projects');
+    assert.equal(rpc.error.code, 'PGRST202');
 });

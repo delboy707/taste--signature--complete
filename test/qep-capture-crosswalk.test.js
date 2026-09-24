@@ -11,14 +11,16 @@ function freshCrosswalk(clientFactory) {
     return require('../qep-capture-crosswalk.js');
 }
 
+// Schema-strict (test/helpers/strict-supabase.js): querying either crosswalk
+// table outside tss_shared fails like PostgREST does.
+const { makeStrictClient } = require('./helpers/strict-supabase');
 function makeClient({ canonical, alias }) {
-    return {
-        schema: () => ({
-            from: (table) => ({
-                select: async () => (table === 'signature_attribute_map' ? canonical : alias),
-            }),
-        }),
-    };
+    return makeStrictClient({
+        tables: {
+            signature_attribute_map: () => canonical,
+            signature_key_alias: () => alias,
+        },
+    }).client;
 }
 
 test('canonical rows come before alias rows, in order, for canonical-wins-on-conflict downstream', async () => {

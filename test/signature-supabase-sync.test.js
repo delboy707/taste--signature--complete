@@ -29,11 +29,11 @@ function freshSync({ enabled = true, hostname = 'localhost', supabaseEnv = 'dev'
         QEP_CAPTURE_CONFIG: enabled === null ? undefined : { ENABLE_SUPABASE_DUAL_WRITE: enabled, SUPABASE_ENV: supabaseEnv },
         location: { hostname },
         localStorage: fakeLocalStorage(),
-        getQepCaptureClient: () => ({
-            schema: () => ({
-                rpc: (name, params) => rpcImpl(name, params),
-            }),
-        }),
+        // Schema-strict (test/helpers/strict-supabase.js): the dual-write RPCs
+        // only resolve when called via .schema('tss_shared').
+        getQepCaptureClient: () => require('./helpers/strict-supabase').makeStrictClient({
+            rpcImpl: (name, params) => rpcImpl(name, params),
+        }).client,
     };
     return require('../signature-supabase-sync.js');
 }
