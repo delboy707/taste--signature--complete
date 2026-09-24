@@ -103,8 +103,8 @@ function renderProductTemporalSelector() {
 
             <div class="temporal-product-grid">
                 ${temporalProducts.map(product => `
-                    <div class="temporal-product-card" onclick="showTemporalAnalysis('${product.productName}')">
-                        <div class="product-name">${product.displayName}</div>
+                    <div class="temporal-product-card" onclick="showTemporalAnalysis(${jsArgAttr(product.productName)})">
+                        <div class="product-name">${escapeHtml(product.displayName)}</div>
                         <div class="product-temporal-stats">
                             <span class="eval-count">${product.count} evaluations</span>
                             <span class="time-span">${product.timeSpanDays} days</span>
@@ -129,7 +129,7 @@ function showTemporalAnalysis(productName) {
     let html = `
         <div class="temporal-analysis-results">
             <div class="results-header">
-                <h4>Temporal Analysis: ${productName}</h4>
+                <h4>Temporal Analysis: ${escapeHtml(productName)}</h4>
                 <button class="btn-secondary" onclick="renderTemporalAnalysisDashboard()">← Back to Overview</button>
             </div>
     `;
@@ -172,7 +172,7 @@ function renderTimeSeriesSection(productName) {
 
             <div class="chart-selector">
                 <label>Select Attributes to Display:</label>
-                <select id="time-series-stage-select" class="form-control" onchange="updateTimeSeriesCharts('${productName}')">
+                <select id="time-series-stage-select" class="form-control" onchange="updateTimeSeriesCharts(${jsArgAttr(productName)})">
                     <option value="all">All Attributes</option>
                     <option value="Appearance">Appearance</option>
                     <option value="Aroma">Aroma</option>
@@ -233,7 +233,7 @@ function updateTimeSeriesCharts(productName, selectedStage) {
 
     let html = '';
     Object.keys(stages).forEach(stageName => {
-        html += `<div class="chart-group"><h6>${stageName}</h6>`;
+        html += `<div class="chart-group"><h6>${escapeHtml(stageName)}</h6>`;
 
         stages[stageName].forEach(series => {
             const chartId = `chart-${series.key.replace(/[^a-z0-9]/gi, '-')}`;
@@ -242,13 +242,13 @@ function updateTimeSeriesCharts(productName, selectedStage) {
             html += `
                 <div class="chart-wrapper">
                     <div class="chart-header">
-                        <span class="chart-title">${series.attributeLabel}</span>
-                        <span class="chart-trend trend-${trend.trend}">
+                        <span class="chart-title">${escapeHtml(series.attributeLabel)}</span>
+                        <span class="chart-trend trend-${escapeHtml(trend.trend)}">
                             ${trend.trend === 'increasing' ? '↗️' : trend.trend === 'decreasing' ? '↘️' : '→'}
                             ${trend.change >= 0 ? '+' : ''}${trend.change.toFixed(2)}
                         </span>
                     </div>
-                    <canvas id="${chartId}" class="time-series-chart"></canvas>
+                    <canvas id="${escapeHtml(chartId)}" class="time-series-chart"></canvas>
                 </div>
             `;
         });
@@ -352,7 +352,7 @@ function renderShelfLifeAnalysis(productName) {
         return `
             <div class="analytics-section">
                 <h5>🕐 Shelf Life Analysis</h5>
-                <p class="empty-state">${shelfLife.message}</p>
+                <p class="empty-state">${escapeHtml(shelfLife.message)}</p>
             </div>
         `;
     }
@@ -365,7 +365,7 @@ function renderShelfLifeAnalysis(productName) {
                     <div class="status-icon">✅</div>
                     <div class="status-message">
                         <strong>Product Stable</strong>
-                        <p>${shelfLife.message} over ${shelfLife.timeSpanDays} days</p>
+                        <p>${escapeHtml(shelfLife.message)} over ${shelfLife.timeSpanDays} days</p>
                     </div>
                 </div>
             </div>
@@ -385,7 +385,7 @@ function renderShelfLifeAnalysis(productName) {
                 <div class="shelf-life-details">
                     <div class="detail-item">
                         <span class="detail-label">Limiting Attribute:</span>
-                        <span class="detail-value">${shelfLife.limitingAttribute}</span>
+                        <span class="detail-value">${escapeHtml(shelfLife.limitingAttribute)}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Current Value:</span>
@@ -406,7 +406,7 @@ function renderShelfLifeAnalysis(productName) {
                         <strong>Other Degrading Attributes:</strong>
                         <ul>
                             ${shelfLife.allDegradingAttributes.slice(1, 5).map(attr => `
-                                <li>${attr.attribute}: ${attr.projectedDays.toFixed(0)} days</li>
+                                <li>${escapeHtml(attr.attribute)}: ${attr.projectedDays.toFixed(0)} days</li>
                             `).join('')}
                         </ul>
                     </div>
@@ -432,8 +432,8 @@ function renderBatchVariationAnalysis(productName) {
             <p class="section-description">Consistency across evaluations</p>
 
             <div class="variation-summary">
-                <div class="consistency-badge consistency-${variation.overallConsistency}">
-                    Overall Consistency: ${variation.overallConsistency.toUpperCase()}
+                <div class="consistency-badge consistency-${escapeHtml(variation.overallConsistency)}">
+                    Overall Consistency: ${escapeHtml(variation.overallConsistency.toUpperCase())}
                 </div>
             </div>
 
@@ -451,14 +451,14 @@ function renderBatchVariationAnalysis(productName) {
                 <tbody>
                     ${variation.results.slice(0, 10).map(result => `
                         <tr>
-                            <td><strong>${result.stage} - ${result.attribute}</strong></td>
+                            <td><strong>${escapeHtml(result.stage)} - ${escapeHtml(result.attribute)}</strong></td>
                             <td>${result.mean.toFixed(2)}</td>
                             <td>${result.stdDev.toFixed(2)}</td>
                             <td>${result.cv.toFixed(1)}%</td>
                             <td>${result.min.toFixed(1)} - ${result.max.toFixed(1)}</td>
                             <td>
-                                <span class="consistency-badge consistency-${result.consistency}">
-                                    ${result.consistency}
+                                <span class="consistency-badge consistency-${escapeHtml(result.consistency)}">
+                                    ${escapeHtml(result.consistency)}
                                 </span>
                             </td>
                         </tr>
@@ -516,7 +516,7 @@ function renderFreshVsAgedComparison(productName) {
                     <tbody>
                         ${significantChanges.map(change => `
                             <tr>
-                                <td><strong>${change.stage} - ${change.attribute}</strong></td>
+                                <td><strong>${escapeHtml(change.stage)} - ${escapeHtml(change.attribute)}</strong></td>
                                 <td>${change.freshValue.toFixed(1)}</td>
                                 <td>${change.agedValue.toFixed(1)}</td>
                                 <td class="${change.change >= 0 ? 'positive-change' : 'negative-change'}">
@@ -551,13 +551,13 @@ function renderSignificantChanges(productName) {
 
             <div class="significant-changes-grid">
                 ${changes.slice(0, 6).map(change => `
-                    <div class="change-card severity-${change.severity}">
+                    <div class="change-card severity-${escapeHtml(change.severity)}">
                         <div class="change-icon">
                             ${change.trend === 'increasing' ? '↗️' : '↘️'}
                         </div>
                         <div class="change-info">
-                            <strong>${change.stage}</strong>
-                            <div>${change.attribute}</div>
+                            <strong>${escapeHtml(change.stage)}</strong>
+                            <div>${escapeHtml(change.attribute)}</div>
                         </div>
                         <div class="change-value ${change.change >= 0 ? 'positive' : 'negative'}">
                             ${change.change >= 0 ? '+' : ''}${change.change.toFixed(2)}

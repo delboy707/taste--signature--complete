@@ -110,7 +110,7 @@ function renderPanelImportSection() {
                     <select id="panel-product-link" class="form-control">
                         <option value="">Select a product...</option>
                         ${experiences.map(e => `
-                            <option value="${e.id}">${e.productInfo.name} - ${e.productInfo.brand}</option>
+                            <option value="${escapeHtml(e.id)}">${escapeHtml(e.productInfo.name)} - ${escapeHtml(e.productInfo.brand)}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -148,7 +148,7 @@ function renderPanelDataList() {
                 ${consumerPanelData.map(panel => `
                     <div class="panel-card">
                         <div class="panel-header">
-                            <h5>${panel.productName}</h5>
+                            <h5>${escapeHtml(panel.productName)}</h5>
                             <span class="panel-badge">${panel.sampleSize} respondents</span>
                         </div>
                         <div class="panel-info">
@@ -166,14 +166,14 @@ function renderPanelDataList() {
                             </div>
                             <div class="panel-stat">
                                 <span>Type:</span>
-                                <strong>${panel.reformulationType}</strong>
+                                <strong>${escapeHtml(panel.reformulationType)}</strong>
                             </div>
                         </div>
                         <div class="panel-actions">
-                            <button class="btn-small btn-secondary" onclick="viewPanelDetails(${panel.id})">
+                            <button class="btn-small btn-secondary" onclick="viewPanelDetails(${jsArgAttr(panel.id)})">
                                 View Details
                             </button>
-                            <button class="btn-small btn-secondary" onclick="deletePanelData(${panel.id})">
+                            <button class="btn-small btn-secondary" onclick="deletePanelData(${jsArgAttr(panel.id)})">
                                 Delete
                             </button>
                         </div>
@@ -212,7 +212,7 @@ function renderExpertVsConsumerSection() {
                 <select id="comparison-product-select" class="form-control" onchange="updateExpertVsConsumerComparison()">
                     <option value="">Choose a product...</option>
                     ${productsWithBoth.map(e => `
-                        <option value="${e.id}">${e.productInfo.name}</option>
+                        <option value="${escapeHtml(e.id)}">${escapeHtml(e.productInfo.name)}</option>
                     `).join('')}
                 </select>
             </div>
@@ -246,8 +246,8 @@ function updateExpertVsConsumerComparison() {
     let html = `
         <div class="comparison-results">
             <div class="comparison-header">
-                <h5>${comparison.productName}</h5>
-                <div class="correlation-badge correlation-${comparison.correlationStrength.toLowerCase().replace(' ', '-')}">
+                <h5>${escapeHtml(comparison.productName)}</h5>
+                <div class="correlation-badge correlation-${escapeHtml(comparison.correlationStrength.toLowerCase().replace(' ', '-'))}">
                     ${comparison.correlationStrength} Correlation (r = ${comparison.correlation.toFixed(3)})
                 </div>
             </div>
@@ -268,11 +268,11 @@ function updateExpertVsConsumerComparison() {
                         const diffClass = comp.difference > 0 ? 'positive-diff' : comp.difference < 0 ? 'negative-diff' : '';
                         return `
                             <tr>
-                                <td class="attribute-name">${attr.charAt(0).toUpperCase() + attr.slice(1)}</td>
+                                <td class="attribute-name">${escapeHtml(attr.charAt(0).toUpperCase() + attr.slice(1))}</td>
                                 <td>${comp.expert.toFixed(2)}</td>
                                 <td>${comp.consumer.toFixed(2)}</td>
                                 <td class="${diffClass}">${comp.difference > 0 ? '+' : ''}${comp.difference.toFixed(2)}</td>
-                                <td><span class="agreement-badge agreement-${comp.agreement.toLowerCase()}">${comp.agreement}</span></td>
+                                <td><span class="agreement-badge agreement-${escapeHtml(comp.agreement.toLowerCase())}">${escapeHtml(comp.agreement)}</span></td>
                             </tr>
                         `;
                     }).join('')}
@@ -319,7 +319,7 @@ function renderReformulationAnalysisSection() {
 
                     return `
                         <div class="reformulation-card">
-                            <h5>${analysis.productName}</h5>
+                            <h5>${escapeHtml(analysis.productName)}</h5>
                             <div class="reform-timeline">
                                 <div class="timeline-point">
                                     <strong>Original</strong>
@@ -350,14 +350,14 @@ function renderReformulationAnalysisSection() {
                                         const changeClass = data.change > 0 ? 'positive-change' : data.change < 0 ? 'negative-change' : '';
                                         return `
                                             <tr>
-                                                <td>${attr.charAt(0).toUpperCase() + attr.slice(1)}</td>
+                                                <td>${escapeHtml(attr.charAt(0).toUpperCase() + attr.slice(1))}</td>
                                                 <td>${data.original.toFixed(2)}</td>
                                                 <td>${data.reformulated.toFixed(2)}</td>
                                                 <td class="${changeClass}">${data.change > 0 ? '+' : ''}${data.change.toFixed(2)} (${data.percentChange.toFixed(1)}%)</td>
                                                 <td>
                                                     ${data.significant ?
-                                                        `<span class="sig-badge">${data.interpretation}</span>` :
-                                                        `<span class="insig-badge">${data.interpretation}</span>`
+                                                        `<span class="sig-badge">${escapeHtml(data.interpretation)}</span>` :
+                                                        `<span class="insig-badge">${escapeHtml(data.interpretation)}</span>`
                                                     }
                                                 </td>
                                             </tr>
@@ -554,7 +554,7 @@ function viewPanelDetails(panelId) {
     const panel = consumerPanelData.find(p => p.id === panelId);
     if (!panel) return;
 
-    alert(`Panel Details for ${panel.productName}\n\nSample Size: ${panel.sampleSize}\nDate: ${new Date(panel.panelDate).toLocaleDateString()}\n\nOverall Liking: ${panel.aggregateScores.overallLiking.mean.toFixed(2)} ± ${panel.aggregateScores.overallLiking.stdDev.toFixed(2)}\nTop 2 Box: ${panel.aggregateScores.overallLiking.top2Box.toFixed(1)}%\nBottom 2 Box: ${panel.aggregateScores.overallLiking.bottom2Box.toFixed(1)}%`);
+    alert(`Panel Details for ${escapeHtml(panel.productName)}\n\nSample Size: ${panel.sampleSize}\nDate: ${new Date(panel.panelDate).toLocaleDateString()}\n\nOverall Liking: ${panel.aggregateScores.overallLiking.mean.toFixed(2)} ± ${panel.aggregateScores.overallLiking.stdDev.toFixed(2)}\nTop 2 Box: ${panel.aggregateScores.overallLiking.top2Box.toFixed(1)}%\nBottom 2 Box: ${panel.aggregateScores.overallLiking.bottom2Box.toFixed(1)}%`);
 }
 
 /**
