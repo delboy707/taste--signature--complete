@@ -110,7 +110,7 @@ function renderApprovalCard(approval, context) {
         <div class="approval-card">
             <div class="approval-header">
                 <div class="approval-status" style="background-color: ${statusColor}20; color: ${statusColor};">
-                    ${statusIcon} ${approval.status.toUpperCase().replace('_', ' ')}
+                    ${statusIcon} ${escapeHtml(approval.status.toUpperCase().replace('_', ' '))}
                 </div>
                 <div class="approval-date">
                     ${new Date(approval.submittedAt).toLocaleDateString()}
@@ -119,14 +119,14 @@ function renderApprovalCard(approval, context) {
 
             <div class="approval-body">
                 <div class="approval-product">
-                    <strong>Product ID:</strong> ${approval.productId}
+                    <strong>Product ID:</strong> ${escapeHtml(approval.productId)}
                 </div>
                 <div class="approval-submitter">
-                    <strong>Submitted by:</strong> ${approval.submitterName}
+                    <strong>Submitted by:</strong> ${escapeHtml(approval.submitterName)}
                 </div>
                 ${approval.notes ? `
                     <div class="approval-notes">
-                        <strong>Notes:</strong> ${approval.notes}
+                        <strong>Notes:</strong> ${escapeHtml(approval.notes)}
                     </div>
                 ` : ''}
             </div>
@@ -140,12 +140,12 @@ function renderApprovalCard(approval, context) {
 
                         return `
                             <div class="approver-item">
-                                <span class="approver-name">${approver.userName}</span>
+                                <span class="approver-name">${escapeHtml(approver.userName)}</span>
                                 <span class="approver-status" style="color: ${approverStatusColor};">
-                                    ${approverStatusIcon} ${approver.status.replace('_', ' ')}
+                                    ${approverStatusIcon} ${escapeHtml(approver.status.replace('_', ' '))}
                                 </span>
                                 ${approver.comments ? `
-                                    <div class="approver-comments">"${approver.comments}"</div>
+                                    <div class="approver-comments">"${escapeHtml(approver.comments)}"</div>
                                 ` : ''}
                             </div>
                         `;
@@ -155,22 +155,22 @@ function renderApprovalCard(approval, context) {
 
             <div class="approval-actions">
                 ${context === 'pending-for-me' && myApprover && myApprover.status === ApprovalStatus.PENDING ? `
-                    <button class="btn-success btn-sm" onclick="respondToApprovalDialog('${approval.id}', '${ApprovalStatus.APPROVED}')">
+                    <button class="btn-success btn-sm" onclick="respondToApprovalDialog(${jsArgAttr(approval.id)}, '${ApprovalStatus.APPROVED}')">
                         ✅ Approve
                     </button>
-                    <button class="btn-warning btn-sm" onclick="respondToApprovalDialog('${approval.id}', '${ApprovalStatus.NEEDS_CHANGES}')">
+                    <button class="btn-warning btn-sm" onclick="respondToApprovalDialog(${jsArgAttr(approval.id)}, '${ApprovalStatus.NEEDS_CHANGES}')">
                         🔄 Request Changes
                     </button>
-                    <button class="btn-danger btn-sm" onclick="respondToApprovalDialog('${approval.id}', '${ApprovalStatus.REJECTED}')">
+                    <button class="btn-danger btn-sm" onclick="respondToApprovalDialog(${jsArgAttr(approval.id)}, '${ApprovalStatus.REJECTED}')">
                         ❌ Reject
                     </button>
                 ` : ''}
                 ${context === 'my-submitted' && approval.status === ApprovalStatus.PENDING ? `
-                    <button class="btn-secondary btn-sm" onclick="cancelApprovalDialog('${approval.id}')">
+                    <button class="btn-secondary btn-sm" onclick="cancelApprovalDialog(${jsArgAttr(approval.id)})">
                         Cancel Request
                     </button>
                 ` : ''}
-                <button class="btn-secondary btn-sm" onclick="viewApprovalDetails('${approval.id}')">
+                <button class="btn-secondary btn-sm" onclick="viewApprovalDetails(${jsArgAttr(approval.id)})">
                     View Details
                 </button>
             </div>
@@ -212,15 +212,15 @@ function showSubmitForApprovalDialog(productId) {
                         <div class="approvers-checklist">
                             ${approvers.map(user => `
                                 <label class="approver-checkbox">
-                                    <input type="checkbox" name="approver" value="${user.id}">
+                                    <input type="checkbox" name="approver" value="${escapeHtml(user.id)}">
                                     <div class="approver-checkbox-content">
                                         <div class="member-avatar-small">
-                                            ${user.avatar ? `<img src="${user.avatar}" alt="${user.name}">` :
-                                              `<div class="avatar-placeholder-small">${user.name.charAt(0)}</div>`}
+                                            ${user.avatar ? `<img src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.name)}">` :
+                                              `<div class="avatar-placeholder-small">${escapeHtml(user.name.charAt(0))}</div>`}
                                         </div>
                                         <div>
-                                            <div class="approver-name">${user.name}</div>
-                                            <div class="approver-role">${user.role}</div>
+                                            <div class="approver-name">${escapeHtml(user.name)}</div>
+                                            <div class="approver-role">${escapeHtml(user.role)}</div>
                                         </div>
                                     </div>
                                 </label>
@@ -240,7 +240,7 @@ function showSubmitForApprovalDialog(productId) {
                 </div>
                 <div class="modal-footer">
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn-primary" onclick="submitForApprovalRequest('${productId}')">
+                    <button class="btn-primary" onclick="submitForApprovalRequest(${jsArgAttr(productId)})">
                         Submit for Approval
                     </button>
                 </div>
@@ -311,7 +311,7 @@ function respondToApprovalDialog(approvalId, decision) {
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
                     <button
                         class="btn-primary"
-                        onclick="submitApprovalResponse('${approvalId}', '${decision}')"
+                        onclick="submitApprovalResponse(${jsArgAttr(approvalId)}, '${decision}')"
                     >
                         ${decisionLabels[decision]}
                     </button>
