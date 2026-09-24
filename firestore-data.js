@@ -14,15 +14,8 @@ const { diffKey: computeDiffKey, computeUpsertDiff: buildUpsertDiff, chunk: chun
 // needed to tell the two schemes apart, no heuristics.
 const LEGACY_DOC_ID_PREFIX = 'exp_';
 
-// Rollout gate (incremental-save-config.js). `global` covers Node tests;
-// `window` covers the browser. Default (missing/empty allowlist) is the
-// OLD delete-all/reinsert-all behavior for every company - see
-// MIGRATION_RUNBOOK.md for the intended rollout order.
-function isIncrementalSaveEnabled(companyId) {
-    const scope = typeof window !== 'undefined' ? window : global;
-    const allowlist = (scope.INCREMENTAL_SAVE_CONFIG && scope.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS) || [];
-    return Array.isArray(allowlist) && allowlist.includes(companyId);
-}
+// Documents are read this many at a time in loadExperiences().
+const LOAD_PAGE_SIZE = 500;
 
 class FirestoreDataManager {
     constructor() {
@@ -287,16 +280,8 @@ class FirestoreDataManager {
      *      _commitOpsResilient) so it can't take unrelated edits in the
      *      same save down with it. The caller (app.js) is expected to
      *      drop `orphanedIds` from its own array and tell the user.
-     *
-     * Gated by incremental-save-config.js's ALLOWLISTED_COMPANY_IDS: a
-     * company not on the allowlist gets _saveExperiencesLegacy() instead
-     * (the original, unmodified delete-all/reinsert-all behavior) -
-     * unaffected by anything in this file until explicitly opted in.
      */
     async saveExperiences(experiences) {
-        if (!isIncrementalSaveEnabled(this.companyId)) {
-            return this._saveExperiencesLegacy(experiences);
-        }
         try {
             await this._ensureMigrated(experiences);
 
@@ -350,56 +335,41 @@ class FirestoreDataManager {
     }
 
     /**
-     * Original save behavior, unmodified: delete every existing doc,
-     * recreate all of them under fresh random ids. Used for any company
-     * NOT on the incremental-save allowlist - see saveExperiences().
-     */
-    async _saveExperiencesLegacy(experiences) {
-        try {
-            const batch = this.db.batch();
-            const collection = this.getExperiencesCollection();
-
-            const existing = await collection.get();
-            existing.docs.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-
-            experiences.forEach((exp, index) => {
-                const docRef = collection.doc(`exp_${Date.now()}_${index}`);
-                batch.set(docRef, {
-                    ...exp,
-                    addedBy: this.userId,
-                    companyId: this.companyId,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-
-            await batch.commit();
-            console.log(`✅ Saved ${experiences.length} experiences to Firestore (legacy path - company not in incremental-save allowlist)`);
-            return { success: true, count: experiences.length };
-
-        } catch (error) {
-            console.error('Firestore save error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    /**
-     * Load all experiences from Firestore
+     * Load ALL experiences from Firestore, most recently updated first.
+     *
+     * Read in pages of LOAD_PAGE_SIZE ordered by document id, not by
+     * updatedAt: an updatedAt ordering silently drops any doc that lacks
+     * the field (e.g. one restored from a backup), and a single limit()
+     * silently truncates past the limit. The updatedAt ordering the app
+     * has always seen is reproduced client-side afterwards.
      */
     async loadExperiences() {
         try {
             const collection = this.getExperiencesCollection();
-            const snapshot = await collection.orderBy('updatedAt', 'desc').limit(500).get();
+            const idOrder = firebase.firestore.FieldPath.documentId();
 
-            const experiences = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                // Remove Firestore timestamps before returning
-                delete data.updatedAt;
-                delete data.companyId; // Internal tracking only
-                experiences.push(data);
-            });
+            const loaded = [];
+            let lastDoc = null;
+            for (;;) {
+                let query = collection.orderBy(idOrder).limit(LOAD_PAGE_SIZE);
+                if (lastDoc) query = query.startAfter(lastDoc);
+                const page = await query.get();
+                page.forEach(doc => {
+                    const data = doc.data();
+                    const updatedAt = data.updatedAt;
+                    const updatedAtMs = updatedAt && typeof updatedAt.toMillis === 'function' ? updatedAt.toMillis() : 0;
+                    // Remove Firestore timestamps before returning
+                    delete data.updatedAt;
+                    delete data.companyId; // Internal tracking only
+                    loaded.push({ data, updatedAtMs });
+                });
+                if (page.size < LOAD_PAGE_SIZE) break;
+                lastDoc = page.docs[page.docs.length - 1];
+            }
+
+            // Array.prototype.sort is stable, so ties keep document-id order.
+            loaded.sort((a, b) => b.updatedAtMs - a.updatedAtMs);
+            const experiences = loaded.map(item => item.data);
 
             // Seed the diff baseline from what's actually in Firestore right
             // now, so the very next saveExperiences() call - even with zero

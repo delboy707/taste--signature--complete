@@ -89,17 +89,11 @@ async function assertPermissionDenied(promise, message) {
   }, message);
 }
 
-// Every test in this suite except the two explicit rollout-gate tests
-// below exercises the NEW incremental-save path - so freshCompanyId()
-// auto-allowlists each company it creates. The two gate tests manage
-// global.INCREMENTAL_SAVE_CONFIG themselves to prove the default
-// (empty allowlist) path independently.
-global.INCREMENTAL_SAVE_CONFIG = { ALLOWLISTED_COMPANY_IDS: [] };
-
+// Incremental save is the only save path - there is no config or allowlist
+// to set up, so a bare company doc is all a test needs.
 async function freshCompanyId() {
   const ref = adminDb.collection('companies').doc();
   await ref.set({ companyName: 'Test Co', ownerId: 'n/a', createdAt: adminFirestore.FieldValue.serverTimestamp() });
-  global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS.push(ref.id);
   return ref.id;
 }
 
@@ -400,6 +394,37 @@ async function main() {
     assert.equal(snap.size, 600, 'all 600 persisted despite exceeding the 500-op batch limit');
   });
 
+  await t('loading 600 experiences returns all 600 (no 500-doc truncation)', async () => {
+    const companyId = await freshCompanyId();
+    const seeder = await makeSignedInCompanyUser(companyId);
+    const many = Array.from({ length: 600 }, (_, i) => exp(5000 + i, `Loaded ${i}`));
+    const saved = await seeder.manager.saveExperiences(many);
+    assert.equal(saved.success, true, saved.error);
+
+    const { manager } = await makeSignedInCompanyUser(companyId); // a fresh session
+    const loaded = await manager.loadExperiences();
+    assert.equal(loaded.success, true, loaded.error);
+    assert.equal(loaded.experiences.length, 600, 'every one of the 600 docs arrived');
+    const ids = new Set(loaded.experiences.map(e => String(e.id)));
+    assert.equal(ids.size, 600, 'no duplicates across pages');
+    for (let i = 0; i < 600; i++) assert.ok(ids.has(String(5000 + i)), `experience ${5000 + i} missing from the load`);
+
+    const resave = await manager.saveExperiences(loaded.experiences);
+    assert.equal(resave.count, 0, 'the baseline covers all 600, so an unedited resave writes nothing');
+  });
+
+  await t('loading includes a doc that has no updatedAt field (e.g. restored from a backup)', async () => {
+    const companyId = await freshCompanyId();
+    const { manager } = await makeSignedInCompanyUser(companyId);
+    await manager.saveExperiences([exp(6001, 'Has updatedAt')]);
+    await adminDb.collection('companies').doc(companyId).collection('experiences').doc('6002')
+      .set({ ...exp(6002, 'No updatedAt'), companyId, addedBy: 'restored' });
+
+    const loaded = await manager.loadExperiences();
+    assert.deepEqual(loaded.experiences.map(e => e.id).sort(), [6001, 6002], 'both docs load, ordered by id then by updatedAt');
+    assert.equal(loaded.experiences[0].id, 6001, 'a doc with updatedAt sorts ahead of one without');
+  });
+
   await t('second tab adds a new experience while the first tab saves an edit - both survive', async () => {
     const companyId = await freshCompanyId();
     // Two independent manager instances = two "tabs", same company, same
@@ -495,51 +520,25 @@ async function main() {
     assert.equal(reloadedRetest.originalTestId, 70, 'the link back to the original test id is intact');
   });
 
-  await t('rollout gate: company NOT in the allowlist gets the OLD legacy behavior', async () => {
+  await t('a fresh company gets incremental behaviour with no config at all', async () => {
+    assert.equal(global.INCREMENTAL_SAVE_CONFIG, undefined, 'no rollout config exists anywhere');
+    assert.equal(typeof FirestoreDataManager.prototype._saveExperiencesLegacy, 'undefined', 'the legacy save path no longer exists');
+
     const companyId = await freshCompanyId();
-    // Undo freshCompanyId()'s auto-allowlisting for this one test - this
-    // is exactly the default state every company starts in.
-    global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS =
-      global.INCREMENTAL_SAVE_CONFIG.ALLOWLISTED_COMPANY_IDS.filter(id => id !== companyId);
-
-    const { manager } = await makeSignedInCompanyUser(companyId);
-    const result = await manager.saveExperiences([exp(200, 'A'), exp(201, 'B')]);
-    assert.equal(result.success, true, result.error);
-    assert.equal(result.count, 2);
-    assert.equal(result.orphanedIds, undefined, 'legacy path has no concept of orphanedIds');
-
-    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
-    const snap = await expCollection.get();
-    assert.equal(snap.size, 2);
-    const legacySchemeIds = snap.docs.filter(d => d.id.startsWith('exp_'));
-    assert.equal(legacySchemeIds.length, 2, 'still using the old exp_<ts>_<index> doc-id scheme, unchanged');
-
-    // Second save with the SAME content: the old behavior always
-    // deletes-and-recreates everything, unlike the new diff-based path.
-    const secondResult = await manager.saveExperiences([exp(200, 'A'), exp(201, 'B')]);
-    assert.equal(secondResult.count, 2, 'legacy path rewrites everything every time, even unchanged content');
-    const secondSnap = await expCollection.get();
-    const newDocIds = secondSnap.docs.map(d => d.id);
-    assert.ok(
-      newDocIds.every(id => !legacySchemeIds.map(d => d.id).includes(id)),
-      'every doc got a fresh id on the second save - old delete-all/reinsert-all behavior confirmed'
-    );
-  });
-
-  await t('rollout gate: company IN the allowlist gets the NEW incremental behavior', async () => {
-    const companyId = await freshCompanyId(); // auto-allowlisted
     const { manager } = await makeSignedInCompanyUser(companyId);
 
     const first = await manager.saveExperiences([exp(210, 'A'), exp(211, 'B')]);
     assert.equal(first.count, 2);
 
     const second = await manager.saveExperiences([exp(210, 'A'), exp(211, 'B')]);
-    assert.equal(second.count, 0, 'no-op resave writes nothing - the new incremental path, not the old one');
+    assert.equal(second.count, 0, 'no-op resave writes nothing - incremental, not delete-all/reinsert-all');
 
-    const expCollection = adminDb.collection('companies').doc(companyId).collection('experiences');
-    const snap = await expCollection.get();
-    const ids = snap.docs.map(d => d.id).sort();
-    assert.deepEqual(ids, ['210', '211'], 'deterministic new-scheme doc ids, not exp_<ts>_<index>');
+    const third = await manager.saveExperiences([exp(210, 'A - edited'), exp(211, 'B')]);
+    assert.equal(third.count, 1, 'only the edited experience is written');
+
+    const snap = await adminDb.collection('companies').doc(companyId).collection('experiences').get();
+    assert.deepEqual(snap.docs.map(d => d.id).sort(), ['210', '211'], 'deterministic doc ids, not exp_<ts>_<index>');
+    assert.ok(snap.docs.every(d => !d.id.startsWith('exp_')), 'no legacy-scheme docs are ever created');
   });
 
   // --- firestore.rules users/{userId} lockdown (fix/users-rules-lockdown) ---
