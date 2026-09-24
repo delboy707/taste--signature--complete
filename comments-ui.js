@@ -11,7 +11,7 @@ function renderCommentsSection(productId) {
         <div class="comments-section">
             <div class="comments-header">
                 <h3>💬 Discussion (${stats.totalComments})</h3>
-                <button class="btn-secondary btn-sm" onclick="toggleCommentsExpanded('${productId}')">
+                <button class="btn-secondary btn-sm" onclick="toggleCommentsExpanded(${jsArgAttr(productId)})">
                     ${stats.totalComments > 0 ? 'Collapse' : 'Expand'}
                 </button>
             </div>
@@ -47,11 +47,11 @@ function renderAddCommentForm(productId, parentId = null) {
     const placeholder = parentId ? 'Write a reply...' : 'Share your thoughts...';
 
     return `
-        <div class="add-comment-form" id="${formId}">
+        <div class="add-comment-form" id="${escapeHtml(formId)}">
             <textarea
                 class="comment-input"
-                id="comment-text-${formId}"
-                placeholder="${placeholder}"
+                id="comment-text-${escapeHtml(formId)}"
+                placeholder="${escapeHtml(placeholder)}"
                 rows="2"
             ></textarea>
             <div class="comment-form-actions">
@@ -60,11 +60,11 @@ function renderAddCommentForm(productId, parentId = null) {
                 </div>
                 <div class="comment-form-buttons">
                     ${parentId ? `
-                        <button class="btn-secondary btn-sm" onclick="cancelReply('${parentId}')">Cancel</button>
+                        <button class="btn-secondary btn-sm" onclick="cancelReply(${jsArgAttr(parentId)})">Cancel</button>
                     ` : ''}
                     <button
                         class="btn-primary btn-sm"
-                        onclick="submitComment('${productId}', '${formId}', ${parentId ? `'${parentId}'` : 'null'})"
+                        onclick="submitComment(${jsArgAttr(productId)}, ${jsArgAttr(formId)}, ${jsArgAttr(parentId || null)})"
                     >
                         ${parentId ? 'Reply' : 'Comment'}
                     </button>
@@ -84,50 +84,50 @@ function renderCommentThread(comment, productId, depth = 0) {
     const timeAgo = getTimeAgo(comment.createdAt);
 
     let html = `
-        <div class="comment-thread" data-comment-id="${comment.id}" style="margin-left: ${depth * 30}px;">
+        <div class="comment-thread" data-comment-id="${escapeHtml(comment.id)}" style="margin-left: ${depth * 30}px;">
             <div class="comment-card">
                 <div class="comment-avatar">
                     ${comment.userAvatar ?
-                        `<img src="${comment.userAvatar}" alt="${comment.userName}">` :
-                        `<div class="avatar-placeholder-small">${comment.userName.charAt(0)}</div>`
+                        `<img src="${escapeHtml(comment.userAvatar)}" alt="${escapeHtml(comment.userName)}">` :
+                        `<div class="avatar-placeholder-small">${escapeHtml(comment.userName.charAt(0))}</div>`
                     }
                 </div>
                 <div class="comment-content">
                     <div class="comment-header">
-                        <span class="comment-author">${comment.userName}</span>
+                        <span class="comment-author">${escapeHtml(comment.userName)}</span>
                         <span class="comment-time">${timeAgo}${comment.edited ? ' (edited)' : ''}</span>
                     </div>
-                    <div class="comment-text" id="comment-text-${comment.id}">
+                    <div class="comment-text" id="comment-text-${escapeHtml(comment.id)}">
                         ${formatCommentText(comment.text)}
                     </div>
 
                     <!-- Reactions -->
                     <div class="comment-reactions">
                         ${renderReactions(comment)}
-                        <button class="reaction-btn" onclick="showReactionPicker('${comment.id}')">
+                        <button class="reaction-btn" onclick="showReactionPicker(${jsArgAttr(comment.id)})">
                             😊 React
                         </button>
                     </div>
 
                     <!-- Actions -->
                     <div class="comment-actions">
-                        <button class="comment-action-btn" onclick="showReplyForm('${productId}', '${comment.id}')">
+                        <button class="comment-action-btn" onclick="showReplyForm(${jsArgAttr(productId)}, ${jsArgAttr(comment.id)})">
                             💬 Reply
                         </button>
                         ${isOwner ? `
-                            <button class="comment-action-btn" onclick="editCommentDialog('${comment.id}')">
+                            <button class="comment-action-btn" onclick="editCommentDialog(${jsArgAttr(comment.id)})">
                                 ✏️ Edit
                             </button>
                         ` : ''}
                         ${canDelete ? `
-                            <button class="comment-action-btn text-danger" onclick="deleteCommentDialog('${comment.id}')">
+                            <button class="comment-action-btn text-danger" onclick="deleteCommentDialog(${jsArgAttr(comment.id)})">
                                 🗑️ Delete
                             </button>
                         ` : ''}
                     </div>
 
                     <!-- Reply form placeholder -->
-                    <div id="reply-container-${comment.id}" class="reply-container"></div>
+                    <div id="reply-container-${escapeHtml(comment.id)}" class="reply-container"></div>
                 </div>
             </div>
     `;
@@ -169,10 +169,10 @@ function renderReactions(comment) {
         html += `
             <span
                 class="reaction-bubble ${userReacted ? 'user-reacted' : ''}"
-                onclick="toggleReaction('${comment.id}', '${emoji}')"
-                title="${users}"
+                onclick="toggleReaction(${jsArgAttr(comment.id)}, ${jsArgAttr(emoji)})"
+                title="${escapeHtml(users)}"
             >
-                ${emoji} ${reactions.length}
+                ${escapeHtml(emoji)} ${reactions.length}
             </span>
         `;
     });
@@ -212,7 +212,7 @@ function formatCommentText(text) {
  * Submit comment
  */
 function submitComment(productId, formId, parentId) {
-    const textarea = document.getElementById(`comment-text-${formId}`);
+    const textarea = document.getElementById(`comment-text-${escapeHtml(formId)}`);
     const text = textarea.value.trim();
 
     if (!text) {
@@ -302,7 +302,7 @@ function editCommentDialog(commentId) {
                 </div>
                 <div class="modal-footer">
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn-primary" onclick="submitEditComment('${commentId}')">Save Changes</button>
+                    <button class="btn-primary" onclick="submitEditComment(${jsArgAttr(commentId)})">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -386,8 +386,8 @@ function showReactionPicker(commentId) {
         <div class="reaction-picker-overlay" onclick="closeReactionPicker()">
             <div class="reaction-picker" onclick="event.stopPropagation()">
                 ${reactions.map(emoji => `
-                    <button class="reaction-emoji" onclick="toggleReaction('${safeCommentId}', '${emoji}'); closeReactionPicker();">
-                        ${emoji}
+                    <button class="reaction-emoji" onclick="toggleReaction(${jsArgAttr(commentId)}, ${jsArgAttr(emoji)}); closeReactionPicker();">
+                        ${escapeHtml(emoji)}
                     </button>
                 `).join('')}
             </div>
