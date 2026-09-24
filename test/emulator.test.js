@@ -749,6 +749,44 @@ async function main() {
     assert.ok(html.includes('value="201"') && html.includes('Oat Biscuit'), `Oat Biscuit missing from re-test options: ${html}`);
   });
 
+  // --- AI proxy rate limiter (api/_lib/rate-limit.js) against real Firestore
+  // transactions. Server-only collection: the Admin SDK writes it, client
+  // rules (catch-all deny) must not. ---
+  const { createFirestoreRateLimiter } = require('../api/_lib/rate-limit.js');
+
+  await t('ai rate limit: concurrent requests never exceed the limit (transactional)', async () => {
+    const uid = `rl_conc_${Date.now()}`;
+    const rl = createFirestoreRateLimiter({ getDb: () => adminDb, limit: 5 });
+    const results = await Promise.all(Array.from({ length: 12 }, () => rl.check(uid)));
+    assert.equal(results.filter(r => r.allowed).length, 5, 'exactly 5 of 12 concurrent requests allowed');
+    const doc = await adminDb.collection('aiRateLimits').doc(uid).get();
+    assert.equal(doc.data().count, 5);
+  });
+
+  await t('ai rate limit: hourly window rolls over', async () => {
+    const uid = `rl_win_${Date.now()}`;
+    let now = Date.UTC(2026, 0, 1, 10, 30, 0);
+    const rl = createFirestoreRateLimiter({ getDb: () => adminDb, limit: 2, now: () => now });
+    assert.equal((await rl.check(uid)).allowed, true);
+    assert.equal((await rl.check(uid)).allowed, true);
+    const blocked = await rl.check(uid);
+    assert.equal(blocked.allowed, false);
+    assert.equal(blocked.retryAfterSeconds, 30 * 60);
+    now = Date.UTC(2026, 0, 1, 11, 0, 1);
+    assert.equal((await rl.check(uid)).allowed, true);
+  });
+
+  await t('ai rate limit: aiRateLimits is not readable or writable by clients (rules catch-all)', async () => {
+    const uid = `rl_rules_${Date.now()}`;
+    await adminDb.collection('aiRateLimits').doc(uid).set({ window: 1, count: 1 });
+    const companyId = await freshCompanyId();
+    await makeSignedInCompanyUser(companyId); // leaves the client signed in
+    await assert.rejects(() => clientDb.collection('aiRateLimits').doc(uid).get(), /permission|PERMISSION_DENIED/i);
+    await assert.rejects(() => clientDb.collection('aiRateLimits').doc(uid).set({ window: 1, count: 0 }), /permission|PERMISSION_DENIED/i);
+    const doc = await adminDb.collection('aiRateLimits').doc(uid).get();
+    assert.equal(doc.data().count, 1, 'client write did not land');
+  });
+
   const failed = results.filter(r => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} emulator tests passed`);
   // Explicit exit: the Firebase client SDK keeps background listeners/

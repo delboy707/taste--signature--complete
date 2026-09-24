@@ -1,14 +1,48 @@
 // Vercel Serverless Function - Proxy for Anthropic API
 // This solves CORS issues when calling Claude from the browser
-// Uses YOUR API key (stored securely in Vercel env vars)
-// Implements authentication and rate limiting
+// Uses YOUR API key (stored securely in Vercel env vars: ANTHROPIC_API_KEY)
+//
+// Security model:
+//   1. Requires `Authorization: Bearer <Clerk session token>`, verified
+//      server-side (shared with api/firebase-token.js via api/_lib/clerk-auth.js)
+//      and gated on the account being provisioned.
+//   2. Server-side model allowlist; any other client-supplied model is ignored
+//      and the default is used.
+//   3. Per-user rate limit (default 60/hour, env AI_RATE_LIMIT_PER_HOUR) in a
+//      server-only Firestore collection. Fails CLOSED (503) if Firestore is
+//      unavailable.
+//   4. Sampling parameters (temperature/top_p/top_k) are never forwarded:
+//      Sonnet 5 / Opus 5.5 reject them with HTTP 400.
+//
+// The handler is built by createHandler(deps) so tests can inject the token
+// verifier, rate limiter and fetch. The module's default export (what Vercel
+// invokes) is a handler wired to the real dependencies.
 // Runtime: Node.js
+
+const {
+    extractBearerToken,
+    verifyClerkSessionToken,
+    isProvisioned
+} = require('./_lib/clerk-auth');
+const {
+    resolveLimit,
+    createFirestoreRateLimiter
+} = require('./_lib/rate-limit');
 
 // Configuration
 const MAX_MESSAGE_LENGTH = 5000;      // Limit message size to prevent abuse
 const MAX_TOKENS = 4096;              // Maximum tokens per request
 const REQUEST_TIMEOUT = 30000;        // 30 second timeout
 const MAX_REQUEST_BODY_SIZE = 50000;  // Max total request body size in chars
+
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+
+// Model allowlist. Anything else falls back to DEFAULT_MODEL (no error).
+const DEFAULT_MODEL = 'claude-sonnet-5';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+const OPUS_MODEL = 'claude-opus-5-5';
+const ALLOWED_MODELS = new Set([DEFAULT_MODEL, HAIKU_MODEL, OPUS_MODEL]);
+const MODEL_ALIASES = { 'claude-haiku-4-5': HAIKU_MODEL };
 
 // Allowed origins - update with your actual domain(s)
 const ALLOWED_ORIGINS = [
@@ -18,239 +52,216 @@ const ALLOWED_ORIGINS = [
 ].filter(Boolean);
 
 /**
- * Verify Firebase ID token using Google's public keys
- * Validates JWT signature, expiry, audience, and issuer
+ * Resolve the model to call. Unknown / missing / non-string -> default.
  */
-async function verifyFirebaseToken(token) {
-    try {
-        // Decode JWT header and payload without verification first
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-            throw new Error('Invalid token format');
-        }
-
-        const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-
-        // Validate token claims
-        const now = Math.floor(Date.now() / 1000);
-
-        if (!payload.exp || payload.exp < now) {
-            throw new Error('Token expired');
-        }
-
-        if (!payload.iat || payload.iat > now + 300) { // 5 min clock skew
-            throw new Error('Token issued in the future');
-        }
-
-        if (!payload.sub || typeof payload.sub !== 'string' || payload.sub.length === 0) {
-            throw new Error('Invalid subject claim');
-        }
-
-        // Verify issuer matches Firebase project
-        const projectId = process.env.FIREBASE_PROJECT_ID || 'taste-signature-ai-app';
-        const expectedIssuer = `https://securetoken.google.com/${projectId}`;
-        if (payload.iss !== expectedIssuer) {
-            throw new Error('Invalid token issuer');
-        }
-
-        // Verify audience matches Firebase project
-        if (payload.aud !== projectId) {
-            throw new Error('Invalid token audience');
-        }
-
-        // Verify auth_time is in the past
-        if (!payload.auth_time || payload.auth_time > now) {
-            throw new Error('Invalid auth_time');
-        }
-
-        // Fetch Google's public keys and verify signature
-        const keysResponse = await fetch(
-            'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
-        );
-        const keys = await keysResponse.json();
-
-        const kid = header.kid;
-        if (!kid || !keys[kid]) {
-            throw new Error('Unknown signing key');
-        }
-
-        // Use Node.js crypto to verify RS256 signature
-        const crypto = require('crypto');
-        const signatureInput = parts[0] + '.' + parts[1];
-        const signature = Buffer.from(parts[2], 'base64url');
-        const publicKey = keys[kid];
-
-        const isValid = crypto.createVerify('RSA-SHA256')
-            .update(signatureInput)
-            .verify(publicKey, signature);
-
-        if (!isValid) {
-            throw new Error('Invalid token signature');
-        }
-
-        return { uid: payload.sub, email: payload.email || null };
-    } catch (error) {
-        console.error('Token verification failed:', error.message);
-        return null;
-    }
+function resolveModel(requested) {
+    if (typeof requested !== 'string') return DEFAULT_MODEL;
+    const model = MODEL_ALIASES[requested] || requested;
+    return ALLOWED_MODELS.has(model) ? model : DEFAULT_MODEL;
 }
 
-module.exports = async function handler(req, res) {
-    // Set CORS headers - restrict to allowed origins
-    const origin = req.headers.origin;
-    if (ALLOWED_ORIGINS.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
+function errorBody(type, message) {
+    return { error: { type, message } };
+}
+
+/**
+ * Build the request handler.
+ * @param {object} [deps]
+ * @param {(token: string) => Promise<object|null>} [deps.verifyClerkToken]
+ * @param {{check(userId: string): Promise<object>}} [deps.rateLimiter]
+ * @param {typeof fetch} [deps.fetchImpl]
+ */
+function createHandler(deps = {}) {
+    const verifyClerkToken = deps.verifyClerkToken || verifyClerkSessionToken;
+    const fetchImpl = deps.fetchImpl || ((...args) => fetch(...args));
+
+    // Default limiter is created lazily so importing this module never
+    // touches Firebase credentials (and unit tests need none).
+    let defaultLimiter = null;
+    function getRateLimiter() {
+        if (deps.rateLimiter) return deps.rateLimiter;
+        if (!defaultLimiter) {
+            const { getAdminFirestore } = require('./_lib/firebase-admin');
+            defaultLimiter = createFirestoreRateLimiter({
+                getDb: getAdminFirestore,
+                limit: resolveLimit(process.env.AI_RATE_LIMIT_PER_HOUR)
+            });
+        }
+        return defaultLimiter;
     }
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
 
-    // Handle preflight request
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    return async function handler(req, res) {
+        // Set CORS headers - restrict to allowed origins
+        const origin = req.headers.origin;
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
 
-    // Only allow POST requests
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    try {
-        const { model, max_tokens, temperature, system, messages } = req.body;
-
-        // Validate total request body size
-        const bodyStr = JSON.stringify(req.body);
-        if (bodyStr.length > MAX_REQUEST_BODY_SIZE) {
-            return res.status(400).json({
-                error: {
-                    type: 'invalid_request',
-                    message: 'Request body too large.'
-                }
-            });
+        // Handle preflight request
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
         }
 
-        // Get authentication header
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({
-                error: {
-                    type: 'authentication_error',
-                    message: 'Authentication required. Please sign in to use AI features.'
-                }
-            });
+        // Only allow POST requests
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
         }
 
-        // Verify Firebase token cryptographically
-        const firebaseToken = authHeader.replace('Bearer ', '');
-        const verifiedUser = await verifyFirebaseToken(firebaseToken);
-
-        if (!verifiedUser) {
-            return res.status(401).json({
-                error: {
-                    type: 'authentication_error',
-                    message: 'Invalid or expired authentication token. Please sign in again.'
-                }
-            });
-        }
-
-        // Get server API key from environment variable
-        const serverApiKey = process.env.ANTHROPIC_API_KEY;
-
-        if (!serverApiKey) {
-            console.error('ANTHROPIC_API_KEY not set in Vercel environment variables');
-            return res.status(503).json({
-                error: {
-                    type: 'configuration_error',
-                    message: 'AI service not configured. Please contact support.'
-                }
-            });
-        }
-
-        // Validate messages array
-        if (!Array.isArray(messages) || messages.length === 0) {
-            return res.status(400).json({
-                error: {
-                    type: 'invalid_request',
-                    message: 'Messages array is required.'
-                }
-            });
-        }
-
-        // Validate request size to prevent abuse
-        const messageContent = messages.map(m =>
-            typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-        ).join('');
-        if (messageContent.length > MAX_MESSAGE_LENGTH) {
-            return res.status(400).json({
-                error: {
-                    type: 'invalid_request',
-                    message: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
-                }
-            });
-        }
-
-        // Validate system prompt size
-        if (system && typeof system === 'string' && system.length > MAX_MESSAGE_LENGTH) {
-            return res.status(400).json({
-                error: {
-                    type: 'invalid_request',
-                    message: 'System prompt too long.'
-                }
-            });
-        }
-
-        // Limit max tokens
-        const limitedMaxTokens = Math.min(max_tokens || 2048, MAX_TOKENS);
-
-        console.log(`Authenticated request from user: ${verifiedUser.uid}`);
-
-        // Call Anthropic API with server key
-        return await callClaudeAPI(serverApiKey, model, limitedMaxTokens, temperature, system, messages, res);
-
-    } catch (error) {
-        console.error('Proxy error:', error);
-        return res.status(500).json({
-            error: {
-                type: 'server_error',
-                message: 'Internal server error'
+        try {
+            // 1. Authentication: verified Clerk session token
+            const sessionToken = extractBearerToken(req.headers.authorization);
+            if (!sessionToken) {
+                return res.status(401).json(errorBody(
+                    'authentication_error',
+                    'Authentication required. Please sign in to use AI features.'
+                ));
             }
-        });
-    }
-};
+
+            const claims = await verifyClerkToken(sessionToken);
+            if (!claims || !claims.sub) {
+                return res.status(401).json(errorBody(
+                    'authentication_error',
+                    'Invalid or expired authentication token. Please sign in again.'
+                ));
+            }
+
+            if (!isProvisioned(claims)) {
+                return res.status(403).json(errorBody(
+                    'forbidden',
+                    'This account has not been provisioned yet.'
+                ));
+            }
+
+            // 2. Request validation
+            const body = req.body;
+            if (!body || typeof body !== 'object' || Array.isArray(body)) {
+                return res.status(400).json(errorBody('invalid_request', 'Invalid request body.'));
+            }
+
+            // Sampling params (temperature, top_p, top_k) are deliberately not
+            // read: they are never forwarded.
+            const { model, max_tokens, system, messages } = body;
+
+            if (JSON.stringify(body).length > MAX_REQUEST_BODY_SIZE) {
+                return res.status(400).json(errorBody('invalid_request', 'Request body too large.'));
+            }
+
+            if (!Array.isArray(messages) || messages.length === 0) {
+                return res.status(400).json(errorBody('invalid_request', 'Messages array is required.'));
+            }
+
+            const messageContent = messages.map(m =>
+                typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+            ).join('');
+            if (messageContent.length > MAX_MESSAGE_LENGTH) {
+                return res.status(400).json(errorBody(
+                    'invalid_request',
+                    `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
+                ));
+            }
+
+            if (system && typeof system === 'string' && system.length > MAX_MESSAGE_LENGTH) {
+                return res.status(400).json(errorBody('invalid_request', 'System prompt too long.'));
+            }
+
+            // 3. Server API key (never from the client)
+            const serverApiKey = process.env.ANTHROPIC_API_KEY;
+            if (!serverApiKey) {
+                console.error('ANTHROPIC_API_KEY not set in Vercel environment variables');
+                return res.status(503).json(errorBody(
+                    'configuration_error',
+                    'AI service not configured. Please contact support.'
+                ));
+            }
+
+            // 4. Per-user rate limit. Fail closed if the limiter is unavailable.
+            let limit;
+            try {
+                limit = await getRateLimiter().check(claims.sub);
+            } catch (limiterError) {
+                console.error('AI rate limiter unavailable (failing closed):', limiterError && limiterError.message);
+                return res.status(503).json(errorBody(
+                    'service_unavailable',
+                    'AI service is temporarily unavailable. Please try again later.'
+                ));
+            }
+
+            if (!limit.allowed) {
+                res.setHeader('retry-after', String(limit.retryAfterSeconds));
+                return res.status(429).json(errorBody(
+                    'rate_limit_error',
+                    `AI request limit reached (${limit.limit} per hour). Please try again in ${Math.ceil(limit.retryAfterSeconds / 60)} minute(s).`
+                ));
+            }
+
+            // 5. Call Anthropic with the allowlisted model and capped tokens
+            const limitedMaxTokens = Math.min(Number(max_tokens) || 2048, MAX_TOKENS);
+
+            console.log(`Authenticated request from user: ${claims.sub}`);
+
+            return await callClaudeAPI({
+                fetchImpl,
+                apiKey: serverApiKey,
+                model: resolveModel(model),
+                max_tokens: limitedMaxTokens,
+                system,
+                messages,
+                res
+            });
+
+        } catch (error) {
+            console.error('Proxy error:', error);
+            return res.status(500).json(errorBody('server_error', 'Internal server error'));
+        }
+    };
+}
 
 /**
  * Call Anthropic API
  */
-async function callClaudeAPI(apiKey, model, max_tokens, temperature, system, messages, res) {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+async function callClaudeAPI({ fetchImpl, apiKey, model, max_tokens, system, messages, res }) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+    try {
+        const response = await fetchImpl(ANTHROPIC_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': apiKey,
                 'anthropic-version': '2023-06-01'
             },
-            body: JSON.stringify({
-                model,
-                max_tokens,
-                temperature,
-                system,
-                messages
-            }),
+            // Only these fields are ever sent. No temperature/top_p/top_k
+            // (rejected by Sonnet 5 / Opus 5.5), no thinking/budget_tokens,
+            // no prefill, no forced tool_choice.
+            body: JSON.stringify({ model, max_tokens, system, messages }),
             signal: controller.signal
         });
-
-        clearTimeout(timeoutId);
 
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('Anthropic API error:', data);
+            console.error('Anthropic API error:', response.status, data && data.error && data.error.type);
+
+            // Model not available (e.g. a newly launching model): clear error, no fallback.
+            if (response.status === 404) {
+                return res.status(404).json(errorBody(
+                    'model_not_found',
+                    `The AI model "${model}" is not available right now. Please try again later or choose a different model.`
+                ));
+            }
+
+            // Our server-side key is bad: do not tell the user to sign in again.
+            if (response.status === 401 || response.status === 403) {
+                return res.status(502).json(errorBody(
+                    'upstream_error',
+                    'AI service configuration error. Please contact support.'
+                ));
+            }
+
             return res.status(response.status).json(data);
         }
 
@@ -258,15 +269,22 @@ async function callClaudeAPI(apiKey, model, max_tokens, temperature, system, mes
 
     } catch (error) {
         if (error.name === 'AbortError') {
-            return res.status(408).json({
-                error: {
-                    type: 'timeout_error',
-                    message: 'Request timed out. Please try again.'
-                }
-            });
+            return res.status(408).json(errorBody(
+                'timeout_error',
+                'Request timed out. Please try again.'
+            ));
         }
         throw error;
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
+// Vercel invokes the module's export: a handler wired to the real dependencies.
+module.exports = createHandler();
 
+// Exposed for unit tests (inject verifier / rate limiter / fetch).
+module.exports.createHandler = createHandler;
+module.exports.resolveModel = resolveModel;
+module.exports.DEFAULT_MODEL = DEFAULT_MODEL;
+module.exports.ALLOWED_MODELS = ALLOWED_MODELS;
