@@ -94,30 +94,30 @@ function renderBenchmarksLibrary() {
 
         html += `
             <div class="benchmark-category">
-                <h5>${category}</h5>
+                <h5>${escapeHtml(category)}</h5>
                 <div class="benchmark-items">
                     ${categoryBenchmarks.map(bench => `
                         <div class="benchmark-item">
                             <div class="benchmark-item-header">
-                                <strong>${bench.subcategory || bench.category}</strong>
+                                <strong>${escapeHtml(bench.subcategory || bench.category)}</strong>
                                 ${bench.isCustom ? '<span class="custom-badge">Custom</span>' : '<span class="default-badge">Industry</span>'}
                             </div>
                             <div class="benchmark-meta">
-                                <span>📍 ${bench.region}</span>
+                                <span>📍 ${escapeHtml(bench.region)}</span>
                                 <span>👥 ${bench.sampleSize} samples</span>
                             </div>
                             <div class="benchmark-source">
-                                ${bench.dataSource}
+                                ${escapeHtml(bench.dataSource)}
                             </div>
                             <div class="benchmark-actions">
-                                <button class="btn-small btn-secondary" onclick="viewBenchmarkDetails('${bench.id}')">
+                                <button class="btn-small btn-secondary" onclick="viewBenchmarkDetails(${jsArgAttr(bench.id)})">
                                     👁️ View Details
                                 </button>
-                                <button class="btn-small btn-secondary" onclick="exportBenchmarkFile('${bench.id}')">
+                                <button class="btn-small btn-secondary" onclick="exportBenchmarkFile(${jsArgAttr(bench.id)})">
                                     📤 Export
                                 </button>
                                 ${bench.isCustom ? `
-                                    <button class="btn-small btn-danger" onclick="confirmDeleteBenchmark('${bench.id}')">
+                                    <button class="btn-small btn-danger" onclick="confirmDeleteBenchmark(${jsArgAttr(bench.id)})">
                                         🗑️ Delete
                                     </button>
                                 ` : ''}
@@ -164,7 +164,7 @@ function renderProductBenchmarkComparison() {
                     <select id="benchmark-product-select" class="form-control">
                         <option value="">Choose a product...</option>
                         ${experiences.map(e => `
-                            <option value="${e.id}">${e.productInfo.name} - ${e.productInfo.brand}</option>
+                            <option value="${escapeHtml(e.id)}">${escapeHtml(e.productInfo.name)} - ${escapeHtml(e.productInfo.brand)}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -174,7 +174,7 @@ function renderProductBenchmarkComparison() {
                     <select id="benchmark-select" class="form-control">
                         <option value="">Choose a benchmark...</option>
                         ${industryBenchmarks.map(b => `
-                            <option value="${b.id}">${b.category} ${b.subcategory ? `- ${b.subcategory}` : ''}</option>
+                            <option value="${escapeHtml(b.id)}">${escapeHtml(b.category)} ${escapeHtml(b.subcategory ? `- ${b.subcategory}` : '')}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -211,15 +211,15 @@ function runBenchmarkComparison() {
     let html = `
         <div class="comparison-results-card">
             <div class="results-header">
-                <h5>${comparison.productName}</h5>
+                <h5>${escapeHtml(comparison.productName)}</h5>
                 <span class="vs-text">vs</span>
-                <h5>${comparison.benchmarkName}</h5>
+                <h5>${escapeHtml(comparison.benchmarkName)}</h5>
             </div>
 
             ${comparison.overallSatisfaction ? `
                 <div class="overall-performance">
                     <div class="performance-badge performance-${getPerformanceClass(comparison.overallSatisfaction.percentile)}">
-                        ${comparison.overallSatisfaction.performance}
+                        ${escapeHtml(comparison.overallSatisfaction.performance)}
                     </div>
                     <div class="percentile-display">
                         <div class="percentile-value">${comparison.overallSatisfaction.percentile.toFixed(1)}<sup>th</sup></div>
@@ -250,7 +250,7 @@ function runBenchmarkComparison() {
                 <tbody>
                     ${Object.values(comparison.attributes).map(attr => `
                         <tr>
-                            <td class="attribute-name">${formatAttributeName(attr.label)}</td>
+                            <td class="attribute-name">${escapeHtml(formatAttributeName(attr.label))}</td>
                             <td>${attr.productValue.toFixed(1)}</td>
                             <td>${attr.benchmarkMean.toFixed(1)}</td>
                             <td class="${attr.difference >= 0 ? 'positive-diff' : 'negative-diff'}">
@@ -264,7 +264,7 @@ function runBenchmarkComparison() {
                             </td>
                             <td>
                                 <span class="performance-badge-small performance-${getPerformanceClass(attr.percentile)}">
-                                    ${attr.performance.split('(')[0].trim()}
+                                    ${escapeHtml(attr.performance.split('(')[0].trim())}
                                 </span>
                             </td>
                         </tr>
@@ -313,7 +313,7 @@ function renderCompetitivePositioning() {
                 <select id="positioning-product-select" class="form-control" onchange="updateCompetitivePositioning()">
                     <option value="">Choose a product...</option>
                     ${experiences.map(e => `
-                        <option value="${e.id}">${e.productInfo.name}</option>
+                        <option value="${escapeHtml(e.id)}">${escapeHtml(e.productInfo.name)}</option>
                     `).join('')}
                 </select>
             </div>
@@ -344,22 +344,22 @@ function updateCompetitivePositioning() {
 
     let html = `
         <div class="positioning-card">
-            <h5>${positioning.productName} - Competitive Rankings</h5>
+            <h5>${escapeHtml(positioning.productName)} - Competitive Rankings</h5>
 
             <div class="rankings-list">
                 ${positioning.rankings.map((rank, index) => `
                     <div class="ranking-item">
                         <div class="ranking-number">#${index + 1}</div>
                         <div class="ranking-info">
-                            <strong>${rank.benchmark.category} ${rank.benchmark.subcategory ? `- ${rank.benchmark.subcategory}` : ''}</strong>
-                            <div class="ranking-meta">${rank.benchmark.region} | ${rank.benchmark.sampleSize} samples</div>
+                            <strong>${escapeHtml(rank.benchmark.category)} ${escapeHtml(rank.benchmark.subcategory ? `- ${rank.benchmark.subcategory}` : '')}</strong>
+                            <div class="ranking-meta">${escapeHtml(rank.benchmark.region)} | ${rank.benchmark.sampleSize} samples</div>
                         </div>
                         <div class="ranking-score">
                             <div class="percentile-display-small">
                                 ${rank.avgPercentile.toFixed(0)}<sup>th</sup>
                             </div>
                             <div class="performance-badge-small performance-${getPerformanceClass(rank.avgPercentile)}">
-                                ${rank.performance.split('(')[0].trim()}
+                                ${escapeHtml(rank.performance.split('(')[0].trim())}
                             </div>
                         </div>
                     </div>
@@ -405,8 +405,8 @@ function renderCustomBenchmarkCreator() {
                     <div class="product-checkbox-list">
                         ${experiences.map(e => `
                             <label class="checkbox-item">
-                                <input type="checkbox" value="${e.id}" class="custom-benchmark-product">
-                                ${e.productInfo.name} - ${e.productInfo.brand}
+                                <input type="checkbox" value="${escapeHtml(e.id)}" class="custom-benchmark-product">
+                                ${escapeHtml(e.productInfo.name)} - ${escapeHtml(e.productInfo.brand)}
                             </label>
                         `).join('')}
                     </div>
