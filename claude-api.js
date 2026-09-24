@@ -63,21 +63,12 @@ class ClaudeAI {
         if (!quotaCheck.allowed) {
             // Quota exceeded - offer options
             const tier = this.usageTracker.getUserTier(userId);
-            const addKey = confirm(
+            alert(
                 `⚠️ ${quotaCheck.message}\n\n` +
                 `You've used ${quotaCheck.used}/${quotaCheck.limit} AI insights on the ${tier.name} tier.\n\n` +
-                `Options:\n` +
-                `• Add your own API key for unlimited use (recommended)\n` +
-                `• Wait until tomorrow for your quota to reset\n` +
-                `• Upgrade to a paid tier (coming soon!)\n\n` +
-                `Click OK to add your own API key, or Cancel to wait.`
+                `AI is provided by the platform - no API key is needed.\n` +
+                `Your quota resets tomorrow, or you can upgrade to a paid tier (coming soon!).`
             );
-
-            if (addKey) {
-                if (typeof window.ensureAPIKey === 'function') {
-                    window.ensureAPIKey();
-                }
-            }
 
             throw new Error(quotaCheck.message);
         }
@@ -99,7 +90,7 @@ class ClaudeAI {
                 const remaining = tier.quotas.aiInsightsPerDay - usage.todayTotal;
                 if (remaining <= 2 && remaining > 0) {
                     setTimeout(() => {
-                        alert(`ℹ️ Usage Alert\n\nYou have ${remaining} AI insights remaining today.\n\nTip: Add your own API key for unlimited use!`);
+                        alert(`ℹ️ Usage Alert\n\nYou have ${remaining} AI insights remaining today.\n\nYour quota resets tomorrow.`);
                     }, 1000);
                 }
             }

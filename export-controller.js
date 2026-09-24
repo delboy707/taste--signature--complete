@@ -54,7 +54,7 @@ async function exportProductReport(experienceId) {
     try {
         // Get AI insights if available (optional)
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (isAIAvailable()) {
             try {
                 const claude = new ClaudeAI();
                 aiInsights = await claude.analyzeProduct(experience);
@@ -92,7 +92,7 @@ async function exportPortfolioReport() {
     try {
         // Get AI insights if available (optional)
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (isAIAvailable()) {
             try {
                 const claude = new ClaudeAI();
                 aiInsights = await claude.suggestImprovements(experiences);
@@ -132,7 +132,7 @@ async function exportComparisonReport(selectedIds) {
     try {
         // Get AI comparison insights if available
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (isAIAvailable()) {
             try {
                 const claude = new ClaudeAI();
                 aiInsights = await claude.compareProducts(selectedExperiences);
@@ -210,7 +210,7 @@ async function exportBeforeAfterReport() {
 
         // Get AI reformulation analysis
         let aiInsights = null;
-        if (claudeAI && window.AI_CONFIG?.ANTHROPIC_API_KEY) {
+        if (isAIAvailable()) {
             try {
                 const claude = new ClaudeAI();
                 aiInsights = await claude.analyzeReformulation(beforeProducts[0], afterProducts[0]);

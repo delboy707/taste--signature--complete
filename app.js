@@ -1379,8 +1379,8 @@ function runComparison() {
 
     document.getElementById('comparison-results').style.display = 'block';
 
-    // Show AI button if API key is configured
-    if (window.AI_CONFIG && window.AI_CONFIG.ANTHROPIC_API_KEY && window.AI_CONFIG.ANTHROPIC_API_KEY !== 'YOUR_API_KEY_HERE') {
+    // Show AI button when the platform AI proxy is usable (signed in)
+    if (isAIAvailable()) {
         document.getElementById('btn-ai-compare').style.display = 'inline-block';
     }
 
@@ -1431,7 +1431,7 @@ async function getAIComparisonInsights() {
             <div class="error-message">
                 <strong>❌ Error:</strong> ${escapeHtml(error.message)}
                 <p style="margin-top: 10px; font-size: 0.9rem;">
-                    Make sure your Anthropic API key is configured correctly in config.js
+                    AI insights are provided by the platform. Make sure you are signed in, then try again.
                 </p>
             </div>
         `;
@@ -2958,9 +2958,8 @@ function updateAIInsightsView() {
                 <div class="ai-config-warning">
                     <span class="warning-icon">⚠️</span>
                     <div>
-                        <strong>API Key Required</strong>
-                        <p style="margin: 5px 0 0 0;">Please add your Anthropic API key to <code>config.js</code> to enable AI features.</p>
-                        <p style="margin: 5px 0 0 0; font-size: 0.85rem;">Open <code>config.js</code> and replace <code>YOUR_API_KEY_HERE</code> with your actual API key (starts with <code>sk-ant-</code>)</p>
+                        <strong>Sign In Required</strong>
+                        <p style="margin: 5px 0 0 0;">AI features are provided by the platform. Please sign in to use them - no API key is needed.</p>
                     </div>
                 </div>
             `;
@@ -3157,10 +3156,10 @@ function showAIError(message) {
 
     container.innerHTML = RenderUtils.buildAIErrorHtml(message, `
                 <strong>Common issues:</strong><br>
-                • API key not configured in config.js<br>
-                • Invalid API key format (must start with sk-ant-)<br>
+                • Not signed in, or your session expired (sign in again)<br>
+                • Hourly AI request limit reached (try again later)<br>
                 • Network connection issues<br>
-                • API quota exceeded
+                • Daily AI insight quota reached
             `);
 }
 

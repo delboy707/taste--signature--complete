@@ -5,8 +5,9 @@
 const CONFIG = {
     // API Settings - all calls go through server proxy (no client-side key needed)
     ANTHROPIC_API_URL: '/api/claude',
+    // Note: no temperature here on purpose. The proxy never forwards sampling
+    // parameters (Sonnet 5 / Opus 5.5 reject them) and enforces a model allowlist.
     CLAUDE_MAX_TOKENS: 4096,
-    CLAUDE_TEMPERATURE: 1.0,
 
     // Feature flags
     ENABLE_AI_INSIGHTS: true,
@@ -27,6 +28,22 @@ function validateAPIKey() {
     }
     console.warn('AI features require authentication. Please sign in.');
     return false;
+}
+
+/**
+ * Single gate for optional/AI-enhanced code paths (PDF report insights,
+ * comparison AI button, ...). AI is provided by the platform through the
+ * /api/claude proxy, so there is no client-side key to test for: the proxy is
+ * usable when a Claude client exists (or can be constructed) AND the user is
+ * signed in. Quiet (no console warning) so it can be called freely.
+ */
+function isAIAvailable() {
+    if (typeof window === 'undefined') return false;
+    const signedIn = !!(window.authManager &&
+        typeof window.authManager.isAuthenticated === 'function' &&
+        window.authManager.isAuthenticated());
+    if (!signedIn) return false;
+    return !!window.claudeAI || typeof ClaudeAI === 'function';
 }
 
 /**
@@ -53,4 +70,9 @@ if (typeof window !== 'undefined') {
     window.validateAPIKey = validateAPIKey;
     window.promptForAPIKey = promptForAPIKey;
     window.ensureAPIKey = ensureAPIKey;
+    window.isAIAvailable = isAIAvailable;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { isAIAvailable, validateAPIKey };
 }

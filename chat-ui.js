@@ -41,14 +41,7 @@ function updateUsageIndicator() {
     try {
         const summary = window.claudeAI.getUsageSummary();
 
-        // Check if user has their own API key
-        if (window.claudeAI.hasOwnApiKey()) {
-            indicator.innerHTML = '✅ <strong>Unlimited</strong> (using your API key)';
-            indicator.style.color = '#28a745';
-            return;
-        }
-
-        // Show quota for server key users
+        // AI is provided by the platform (server-side key); show the quota
         const todayUsed = summary.today.used;
         const todayLimit = summary.today.limit;
         const todayRemaining = summary.today.remaining;
@@ -71,7 +64,7 @@ function updateUsageIndicator() {
         }
     } catch (error) {
         console.error('Failed to update usage indicator:', error);
-        indicator.innerHTML = '💡 <a href="#" onclick="if(window.ensureAPIKey) window.ensureAPIKey(); return false;" style="color: #007bff;">Add API key</a> for unlimited AI insights';
+        indicator.textContent = '💡 Sign in to use AI insights';
     }
 }
 
