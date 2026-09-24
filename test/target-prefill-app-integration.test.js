@@ -64,7 +64,7 @@ function loadAppForPrefillTests() {
         document,
         localStorage,
         console: { ...console, log() {}, warn() {}, error() {} },
-        window: { TouchedFields: require('../touched-fields.js') },
+        window: { TouchedFields: require('../touched-fields.js'), TargetPrefill: require('../target-prefill.js') },
         escapeHtml: require('../dom-utils.js').escapeHtml,
         RenderUtils: require('../render-utils.js'),
         alert() {},
@@ -99,7 +99,7 @@ test('a submission started from "Start Full Evaluation from this target" carries
     const { app } = loadAppForPrefillTests();
 
     app.applyTargetPrefillToForm(
-        { formValues: [], unmapped: [], sensoryNotes: [] },
+        { markers: [], briefText: {}, banner: '', unmapped: [] },
         { projectId: 'proj-123', versionId: 'ver-456', projectName: 'Zesty Cola' }
     );
     app.handleFormSubmit(fakeSubmitEvent());
@@ -125,7 +125,7 @@ test('an ordinary submission (never target-prefilled) carries no tssProjectId/so
 test('the ids are cleared after submit: a SECOND ordinary submission right after a target-prefilled one does not inherit them', () => {
     const { app } = loadAppForPrefillTests();
 
-    app.applyTargetPrefillToForm({ formValues: [], unmapped: [], sensoryNotes: [] }, { projectId: 'proj-123', versionId: 'ver-456' });
+    app.applyTargetPrefillToForm({ markers: [], briefText: {}, banner: '', unmapped: [] }, { projectId: 'proj-123', versionId: 'ver-456' });
     app.handleFormSubmit(fakeSubmitEvent());
     app.handleFormSubmit(fakeSubmitEvent());
 
@@ -145,7 +145,7 @@ test('re-test copies do NOT inherit a pending target link: selecting a re-test c
     // Start from a target (as if the user clicked "Start Full Evaluation
     // from this target" right before deciding to re-test an existing
     // product instead).
-    app.applyTargetPrefillToForm({ formValues: [], unmapped: [], sensoryNotes: [] }, { projectId: 'proj-123', versionId: 'ver-456' });
+    app.applyTargetPrefillToForm({ markers: [], briefText: {}, banner: '', unmapped: [] }, { projectId: 'proj-123', versionId: 'ver-456' });
 
     // Now pick a re-test from the selector - this must clear the pending link.
     app.initRetestSelector();
@@ -166,7 +166,7 @@ test('applyTargetPrefillToForm pre-fills productInfo.name from the project name 
     const { app, elements } = loadAppForPrefillTests();
     elements.get('item-name').value = 'Already typed by the user';
 
-    app.applyTargetPrefillToForm({ formValues: [], unmapped: [], sensoryNotes: [] }, { projectId: 'p', versionId: 'v', projectName: 'Should Not Overwrite' });
+    app.applyTargetPrefillToForm({ markers: [], briefText: {}, banner: '', unmapped: [] }, { projectId: 'p', versionId: 'v', projectName: 'Should Not Overwrite' });
 
     assert.equal(elements.get('item-name').value, 'Already typed by the user');
 });

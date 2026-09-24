@@ -143,6 +143,9 @@ function initForm() {
     btnPrev.addEventListener('click', () => navigateStage(-1));
 
     form.addEventListener('submit', handleFormSubmit);
+    // A reset form is a blank, non-target evaluation: drop any target
+    // markers / "Brief says" text / banner with it.
+    form.addEventListener('reset', clearTargetPrefillUi);
 
     // Load draft if available
     loadFormDraft();
@@ -171,6 +174,7 @@ function initRetestSelector() {
         // A re-test is never a target-prefilled evaluation, even if one was
         // pending from an earlier "Start Full Evaluation from this target".
         pendingTargetLink = null;
+        clearTargetPrefillUi();
 
         // Auto-fill product info
         document.getElementById('item-name').value = originalExp.productInfo.name;
@@ -206,12 +210,59 @@ function updateRetestOptions() {
 // ===== TARGET PREFILL (Full Evaluation, "Start Full Evaluation from this
 // target" - see target-prefill.js / targets-loaded-ui.js) =====
 //
-// Pre-filled sliders are deliberately left OUT of mainFormTouched - same
-// rule as every other slider (touched-fields.js) - so they save as null
-// unless the user actually moves them. This is a brief TARGET, not
-// measured data, and must never be persisted as if it were just because a
-// script set a slider's .value.
+// A brief TARGET is never written into a slider's .value and never marked
+// touched (touched-fields.js) - the slider stays in its normal default
+// state and saves as null unless the user actually moves it. Targets are
+// only DRAWN: a "Target N" marker on each mapped slider's track, the
+// stage's brief text as "Brief says:", and a one-line banner. All three
+// are removed by clearTargetPrefillUi().
+const TARGET_PREFILL_UI_SELECTOR = '.target-marker-track, .target-brief-says';
+
+function clearTargetPrefillUi() {
+    document.querySelectorAll(TARGET_PREFILL_UI_SELECTOR).forEach((el) => el.remove());
+    const banner = document.getElementById('target-prefill-banner');
+    if (banner) banner.remove();
+}
+
+function renderTargetMarkers(prefill) {
+    const TP = window.TargetPrefill;
+    const title = (prefill && prefill.markerTitle) || '';
+    ((prefill && prefill.markers) || []).forEach((marker) => {
+        const slider = document.getElementById(marker.elementId);
+        if (!slider || typeof slider.insertAdjacentElement !== 'function') return;
+        const track = document.createElement('div');
+        track.className = 'target-marker-track';
+        track.setAttribute('data-target-for', marker.elementId);
+        track.setAttribute('data-target-kind', marker.kind);
+        track.innerHTML = TP.buildTargetMarkerHtml(marker, title, slider.getAttribute('min'), slider.getAttribute('max'));
+        slider.insertAdjacentElement('afterend', track);
+    });
+}
+
+function renderTargetBriefText(prefill) {
+    const TP = window.TargetPrefill;
+    const briefText = (prefill && prefill.briefText) || {};
+    Object.keys(briefText).forEach((stageId) => {
+        const text = briefText[stageId];
+        const stageNumber = TP.STAGE_ID_TO_FORM_STAGE_NUMBER[stageId];
+        if (!text || !stageNumber) return;
+        const stageEl = document.querySelector(`.form-stage[data-stage="${stageNumber}"]`);
+        if (!stageEl || typeof stageEl.insertAdjacentElement !== 'function') return;
+        const block = document.createElement('div');
+        block.className = 'target-brief-says';
+        block.setAttribute('data-target-stage', stageId);
+        block.innerHTML = TP.buildBriefSaysHtml(text);
+        const anchor = stageEl.querySelector('.stage-description') || stageEl.querySelector('h4');
+        if (anchor && typeof anchor.insertAdjacentElement === 'function') {
+            anchor.insertAdjacentElement('afterend', block);
+        } else {
+            stageEl.insertAdjacentElement('afterbegin', block);
+        }
+    });
+}
+
 function applyTargetPrefillToForm(prefill, linkInfo) {
+    clearTargetPrefillUi();
     if (linkInfo) {
         pendingTargetLink = {
             tssProjectId: linkInfo.projectId || null,
@@ -223,15 +274,8 @@ function applyTargetPrefillToForm(prefill, linkInfo) {
         }
     }
 
-    ((prefill && prefill.formValues) || []).forEach(({ elementId, valueSpanId, value }) => {
-        const el = document.getElementById(elementId);
-        if (!el) return;
-        el.value = String(value);
-        const span = document.getElementById(valueSpanId);
-        if (span) span.textContent = String(value);
-        // Intentionally no TouchedFields.markTouched(mainFormTouched, elementId) here.
-    });
-
+    renderTargetMarkers(prefill);
+    renderTargetBriefText(prefill);
     showTargetPrefillBanner(prefill);
 }
 
@@ -239,26 +283,12 @@ function showTargetPrefillBanner(prefill) {
     const form = document.getElementById('taste-form');
     if (!form || !form.parentNode) return;
 
-    let banner = document.getElementById('target-prefill-banner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'target-prefill-banner';
-        banner.style.cssText = 'background:#e8f0fe;border:1px solid #b3d0ff;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#1a3a6b;';
-        form.parentNode.insertBefore(banner, form);
-    }
-
-    let text = 'Values pre-filled from your brief target - adjust to your measured/evaluated values. Untouched sliders are not saved as measured data.';
-    const unmapped = (prefill && prefill.unmapped) || [];
-    const notes = (prefill && prefill.sensoryNotes) || [];
-    if (unmapped.length > 0) {
-        text += ` ${unmapped.length} target value${unmapped.length === 1 ? '' : 's'} could not be auto-filled (not in the Signature attribute crosswalk) - see console for details, nothing was silently dropped.`;
-        console.warn('Target prefill: unmapped targets (not applied to any slider):', unmapped);
-    }
-    if (notes.length > 0) {
-        text += ` ${notes.length} stage${notes.length === 1 ? '' : 's'} also ${notes.length === 1 ? 'has' : 'have'} free-text sensory notes from the brief - shown in console, not auto-filled (no attribute id to map from).`;
-        console.info('Target prefill: sensory notes (informational only, not applied to any slider):', notes);
-    }
-    banner.textContent = text;
+    const banner = document.createElement('div');
+    banner.id = 'target-prefill-banner';
+    banner.className = 'target-prefill-banner';
+    // textContent, never innerHTML: the brief name is untrusted.
+    banner.textContent = (prefill && prefill.banner) || '';
+    form.parentNode.insertBefore(banner, form);
 }
 
 if (typeof window !== 'undefined') {
@@ -784,8 +814,7 @@ function handleFormSubmit(e) {
     document.getElementById('taste-form').reset();
     TouchedFields.resetTouchedTracker(mainFormTouched);
     pendingTargetLink = null;
-    const targetPrefillBanner = document.getElementById('target-prefill-banner');
-    if (targetPrefillBanner) targetPrefillBanner.remove();
+    clearTargetPrefillUi();
     currentStage = 1;
     document.querySelectorAll('.form-stage').forEach(stage => stage.classList.remove('active'));
     document.querySelectorAll('.stage-indicator').forEach(indicator => {

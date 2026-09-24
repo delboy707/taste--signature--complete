@@ -7866,3 +7866,58 @@ textarea:focus {
 .qep-feedback-footer .qep-feedback-btn:hover {
     background: rgba(20, 20, 20, 0.95);
 }
+
+/* ===== Brief target markers (target-prefill.js / app.js) =====
+   A brief target is drawn, never set: a tick + "Target N" label under the
+   slider track, a "Brief says:" block per stage, and a one-line banner.
+   Blue, deliberately unlike the gold slider accent (--primary-color). */
+:root {
+    --target-marker-color: #1d5fd1;
+}
+.target-marker-track {
+    position: relative;
+    height: 30px;
+    margin-top: -10px;
+    pointer-events: none;
+}
+.target-marker-tick {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 12px;
+    background: var(--target-marker-color);
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+.target-marker-label {
+    position: absolute;
+    top: 15px;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--target-marker-color);
+    cursor: help;
+    pointer-events: auto;
+}
+.target-brief-says {
+    background: #eef3fc;
+    border-left: 3px solid var(--target-marker-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 8px 0 14px;
+    font-size: 0.85rem;
+    color: #1a3a6b;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+.target-prefill-banner {
+    background: #e8f0fe;
+    border: 1px solid #b3d0ff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: #1a3a6b;
+}
