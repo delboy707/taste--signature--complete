@@ -323,10 +323,12 @@ delegated. The two relevant to this app are:
 - 0027 - resurrection guard: `upsert_signature_profile()` now raises
   `'profile was deleted'` instead of silently recreating a row over a
   soft-deleted one.
-- 0035 - records the production `signature_profiles_set_org_id()` trigger
-  function (applied by hand 2026-09-22): it now RAISES
+- 0035 - `signature_profiles_set_org_id()` now RAISES
   `signature_profiles: no resolvable org for caller` when the caller has no
-  resolvable org, instead of leaving `org_id` null.
+  resolvable org, instead of leaving `org_id` null. It keeps 0026's security
+  attributes (SECURITY INVOKER, `search_path = public`). It was first applied
+  by hand to prod on 2026-09-22 as SECURITY DEFINER; the amended statement
+  was applied to prod and dev on 2026-09-24.
 
 ### This app
 - **Incremental save is the only save path** (2026-09-24). The rollout
@@ -361,9 +363,9 @@ delegated. The two relevant to this app are:
   (currently only wired to Brief's Lock flow) - a Signature company has
   no corresponding `tss_shared.organisations`/`memberships` row today, so
   a user with no resolvable org has no org on their dual-written rows.
-  Since 0035 (prod, 2026-09-22) the trigger raises for such a caller instead
-  of storing `org_id = null`, so their dual-write is expected to fail (and
-  queue for retry) until this is deliberately decided one way or the other
+  Since 0035 (prod from 2026-09-22, dev from 2026-09-24) the trigger raises
+  for such a caller instead of storing `org_id = null`, so their dual-write
+  is expected to fail (and queue for retry) until this is deliberately decided one way or the other
   (extend `provision_org`, or a self-service path on sign-in). Verify this
   behaviour against prod before relying on it.
 - **"Test in Capture" handoff (Phase 2)**: the link exists behind
@@ -394,12 +396,12 @@ delegated. The two relevant to this app are:
   `tss_shared.auth_user_org_ids()` internally, which is deliberately
   where the elevated read of `tss_shared.memberships` is isolated. Don't
   add `SECURITY DEFINER` to it without understanding why that split
-  exists. **Update 2026-09-24:** the production copy of this trigger
-  function is in fact `SECURITY DEFINER` with `set search_path = ''` (applied
-  by hand 2026-09-22, recorded in qep-capture migration 0035). It still
-  sees the caller's claims because `auth_user_org_ids()` reads the request
-  JWT. Whether dev matches prod is UNKNOWN; reconcile deliberately before
-  changing it either way.
+  exists. **Update 2026-09-24:** for a couple of days production carried a
+  hand-applied `SECURITY DEFINER` / `set search_path = ''` variant of this
+  trigger (2026-09-22). qep-capture migration 0035 was amended to restore
+  0026's attributes (INVOKER, `search_path = public`) while keeping the
+  null-org raise, and was applied to prod and dev on 2026-09-24 (per the
+  owner; not re-verified from this repo). The rule above stands.
 - `firestore.rules.hardening-proposal` exists (three rule tightenings
   pulled out of what used to be silently undeployed in this repo's rules)
   but is **not deployed and must not be deployed without an explicit
