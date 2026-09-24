@@ -4,23 +4,26 @@
 class ClaudeAI {
     constructor() {
         this.apiUrl = window.AI_CONFIG?.ANTHROPIC_API_URL || '/api/claude';
-        this.model = window.AI_CONFIG?.CLAUDE_MODEL || 'claude-sonnet-4-6';
+        this.model = window.AI_CONFIG?.CLAUDE_MODEL || 'claude-sonnet-5';
         this.isConfigured = true; // All calls go through server proxy
         this.usageTracker = new window.UsageTracker();
     }
 
     /**
-     * Get current user's Firebase auth token
+     * Get a FRESH Clerk session token for the /api/claude proxy.
+     * Clerk session tokens are short-lived, so this is fetched per request
+     * (Clerk caches and refreshes internally; getToken() is cheap).
+     * Returns null when the user has no Clerk session.
      */
     async getAuthToken() {
-        if (window.authManager && window.authManager.currentUser) {
-            try {
-                const token = await window.authManager.currentUser.getIdToken();
-                return token;
-            } catch (error) {
-                console.error('Failed to get auth token:', error);
-                return null;
+        try {
+            const clerk = window.Clerk;
+            if (clerk && clerk.session && typeof clerk.session.getToken === 'function') {
+                const token = await clerk.session.getToken();
+                return token || null;
             }
+        } catch (error) {
+            console.error('Failed to get Clerk session token:', error);
         }
         return null;
     }
@@ -49,10 +52,10 @@ class ClaudeAI {
     async sendMessage(userMessage, systemPrompt = '') {
         const userId = this.getUserId();
 
-        // All calls go through server proxy with Firebase auth
+        // All calls go through the server proxy with the Clerk session token
         const authToken = await this.getAuthToken();
         if (!authToken) {
-            throw new Error('Authentication required. Please sign in to use AI features.');
+            throw new Error('You are not signed in. Please sign in to use AI features.');
         }
 
         // Check quotas
@@ -135,7 +138,6 @@ class ClaudeAI {
                 body: JSON.stringify({
                     model: this.model,
                     max_tokens: window.AI_CONFIG.CLAUDE_MAX_TOKENS,
-                    temperature: window.AI_CONFIG.CLAUDE_TEMPERATURE,
                     system: systemPrompt,
                     messages: [
                         {
@@ -147,14 +149,21 @@ class ClaudeAI {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                const errorMsg = errorData.error?.message || response.statusText;
+                let errorData = {};
+                try { errorData = await response.json(); } catch (e) { /* non-JSON error body */ }
 
                 // Handle specific error types with generic messages
                 if (response.status === 401) {
                     throw new Error('Authentication failed. Please sign in again.');
+                } else if (response.status === 403) {
+                    throw new Error('Your account is not enabled for AI features yet.');
+                } else if (response.status === 404 && errorData.error?.type === 'model_not_found') {
+                    throw new Error('The selected AI model is not available right now. Please try again later.');
                 } else if (response.status === 429) {
-                    throw new Error('Rate limit exceeded. Please try again later.');
+                    const retry = parseInt(response.headers && response.headers.get && response.headers.get('retry-after'), 10);
+                    throw new Error(retry > 0
+                        ? `AI request limit reached. Please try again in about ${Math.ceil(retry / 60)} minute(s).`
+                        : 'Rate limit exceeded. Please try again later.');
                 } else if (response.status === 503) {
                     throw new Error('AI service is temporarily unavailable. Please try again later.');
                 } else {
