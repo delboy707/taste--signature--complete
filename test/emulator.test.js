@@ -699,6 +699,57 @@ async function main() {
     assert.equal(user.role, 'member');
   });
 
+  // --- Adding to an existing product (the re-test selector) ---
+  // The only way to add a test to an existing product is the re-test
+  // selector, which is populated by updateRetestOptions(). It used to be
+  // refreshed only after a NEW entry was submitted, so anything loaded from
+  // Firestore/localStorage never appeared in it. These tests drive the REAL
+  // app.js (stub DOM, see test/helpers/load-app.js) against the emulator.
+  const { loadApp } = require('./helpers/load-app.js');
+  const existingProduct = (id, name, brand) => ({
+    id,
+    timestamp: '2026-09-01T10:00:00.000Z',
+    productInfo: { name, brand, type: 'Snack', variant: 'N/A', occasion: 'Not specified', temperature: 'Not specified' },
+    needState: 'indulgence',
+    stages: { aftertaste: { emotions: { satisfaction: 7 } } },
+    emotionalTriggers: {},
+    notes: '',
+  });
+
+  await t('retest selector lists existing products after a cloud load', async () => {
+    const companyId = await freshCompanyId();
+    const seeder = await makeSignedInCompanyUser(companyId);
+    const seeded = await seeder.manager.saveExperiences([
+      existingProduct(101, 'Dark Choc Bar', 'Acme'),
+      existingProduct(102, 'Sea Salt Chips', 'Snackco'),
+    ]);
+    assert.equal(seeded.success, true, seeded.error);
+
+    const { manager } = await makeSignedInCompanyUser(companyId); // a fresh session
+    const { app, elements } = loadApp();
+    app.updateRetestOptions(); // what initForm() does at DOMContentLoaded, before any data has loaded
+    app.useCloud(manager);
+    await app.loadDataFromCloud();
+
+    assert.equal(app.getExperiences().length, 2, 'both existing products loaded from Firestore');
+    const html = elements.get('retest-selector').innerHTML;
+    assert.ok(html.includes('value="101"') && html.includes('Dark Choc Bar'), `Dark Choc Bar missing from re-test options: ${html}`);
+    assert.ok(html.includes('value="102"') && html.includes('Sea Salt Chips'), `Sea Salt Chips missing from re-test options: ${html}`);
+  });
+
+  await t('retest selector lists existing products after a localStorage load', async () => {
+    const { app, elements } = loadApp({
+      localStorageData: [existingProduct(201, 'Oat Biscuit', 'Bakeco')],
+    });
+    app.updateRetestOptions(); // initForm() at DOMContentLoaded
+    await app.loadData();      // DOMContentLoaded: loadData() ...
+    app.updateDashboard();     // ... then updateDashboard()
+
+    assert.equal(app.getExperiences().length, 1);
+    const html = elements.get('retest-selector').innerHTML;
+    assert.ok(html.includes('value="201"') && html.includes('Oat Biscuit'), `Oat Biscuit missing from re-test options: ${html}`);
+  });
+
   const failed = results.filter(r => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} emulator tests passed`);
   // Explicit exit: the Firebase client SDK keeps background listeners/

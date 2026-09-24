@@ -182,9 +182,10 @@ function updateRetestOptions() {
     const selector = document.getElementById('retest-selector');
     if (!selector) return;
 
-    // Group products by name to show test history
+    // Group products by name to show test history. Malformed entries are
+    // skipped (updateDashboard() also tolerates them, and now calls this).
     const productGroups = {};
-    experiences.forEach(exp => {
+    experiences.filter(exp => exp && exp.productInfo).forEach(exp => {
         const key = `${exp.productInfo.name}-${exp.productInfo.brand}`;
         if (!productGroups[key]) {
             productGroups[key] = [];
@@ -201,7 +202,11 @@ function updateRetestOptions() {
         });
     });
 
+    // Keep an in-progress re-test choice if this refresh happens mid-form
+    // (setting a value with no matching option leaves it unselected).
+    const previous = selector.value;
     selector.innerHTML = options;
+    if (previous) selector.value = previous;
 }
 
 // Debounce helper to prevent excessive saves
@@ -888,6 +893,13 @@ async function saveData() {
 
 // ===== DASHBOARD =====
 function updateDashboard() {
+    // updateDashboard() runs after every load and every change to
+    // `experiences`, which is exactly when the re-test selector (the only way
+    // to add a test to an existing product) must be rebuilt. It used to be
+    // rebuilt only after submitting a NEW entry, so products loaded from
+    // Firestore/localStorage never appeared in it.
+    updateRetestOptions();
+
     if (experiences.length === 0) {
         document.getElementById('stat-total').textContent = '0';
         document.getElementById('stat-products').textContent = '0';
