@@ -39,3 +39,23 @@ test('retest dropdown: normal names render unchanged, malformed entries skipped'
   assert.match(html, /<option value="7">Cola - Test #1 \(/);
   assert.equal((html.match(/<option/g) || []).length, 2);
 });
+
+test('AI response formatting: model output cannot inject tags', () => {
+  for (const p of PAYLOADS) {
+    for (const fn of [RU.formatAIResponse, RU.formatAIMarkdown]) {
+      const html = fn(`**bold** ${p}\n- item`);
+      assertNoUnescapedTag(html, p);
+      assert.match(html, /<strong>bold<\/strong>/);
+    }
+    assertNoUnescapedTag(RU.buildAIResponseCardHtml(p, p), p);
+    assertNoUnescapedTag(RU.buildAIErrorHtml(p), p);
+  }
+});
+
+test('AI response formatting: markdown still renders after escaping', () => {
+  const html = RU.formatAIMarkdown('# Title\n\n**b** and `code`');
+  assert.match(html, /<h1>Title<\/h1>/);
+  assert.match(html, /<code>code<\/code>/);
+  assert.equal(RU.formatAIResponse(''), '');
+  assert.equal(RU.formatAIResponse(null), '');
+});

@@ -1448,7 +1448,7 @@ async function getAIComparisonInsights() {
         console.error('AI Comparison Error:', error);
         content.innerHTML = `
             <div class="error-message">
-                <strong>❌ Error:</strong> ${error.message}
+                <strong>❌ Error:</strong> ${escapeHtml(error.message)}
                 <p style="margin-top: 10px; font-size: 0.9rem;">
                     Make sure your Anthropic API key is configured correctly in config.js
                 </p>
@@ -1457,21 +1457,10 @@ async function getAIComparisonInsights() {
     }
 }
 
-// Helper function to format AI response (converts markdown-like formatting to HTML)
+// Format AI response for display. AI output is untrusted: RenderUtils escapes
+// it before adding the fixed set of formatting tags.
 function formatAIResponse(text) {
-    if (!text) return '';
-
-    // Convert **bold** to <strong>
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Convert line breaks to <br>
-    text = text.replace(/\n/g, '<br>');
-
-    // Convert bullet points
-    text = text.replace(/^- (.*?)$/gm, '<li>$1</li>');
-    text = text.replace(/(<li>.*?<\/li>)/s, '<ul>$1</ul>');
-
-    return text;
+    return RenderUtils.formatAIResponse(text);
 }
 
 function renderComparisonShapeChart(products) {
@@ -3047,7 +3036,7 @@ function updateAIInsightsView() {
                     <span class="success-icon">✅</span>
                     <div>
                         <strong>Claude AI Connected</strong>
-                        <p style="margin: 5px 0 0 0;">Using model: ${claudeAI.model}</p>
+                        <p style="margin: 5px 0 0 0;">Using model: ${escapeHtml(claudeAI.model)}</p>
                     </div>
                 </div>
             `;
@@ -3215,28 +3204,9 @@ function showAIResponse(content, title) {
     const container = document.getElementById('ai-response-container');
     container.style.display = 'block';
 
-    // Convert markdown-style formatting to HTML
-    let formattedContent = content
-        .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`(.+?)`/g, '<code>$1</code>')
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-        .replace(/^\- (.+)$/gm, '<li>$1</li>')
-        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-
-    container.innerHTML = `
-        <div class="ai-response-content">
-            <h2 style="color: var(--primary-color); margin-top: 0;">${title}</h2>
-            <div style="margin-top: 20px;">
-                <p>${formattedContent}</p>
-            </div>
-        </div>
-    `;
+    // AI output and title (may contain a product name) are escaped inside
+    // RenderUtils before the fixed formatting tags are applied.
+    container.innerHTML = RenderUtils.buildAIResponseCardHtml(content, title);
 
     container.scrollIntoView({ behavior: 'smooth' });
 }
@@ -3246,19 +3216,13 @@ function showAIError(message) {
     const container = document.getElementById('ai-response-container');
     container.style.display = 'block';
 
-    container.innerHTML = `
-        <div class="ai-error">
-            <h3>⚠️ Error</h3>
-            <p>${message}</p>
-            <p style="margin-top: 15px; font-size: 0.9rem;">
+    container.innerHTML = RenderUtils.buildAIErrorHtml(message, `
                 <strong>Common issues:</strong><br>
                 • API key not configured in config.js<br>
                 • Invalid API key format (must start with sk-ant-)<br>
                 • Network connection issues<br>
                 • API quota exceeded
-            </p>
-        </div>
-    `;
+            `);
 }
 
 // ===== TUTORIAL & ONBOARDING INTEGRATION =====
