@@ -54,6 +54,8 @@ function loadApp({ localStorageData = null } = {}) {
     localStorage,
     console,
     window: { TouchedFields: require('../../touched-fields.js') },
+    escapeHtml: require('../../dom-utils.js').escapeHtml,
+    RenderUtils: require('../../render-utils.js'),
   };
   const scope = new Proxy(provided, {
     has: () => true,

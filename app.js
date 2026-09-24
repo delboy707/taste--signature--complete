@@ -182,25 +182,9 @@ function updateRetestOptions() {
     const selector = document.getElementById('retest-selector');
     if (!selector) return;
 
-    // Group products by name to show test history. Malformed entries are
-    // skipped (updateDashboard() also tolerates them, and now calls this).
-    const productGroups = {};
-    experiences.filter(exp => exp && exp.productInfo).forEach(exp => {
-        const key = `${exp.productInfo.name}-${exp.productInfo.brand}`;
-        if (!productGroups[key]) {
-            productGroups[key] = [];
-        }
-        productGroups[key].push(exp);
-    });
-
-    let options = '<option value="">No - This is a new product</option>';
-    Object.entries(productGroups).forEach(([key, exps]) => {
-        exps.forEach((exp, idx) => {
-            const testNum = exp.testNumber || (idx + 1);
-            const date = new Date(exp.timestamp).toLocaleDateString();
-            options += `<option value="${exp.id}">${exp.productInfo.name} - Test #${testNum} (${date})</option>`;
-        });
-    });
+    // Malformed entries are skipped (updateDashboard() also tolerates them,
+    // and now calls this). Product names are escaped in the builder.
+    const options = RenderUtils.buildRetestOptionsHtml(experiences);
 
     // Keep an in-progress re-test choice if this refresh happens mid-form
     // (setting a value with no matching option leaves it unselected).
