@@ -607,6 +607,98 @@ async function main() {
     assert.equal(expSnap.size, 1, 'company experiences still readable via belongsToCompany after users/{uid} lockdown');
   });
 
+  // --- Stage 3b: ensureFirestoreProvisioned (api/firebase-token.js) ---
+  // Called directly against the emulator - no Clerk, no HTTP. The default
+  // firebase-admin app was initialised above, so the module reuses it
+  // instead of building a credential from env vars.
+  const { ensureFirestoreProvisioned } = require('../api/firebase-token.js');
+  const stamp = Date.now();
+  const uidA = `s3b_A_${stamp}`;
+  const uidB = `s3b_B_${stamp}`;
+  const uidC = `s3b_C_${stamp}`;
+  const uidD = `s3b_D_${stamp}`;
+  const uidE = `s3b_E_${stamp}`;
+  const uidF = `s3b_F_${stamp}`;
+  const companyCount = async () => (await adminDb.collection('companies').count().get()).data().count;
+  const getUser = async (uid) => (await adminDb.collection('users').doc(uid).get());
+  const getOrgMap = async (orgId) => (await adminDb.collection('orgCompanyMap').doc(orgId).get());
+  let companyOfOrg1;
+
+  await t('3b-1: first user of a new org -> creates company, writes orgCompanyMap, role owner', async () => {
+    const before = await companyCount();
+    await ensureFirestoreProvisioned(uidA, 'a@example.com', 'Alpha', 'org_TEST1');
+    assert.equal(await companyCount(), before + 1, 'exactly one company created');
+    const map = await getOrgMap('org_TEST1');
+    assert.ok(map.exists, 'orgCompanyMap/org_TEST1 written');
+    companyOfOrg1 = map.data().companyId;
+    const user = (await getUser(uidA)).data();
+    assert.equal(user.role, 'owner');
+    assert.equal(user.companyId, companyOfOrg1);
+    const company = await adminDb.collection('companies').doc(companyOfOrg1).get();
+    assert.ok(company.exists, 'mapped company doc exists');
+    assert.equal(company.data().ownerId, uidA);
+  });
+
+  await t('3b-2: second user, same org -> joins existing company as member, no new company', async () => {
+    const before = await companyCount();
+    await ensureFirestoreProvisioned(uidB, 'b@example.com', 'Bravo', 'org_TEST1');
+    assert.equal(await companyCount(), before, 'company count unchanged');
+    const user = (await getUser(uidB)).data();
+    assert.equal(user.role, 'member');
+    assert.equal(user.companyId, companyOfOrg1, "gets A's companyId");
+  });
+
+  await t('3b-3: no orgId -> own new company, no orgCompanyMap written', async () => {
+    const beforeCompanies = await companyCount();
+    const beforeMaps = (await adminDb.collection('orgCompanyMap').count().get()).data().count;
+    await ensureFirestoreProvisioned(uidC, 'c@example.com', 'Charlie', null);
+    assert.equal(await companyCount(), beforeCompanies + 1, 'own company created');
+    assert.equal((await adminDb.collection('orgCompanyMap').count().get()).data().count, beforeMaps, 'no map written');
+    const user = (await getUser(uidC)).data();
+    assert.equal(user.role, 'owner');
+    assert.notEqual(user.companyId, companyOfOrg1, 'separate from the org company');
+  });
+
+  await t('3b-4: already-provisioned user called again with a different orgId -> untouched', async () => {
+    const beforeUser = (await getUser(uidA)).data();
+    const beforeCompanies = await companyCount();
+    await ensureFirestoreProvisioned(uidA, 'a@example.com', 'Alpha', 'org_TEST_OTHER');
+    const afterUser = (await getUser(uidA)).data();
+    assert.equal(afterUser.companyId, beforeUser.companyId, 'companyId unchanged');
+    assert.equal(afterUser.role, beforeUser.role, 'role unchanged');
+    assert.equal(await companyCount(), beforeCompanies, 'no company created');
+    assert.equal((await getOrgMap('org_TEST_OTHER')).exists, false, 'no map written for the other org');
+  });
+
+  await t('3b-5: two users, same new org, concurrent -> exactly one company, shared companyId', async () => {
+    await Promise.all([
+      ensureFirestoreProvisioned(uidD, 'd@example.com', 'Delta', 'org_TEST2'),
+      ensureFirestoreProvisioned(uidE, 'e@example.com', 'Echo', 'org_TEST2'),
+    ]);
+    const map = await getOrgMap('org_TEST2');
+    assert.ok(map.exists, 'orgCompanyMap/org_TEST2 written');
+    const orgCompanyId = map.data().companyId;
+    const d = (await getUser(uidD)).data();
+    const e = (await getUser(uidE)).data();
+    assert.equal(d.companyId, orgCompanyId);
+    assert.equal(e.companyId, orgCompanyId, 'both share the same companyId');
+    const created = await adminDb.collection('companies').where('ownerId', 'in', [uidD, uidE]).get();
+    assert.equal(created.size, 1, 'exactly one company created for the org');
+    assert.deepEqual([d.role, e.role].sort(), ['member', 'owner'], 'one owner, one member');
+  });
+
+  await t('3b-6: pre-seeded orgCompanyMap -> new user joins that company, none created', async () => {
+    const companyX = adminDb.collection('companies').doc();
+    await companyX.set({ companyName: 'Preseeded X', ownerId: 'n/a', createdAt: adminFirestore.FieldValue.serverTimestamp() });
+    await adminDb.collection('orgCompanyMap').doc('org_TEST3').set({ companyId: companyX.id });
+    const before = await companyCount();
+    await ensureFirestoreProvisioned(uidF, 'f@example.com', 'Foxtrot', 'org_TEST3');
+    assert.equal(await companyCount(), before, 'no company created');
+    const user = (await getUser(uidF)).data();
+    assert.equal(user.companyId, companyX.id, 'joined pre-seeded company X');
+    assert.equal(user.role, 'member');
+  });
+
   const failed = results.filter(r => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} emulator tests passed`);
   // Explicit exit: the Firebase client SDK keeps background listeners/

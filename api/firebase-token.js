@@ -249,3 +249,7 @@ module.exports = async function handler(req, res) {
         });
     }
 };
+
+// Exposed only so emulator tests can call it directly; the handler above
+// remains the module's export for Vercel.
+module.exports.ensureFirestoreProvisioned = ensureFirestoreProvisioned;
