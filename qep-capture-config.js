@@ -33,6 +33,13 @@ const QEP_CAPTURE_CONFIG = {
     // 0036/0037 are applied in the environment this deploys against.
     ENABLE_TARGETS_LOADED: true,
 
+    // Stage 2B "Send to Capture" (send-to-capture.js): history-row button
+    // that turns an experience into a new TSS project version
+    // (tss_shared.create_version_from_signature, qep-capture migration 0038)
+    // and a Capture study (public.create_study_from_version, 0032). Keep
+    // false until 0038 is applied in the environment this deploys against.
+    ENABLE_SEND_TO_CAPTURE: false,
+
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link. Defaults to production; set to
     // http://localhost:3000 locally to test against a qep-capture dev
