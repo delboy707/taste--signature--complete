@@ -75,9 +75,29 @@ function crossSchemaEmbeds(selectStr, querySchema) {
  * @param {(name: string, params: object) => {data:any,error:any}} [opts.rpcImpl]
  * @returns {{ client: object, violations: string[], queries: object[] }}
  */
-function makeStrictClient({ tables = {}, rpcImpl = null } = {}) {
+function makeStrictClient({ tables = {}, rpcImpl = null, accessToken = null } = {}) {
     const violations = [];
     const queries = [];
+
+    // Auth, like the real Supabase gateway: when the client was built with an
+    // accessToken() callback (qep-capture-client.js is), every request calls
+    // it. A null/empty token means supabase-js falls back to the anon key, and
+    // anon has no USAGE on tss_shared, so PostgREST answers 42501
+    // "permission denied for schema tss_shared" (2026-09-24 production bug).
+    async function authFor(schema) {
+        if (!accessToken) return null;
+        let token;
+        try {
+            token = await accessToken();
+        } catch (err) {
+            return { data: null, error: { code: '', message: `${(err && err.message) || err}` } };
+        }
+        if (!token && schema === 'tss_shared') {
+            violations.push(`tss_shared call made without a Clerk token (sent as anon)`);
+            return { data: null, error: { code: '42501', message: 'permission denied for schema tss_shared' } };
+        }
+        return null;
+    }
 
     function builder(schema, tableName) {
         const state = { schema, table: tableName, filters: {}, select: '' };
@@ -109,14 +129,16 @@ function makeStrictClient({ tables = {}, rpcImpl = null } = {}) {
             in(col, vals) { state.filters[col] = { in: vals }; return chain; },
             order() { return chain; },
             limit() { return chain; },
-            maybeSingle: async () => result('single'),
-            single: async () => result('single'),
-            then(resolve, reject) { Promise.resolve(result('list')).then(resolve, reject); },
+            maybeSingle: async () => (await authFor(schema)) || result('single'),
+            single: async () => (await authFor(schema)) || result('single'),
+            then(resolve, reject) { authFor(schema).then(a => a || result('list')).then(resolve, reject); },
         };
         return chain;
     }
 
-    function rpc(schema, name, params) {
+    async function rpc(schema, name, params) {
+        const denied = await authFor(schema);
+        if (denied) return denied;
         const home = SCHEMA_OF_RPC[name];
         if (home !== schema) {
             violations.push(`rpc ${name} called in schema '${schema}' (lives in '${home || 'unknown'}')`);
