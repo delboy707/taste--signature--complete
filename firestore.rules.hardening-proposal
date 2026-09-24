@@ -3,8 +3,8 @@
 // This is the hardening that used to be baked directly into the repo's
 // checked-in firestore.rules, undeployed, silently drifted from what's
 // actually live (see MIGRATION_RUNBOOK.md). Pulled out here so
-// firestore.rules can be an honest, verbatim copy of the live rules
-// (firestore.rules.live) with nothing extra mixed in.
+// firestore.rules can be an honest, verbatim copy of what is deployed
+// (firestore.rules itself) with nothing extra mixed in.
 //
 // Three changes relative to live, each independent and separately
 // reviewable - none of them are needed by, or applied as part of, the

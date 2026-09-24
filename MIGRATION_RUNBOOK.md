@@ -2,15 +2,16 @@
 
 Branch: `fix/incremental-save`. Not merged, not deployed. This document
 reflects the design after reconciling against the ACTUALLY deployed
-`firestore.rules` (see `firestore.rules.live`, copied by hand from the
-Firebase console, revision Nov 28 2025 11:13 AM) - the repo's checked-in
-`firestore.rules` had drifted from what's live and no longer does.
+`firestore.rules` (originally reconciled by hand against the Firebase
+console, revision Nov 28 2025 11:13 AM; the checked-in `firestore.rules`
+was deployed on 2026-09-23 and is what is live).
 
 ## Files that matter here
 
-- `firestore.rules` - now a byte-identical copy of `firestore.rules.live`.
-  Confirm this with `diff firestore.rules firestore.rules.live` before
-  every merge; it should always print nothing.
+- `firestore.rules` - what is deployed (deployed 2026-09-23); the source
+  of truth. Confirm a branch does not change it with
+  `git diff origin/main -- firestore.rules` before every merge; it should
+  print nothing unless a rules change is the point of the branch.
 - `firestore.rules.hardening-proposal` - the three rule tightenings that
   used to be silently baked into the repo's `firestore.rules` (never
   actually deployed). Pulled out into their own file, clearly marked as
@@ -161,8 +162,9 @@ no real project)
    real credentials, key outside the repo). Confirm `./backups/*.json`
    looks sane (spot-check a company's file against the Firebase console).
 2. Code review this branch's diff. `firestore.rules` should show **zero**
-   diff against `firestore.rules.live` - confirm with `diff` before
-   merging, not just by eye.
+   diff against the deployed rules - confirm with
+   `git diff origin/main -- firestore.rules` before merging, not just by
+   eye.
 3. **Merge to `main` with `incremental-save-config.js`'s allowlist still
    empty.** This is a no-behavior-change merge - every company keeps
    using `_saveExperiencesLegacy()`. Deploy to Vercel as normal (no rules
