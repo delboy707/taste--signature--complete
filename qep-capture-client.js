@@ -24,6 +24,40 @@ let _qepCaptureClient = null;
 const CLERK_WAIT_MS = 15000;
 const CLERK_POLL_MS = 100;
 
+// Demo mode (localStorage flag owned by demo-mode.js, read by auth.js as
+// DEMO_MODE_KEY) skips auth.js's Clerk gate, so ClerkJS is never loaded and a
+// Clerk token can never arrive. Every qep-capture call fails immediately in
+// demo mode instead of polling CLERK_WAIT_MS for a Clerk that will never load.
+const DEMO_MODE_MESSAGE = 'Demo mode: QEP Capture features need a signed-in QEP account. Exit demo mode and sign in to use them.';
+
+/**
+ * True when the app is in demo mode. Delegates to demo-mode.js
+ * (window.demoMode.isDemoActive()); if that has not loaded, reads the same
+ * localStorage key auth.js uses (its DEMO_MODE_KEY). Never throws - blocked
+ * storage counts as not-demo, which still takes the Clerk path below and so
+ * still never falls back to anon.
+ */
+function isQepDemoModeActive() {
+    if (typeof window === 'undefined') return false;
+    try {
+        if (window.demoMode && typeof window.demoMode.isDemoActive === 'function') {
+            return window.demoMode.isDemoActive() === true;
+        }
+        if (typeof DEMO_MODE_KEY === 'string' && window.localStorage) {
+            return window.localStorage.getItem(DEMO_MODE_KEY) === 'true';
+        }
+    } catch (err) {
+        // Storage unavailable - treat as not demo.
+    }
+    return false;
+}
+
+function _demoModeError() {
+    const err = new Error(DEMO_MODE_MESSAGE);
+    err.code = 'QEP_DEMO_MODE';
+    return err;
+}
+
 function _notSignedInError() {
     return new Error('Not signed in to QEP: no Clerk session, so qep-capture was not called. Please sign in again.');
 }
@@ -36,6 +70,7 @@ function _notSignedInError() {
  * tss_shared", 2026-09-24). Throws a clear not-signed-in error instead.
  */
 async function _getClerkTokenOrThrow() {
+    if (isQepDemoModeActive()) throw _demoModeError();
     const deadline = Date.now() + CLERK_WAIT_MS;
     while (!(window.Clerk && window.Clerk.loaded)) {
         if (Date.now() >= deadline) throw _notSignedInError();
@@ -48,6 +83,11 @@ async function _getClerkTokenOrThrow() {
 }
 
 function getQepCaptureClient() {
+    // Checked before the cache so callers get the clear demo message from
+    // their own try/catch, not a wrapped fetch error from inside supabase-js.
+    if (isQepDemoModeActive()) {
+        throw _demoModeError();
+    }
     if (_qepCaptureClient) {
         return _qepCaptureClient;
     }
@@ -70,7 +110,8 @@ function getQepCaptureClient() {
 
 if (typeof window !== 'undefined') {
     window.getQepCaptureClient = getQepCaptureClient;
+    window.isQepDemoModeActive = isQepDemoModeActive;
 }
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { getQepCaptureClient, CLERK_WAIT_MS };
+    module.exports = { getQepCaptureClient, isQepDemoModeActive, CLERK_WAIT_MS, DEMO_MODE_MESSAGE };
 }
