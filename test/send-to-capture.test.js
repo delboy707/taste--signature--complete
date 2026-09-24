@@ -181,6 +181,11 @@ test('mapSendToCaptureError: known RPC raise texts become clear messages', () =>
         ['TypeError: Failed to fetch', /Could not reach QEP/],
         ['QEP-Capture client: @supabase/supabase-js not loaded.', /not configured on this page/],
         ['nothing measured', /Rate at least one attribute/],
+        ['no measured values to send to Capture', /Rate at least one attribute/],
+        ['create_version_from_signature: not authenticated', /Sign in to your QEP account/],
+        ['more than one organisation for caller - select an active organisation first', /more than one organisation/],
+        ['experience value out of range 0-10 at appearance:gloss', /outside the 0-10 scale/],
+        ['experience.tssCategoryId zzz is not a known category', /category chosen for Capture is not recognised/],
     ];
     for (const [raw, re] of cases) {
         assert.match(STC.mapSendToCaptureError({ message: raw }), re, raw);
@@ -536,4 +541,12 @@ test('index.html loads send-to-capture.js after dom-utils.js and before app.js',
     assert.ok(at('dom-utils.js') < at('send-to-capture.js'));
     assert.ok(at('qep-capture-client.js') < at('send-to-capture.js'));
     assert.ok(at('send-to-capture.js') < at('app.js'));
+});
+
+test('successNotes: reused version, category fallback and out-of-category targets are called out', () => {
+    assert.equal(STC.successNotes({ version: {}, outOfCategoryCount: 0 }), '');
+    const s = STC.successNotes({ version: { reused_existing_version: true, category_fallback: true }, outOfCategoryCount: 2 });
+    assert.match(s, /existing version was reused/);
+    assert.match(s, /default category was used/);
+    assert.match(s, /2 target\(s\) fall outside/);
 });

@@ -140,15 +140,21 @@
   }
 
   const ERROR_MAP = [
-    [/not signed in|no clerk session|clerk.*not (loaded|available)/i,
+    [/not signed in|no clerk session|clerk.*not (loaded|available)|not authenticated/i,
       'Sign in to your QEP account to send this experience to Capture.'],
     [/demo mode/i, DEMO_MODE_MESSAGE],
+    [/more than one organisation for caller/i,
+      'Your QEP account belongs to more than one organisation. Select your active organisation in the QEP Portal, then try again.'],
     [/no organisation for caller|no resolvable org/i,
       'Your QEP account is not linked to an organisation yet, so Capture cannot create a study. Ask your QEP admin to set up your organisation.'],
     [/is not a project in your organisation/i,
       'This experience is linked to a Brief project that is not in your organisation (or no longer exists), so it cannot be sent to Capture.'],
     [/is not a version of project|requires experience\.tssProjectId|differs from the stored link/i,
       'This experience\'s link to its Brief version is inconsistent, so it cannot be sent to Capture. Start a new Full Evaluation from the target and try again.'],
+    [/out of range 0-10/i,
+      'This experience has a rating outside the 0-10 scale, so it cannot be sent to Capture. Edit or re-log it and try again.'],
+    [/is not a known category/i,
+      'The product category chosen for Capture is not recognised. Please contact QEP support.'],
     [/profile was deleted/i,
       'This experience was deleted from the shared QEP database, so it cannot be sent to Capture. Log it again as a new experience.'],
     [/nothing measured|no measured|at least one attribute/i, NOTHING_MEASURED_MESSAGE],
@@ -248,6 +254,16 @@
       url: buildCaptureStudyUrl(result.study.id, deps.config),
       outOfCategoryCount: result.outOfCategoryCount,
     };
+  }
+
+  /** Extra plain-text sentences for the success toast (leading space each). */
+  function successNotes(result) {
+    const v = (result && result.version) || {};
+    let s = '';
+    if (v.reused_existing_version === true) s += ' Nothing changed since the last send, so the existing version was reused.';
+    if (v.category_fallback === true) s += ' The product type did not match a Capture category, so a default category was used - check it in Capture.';
+    if (result && result.outOfCategoryCount > 0) s += ` ${result.outOfCategoryCount} target(s) fall outside the study category.`;
+    return s;
   }
 
   function sendToCaptureTooltip(experience) {
@@ -371,8 +387,7 @@
         if (win && !win.closed) {
           try { win.location.href = result.url; opened = true; } catch { opened = false; }
         }
-        const extra = result.outOfCategoryCount > 0
-          ? ` ${result.outOfCategoryCount} target(s) fall outside the study category.` : '';
+        const extra = successNotes(result);
         notify({
           type: 'success',
           message: `Capture study created: ${result.studyName}.${extra}${opened ? '' : ' Your browser blocked the new tab - use the link below.'}`,
@@ -417,6 +432,7 @@
     extractStudyResult,
     sendExperienceToCapture,
     sendToCaptureTooltip,
+    successNotes,
     buildSendToCaptureButtonHtml,
     showSendToCaptureToast,
     createSendToCaptureController,
