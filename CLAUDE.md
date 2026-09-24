@@ -20,7 +20,7 @@ Read this first whenever starting a new session.
 - Firebase / Firestore (auth + data)
 - Chart.js (visualization)
 - jsPDF + SheetJS (export)
-- Anthropic Claude API via serverless proxy (`api/`, env: `ANTHROPIC_API_KEY`)
+- Anthropic Claude API via serverless proxy (`api/claude.js`, env: `ANTHROPIC_API_KEY`)
 - Wistia for demo video (media-id: `h2e5wwqxdf`)
 - Hosted on Vercel; deploys auto-trigger on push to `main`
 
@@ -191,7 +191,13 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 
 - Stripe is NOT needed for trial enforcement. Firebase / Firestore
   handles trial access natively. Stripe only enters at paid conversion.
-- Use DOMPurify, not manual escaping, for any `innerHTML` usage.
+- Any `innerHTML` / `insertAdjacentHTML` / `outerHTML` / `document.write`
+  that interpolates user-supplied or imported data MUST escape it with the
+  shared `escapeHtml()` from `dom-utils.js` (loads before every UI module).
+  Ids/strings inside inline `onclick` handlers go through `jsArgAttr()`.
+  Prefer the pure builders in `render-utils.js` (`window.RenderUtils`),
+  unit-tested in `test/render-utils.test.js`. AI output is escaped first,
+  then fixed markdown tags are applied. (DOMPurify is not used.)
 - Sensory attribute "Compressive Resistance" / "Kokumi" etc. shown via
   tooltip — consumer-facing label is the primary display text.
 
@@ -260,36 +266,63 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   commit it" means "it's not committed"; check `git log`/`git status`
   before reporting on deployment state.
 
+## AI proxy (`api/claude.js`) - updated 2026-09-24
+
+- Requires `Authorization: Bearer <Clerk session token>`, verified
+  server-side (`api/_lib/clerk-auth.js`, shared with `api/firebase-token.js`;
+  the account must be provisioned). The client (`claude-api.js`) fetches a
+  fresh token per request via `window.Clerk.session.getToken()`. Firebase ID
+  tokens are no longer accepted. There is no client-side API key.
+- Model allowlist: default `claude-sonnet-5`; also
+  `claude-haiku-4-5-20251001` (alias `claude-haiku-4-5`) and
+  `claude-opus-5-5`. Anything else is ignored and the default is used.
+  `max_tokens` is capped at 4096. `temperature` / `top_p` / `top_k` are never
+  forwarded (Sonnet 5 / Opus 5.5 reject them with HTTP 400).
+- Rate limit: 60 requests/hour per Clerk user id (optional env
+  `AI_RATE_LIMIT_PER_HOUR`), fixed hourly window, stored in Firestore
+  `aiRateLimits/{clerkUserId}` via the Admin SDK, transactional. 429 with
+  `retry-after` over the limit; 503 (fail closed) if Firestore is down. The
+  `firestore.rules` catch-all already denies clients on that collection.
+- Gate optional AI paths on `isAIAvailable()` (`config.js`).
+- The handler is built by `createHandler(deps)`; tests in
+  `test/api-claude.test.js`.
+
+## Testing
+
+- `npm test` runs every unit suite (node:test, no emulator, no network).
+- `npm run test:emulator` runs the Firestore/Auth emulator suite (needs Java
+  and firebase-tools).
+- There is no lint or typecheck in this repo.
+
 ## On the horizon (post-current-session)
 
 - Firestore Security Rules + React client-side checks for trial access
-- Per-user rate limiting on the Anthropic API proxy
 - CSP hardening (remove `unsafe-inline`)
-- `api/claude.js` forwards the client-supplied `model` string with no
-  allowlist - hardening candidate. The model string itself lives in
-  `claude-api.js:7` only (not duplicated in `api/claude.js`).
 - Tier 1 onboarding walkthrough (incognito Chrome + plus-addressed Gmail)
 - Beta launch infra: feedback mechanism, welcome email, rate limits
 - Pricing: ~$1k/mo or ~$8k/yr enterprise tiers
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
-## Status 2026-09-16
+## Status 2026-09-24 (supersedes 2026-09-16)
 
 Handoff note - Signature to Supabase dual-write (Option A) and related
 TSS Phase 1/2 work. Read this before picking either thread back up.
 
-### Dev migrations applied (0022-0027) - none in production
-All applied directly to qep-capture's dev Supabase project
-(`fmfjihpatkooldhrerui`) via the Supabase MCP, tested via rolled-back
-transactions. Production (`xrkjkhehiwxaesignvty`) has none of these yet -
-Derek pushes production migrations, never delegated. Full detail lives in
-qep-capture's own CLAUDE.md; the two relevant to this app are:
+### Supabase side (lives in qep-capture)
+The database migrations that matter to this app live in qep-capture's
+`supabase/migrations/`; qep-capture's own CLAUDE.md is the source of truth
+for what is applied where. Derek pushes production migrations, never
+delegated. The two relevant to this app are:
 - 0026 - `tss_shared.signature_profiles` / `signature_profile_values`,
   `upsert_signature_profile()` / `soft_delete_signature_profile()` RPCs.
 - 0027 - resurrection guard: `upsert_signature_profile()` now raises
   `'profile was deleted'` instead of silently recreating a row over a
   soft-deleted one.
+- 0035 - records the production `signature_profiles_set_org_id()` trigger
+  function (applied by hand 2026-09-22): it now RAISES
+  `signature_profiles: no resolvable org for caller` when the caller has no
+  resolvable org, instead of leaving `org_id` null.
 
 ### This app
 - **Incremental save is the only save path** (2026-09-24). The rollout
@@ -306,28 +339,37 @@ qep-capture's own CLAUDE.md; the two relevant to this app are:
   read-only export and audit.
 - Stale tabs pick up the new code via the service-worker `VERSION` bump
   (bump it on every release that changes cached assets).
-- `feat/supabase-dual-write` branch: **committed locally, not pushed**,
-  no PR. `ENABLE_SUPABASE_DUAL_WRITE: false` in `qep-capture-config.js` -
-  no behavior change until explicitly flipped. Includes the
-  `SUPABASE_ENV: 'dev'` guard (self-disables if ever loaded on
-  `signature.qeptss.com` while still pointed at the dev project).
+- **Branches merged to main** (PRs #34-#44): `fix/incremental-save`,
+  `feat/touched-fields`, `feat/supabase-dual-write`,
+  `feat/targets-loaded-qep-capture`, `feat/test-in-capture`,
+  `feat/dual-write-prod-enable`.
+- **Flags on main** (`qep-capture-config.js`): `ENABLE_SUPABASE_DUAL_WRITE:
+  true` with `SUPABASE_ENV: 'prod'` (the dev-project guard is inert against
+  prod); `ENABLE_TARGETS_LOADED: false` (the Targets Loaded page and its
+  "Test in Capture" link are merged but hidden). `vercel.json` `connect-src`
+  already includes both `supabase.co` hosts (https + wss).
+- `api/claude.js` requires a Clerk token, a model allowlist and a per-user
+  rate limit (see "AI proxy" above).
 
 ### Open items
-- **CSP blocker**: `vercel.json`'s `connect-src` has no `supabase.co`
-  entry. Must be added before dual-write can ever actually be turned on
-  in a deployed environment - today it's silently inert since the flag
-  is off, but flipping the flag without this change first would just
-  produce CSP-blocked fetches, queued forever in the retry queue.
 - **Org membership for Signature users**: unresolved. qep-capture's
   `tss_shared.provision_org()` is platform-admin-only, manually invoked
   (currently only wired to Brief's Lock flow) - a Signature company has
   no corresponding `tss_shared.organisations`/`memberships` row today, so
-  every dual-written `signature_profiles` row lands with `org_id = null`
-  (owner-only visibility) until this is deliberately decided one way or
-  the other (extend `provision_org`, or a self-service path on sign-in).
-- **"Test in Capture" handoff (Phase 2)**: not started - the deeper
-  cross-app flow (Brief -> Signature -> Capture) beyond the current
-  data-plumbing phase.
+  a user with no resolvable org has no org on their dual-written rows.
+  Since 0035 (prod, 2026-09-22) the trigger raises for such a caller instead
+  of storing `org_id = null`, so their dual-write is expected to fail (and
+  queue for retry) until this is deliberately decided one way or the other
+  (extend `provision_org`, or a self-service path on sign-in). Verify this
+  behaviour against prod before relying on it.
+- **"Test in Capture" handoff (Phase 2)**: the link exists behind
+  `ENABLE_TARGETS_LOADED` (off); the fuller Brief -> Signature -> Capture
+  flow is not built.
+- **Revoke the Anthropic key exposed in the 2026-02 audit** (it was in
+  `SECURITY_AUDIT_REPORT.md` and git history; removed from the tree on
+  2026-09-24, but the history still contains it). `DEPLOYMENT.md` still
+  mentions `VITE_ANTHROPIC_API_KEY` and `TESTING_CHECKLIST.md` still
+  describes an own-API-key flow; both are stale.
 - **Results-ready view**: not started - where/how a user is told a
   Capture study's results are ready to compare against their Signature/
   Brief target.
@@ -348,7 +390,12 @@ qep-capture's own CLAUDE.md; the two relevant to this app are:
   `tss_shared.auth_user_org_ids()` internally, which is deliberately
   where the elevated read of `tss_shared.memberships` is isolated. Don't
   add `SECURITY DEFINER` to it without understanding why that split
-  exists.
+  exists. **Update 2026-09-24:** the production copy of this trigger
+  function is in fact `SECURITY DEFINER` with `set search_path = ''` (applied
+  by hand 2026-09-22, recorded in qep-capture migration 0035). It still
+  sees the caller's claims because `auth_user_org_ids()` reads the request
+  JWT. Whether dev matches prod is UNKNOWN; reconcile deliberately before
+  changing it either way.
 - `firestore.rules.hardening-proposal` exists (three rule tightenings
   pulled out of what used to be silently undeployed in this repo's rules)
   but is **not deployed and must not be deployed without an explicit
