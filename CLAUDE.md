@@ -292,18 +292,20 @@ qep-capture's own CLAUDE.md; the two relevant to this app are:
   soft-deleted one.
 
 ### This app
-- PR #34 (`fix/incremental-save`) is **merged to main**. The new
-  incremental save path exists and is tested, but is **off** in
-  practice - `incremental-save-config.js`'s `ALLOWLISTED_COMPANY_IDS` is
-  still empty, so every company gets the original delete-all/reinsert-all
-  behavior unchanged.
-- Pre-merge backup already taken: 68 experiences across 10 companies,
-  stored outside the repo (Admin SDK export, Spark plan has no managed
-  export).
-- **Parked**: adding a real test company to the allowlist (rollout step
-  3). Blocked - Clerk's email verification rejected the `+`-addressed
-  Gmail alias meant for this. Needs a different test identity before
-  that step can proceed.
+- **Incremental save is the only save path** (2026-09-24). The rollout
+  allowlist (`incremental-save-config.js`) and the legacy delete-all/
+  reinsert-all path (`_saveExperiencesLegacy`) are gone. Every company
+  gets deterministic doc ids (`String(experience.id)`) and per-doc
+  upserts. The legacy `exp_<ts>_<index>` migration code is kept (it only
+  matters for a restored backup). `loadExperiences()` pages through the
+  whole collection, so there is no 500-doc cap.
+- Production Firestore was cleaned on 2026-09-24: only company
+  `MTOiWl6wdifnVNOqKMHJ` (Derek Roberts) remains, fully migrated (0
+  legacy docs). Pre-cleanup backups are in `backups/2026-09-24/`
+  (gitignored, real data); `scripts/backup-and-audit.js` re-runs a
+  read-only export and audit.
+- Stale tabs pick up the new code via the service-worker `VERSION` bump
+  (bump it on every release that changes cached assets).
 - `feat/supabase-dual-write` branch: **committed locally, not pushed**,
   no PR. `ENABLE_SUPABASE_DUAL_WRITE: false` in `qep-capture-config.js` -
   no behavior change until explicitly flipped. Includes the

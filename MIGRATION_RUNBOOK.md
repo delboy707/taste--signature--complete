@@ -1,6 +1,9 @@
 # Incremental-save migration - rollout runbook
 
-Branch: `fix/incremental-save`. Not merged, not deployed. This document
+Status (2026-09-24): rollout complete. The allowlist gate and the legacy
+save path have been removed - incremental save is the only save path.
+This document is kept as the design and rollout record; the sections on
+the gate describe how it worked while it existed. It
 reflects the design after reconciling against the ACTUALLY deployed
 `firestore.rules` (originally reconciled by hand against the Firebase
 console, revision Nov 28 2025 11:13 AM; the checked-in `firestore.rules`
@@ -17,7 +20,8 @@ was deployed on 2026-09-23 and is what is live).
   actually deployed). Pulled out into their own file, clearly marked as
   a proposal, not applied anywhere. Deploy only as its own deliberate,
   separately-reviewed change if it's ever wanted.
-- `incremental-save-config.js` - the rollout gate (see below).
+- `incremental-save-config.js` - REMOVED 2026-09-24 (it was the rollout
+  gate, see below).
 - `scripts/export-experiences-backup.js` - the pre-migration backup.
 
 ## What changed, in one paragraph
@@ -31,30 +35,25 @@ inferred from a save, and a stale write against an already-deleted doc
 is now handled softly (see "NOT_FOUND handling" below), not as a save
 failure. A one-time migration moves any pre-existing
 `exp_<timestamp>_<index>`-scheme docs to the new scheme, and is
-idempotent if interrupted partway through. All of this is gated by an
-explicit per-company allowlist - see "Rollout gate".
+idempotent if interrupted partway through. During the rollout all of this
+was gated by an explicit per-company allowlist; that gate has since been
+removed - see "Rollout gate (retired)".
 
-## Rollout gate
+## Rollout gate (retired)
 
-`incremental-save-config.js`:
+While rolling out, `incremental-save-config.js` held an
+`ALLOWLISTED_COMPANY_IDS` array: a company not on it got
+`_saveExperiencesLegacy()` (the original delete-all/reinsert-all code), and
+merging was not a behavior change for anyone until a companyId was added.
 
-```js
-const INCREMENTAL_SAVE_CONFIG = {
-    ALLOWLISTED_COMPANY_IDS: []
-};
-```
-
-Default is empty. A company NOT on the list gets `_saveExperiencesLegacy()`
-- the original, byte-for-byte-unmodified delete-all/reinsert-all code -
-completely untouched by anything in this branch, including migration
-(migration only ever runs from inside the new `saveExperiences()` path,
-which a non-allowlisted company never reaches). Merging this branch is
-therefore not itself a behavior change for anyone until a companyId is
-added to the array.
-
-Tested both paths explicitly (see test results below): a non-allowlisted
-company keeps getting fresh `exp_<ts>_<index>` ids on every save; an
-allowlisted company gets deterministic ids and no-op resaves.
+On 2026-09-24 the only remaining company (`MTOiWl6wdifnVNOqKMHJ`) was fully
+migrated (0 legacy `exp_` docs), so the gate, `isIncrementalSaveEnabled()`,
+`_saveExperiencesLegacy()`, `incremental-save-config.js` and its `<script>`
+tag were deleted. Every company now gets deterministic ids and no-op
+resaves; the emulator suite proves a fresh company gets that with no
+config. The migration code for `exp_` docs stays, so a restored backup
+still migrates on its first save. `loadExperiences()` now reads the whole
+collection in pages instead of `limit(500)`.
 
 ## Rules: no deploy needed
 
@@ -104,8 +103,8 @@ by a teammate."), and re-renders - the save is still reported as
 
 The project is on Spark (no scheduled/managed Firestore export).
 Recommended: run **`scripts/export-experiences-backup.js`** once,
-locally, before this branch's allowlist is widened past the first test
-company:
+locally, before any rollout step that could change or migrate
+production data:
 
 ```bash
 FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/outside/this/repo/service-account.json \
@@ -128,14 +127,15 @@ for it either - and is read-only against Firestore.
   safe (test 3b) and verified idempotent if one attempt is interrupted
   partway through, but it means migration work can be duplicated across
   tabs rather than coordinated.
-- **500-doc read cap in `loadExperiences()`** (`.limit(500)`) is
-  pre-existing, untouched, and not part of this fix.
+- *(Resolved 2026-09-24)* The 500-doc read cap in `loadExperiences()` is
+  gone: it now reads the whole collection in pages of 500.
 
 ## Test results (Firestore + Auth emulators only, real `firestore.rules`,
 no real project)
 
-14/14 pure unit tests (`npm run test:diff` + backup-script guard tests),
-16/16 emulator integration tests (`npm run test:emulator`):
+Originally 14/14 pure unit tests and 16/16 emulator tests; as of
+2026-09-24 `npm run test:emulator` runs 31 tests (the table below lists the
+original rollout tests plus the ones changed when the gate was removed):
 
 | # | Test | Result |
 |---|---|---|
@@ -153,8 +153,10 @@ no real project)
 | 12 | One stale doc must never fail an unrelated edit in the same save | PASS |
 | 13 | Failure injection -> real `PERMISSION_DENIED`, full array in localStorage | PASS |
 | 14 | Retest chain survives save/reload | PASS |
-| 15 | Rollout gate: non-allowlisted company gets the OLD legacy behavior | PASS |
-| 16 | Rollout gate: allowlisted company gets the NEW incremental behavior | PASS |
+| 15 | *(Retired 2026-09-24)* Rollout gate: non-allowlisted company gets the OLD legacy behavior | removed with the gate |
+| 16 | A fresh company gets incremental behaviour with no config at all (replaced the allowlist-gate test) | PASS |
+| 17 | Loading 600 experiences returns all 600 (paged load, no 500-doc truncation) | PASS |
+| 18 | A doc with no `updatedAt` (e.g. restored from a backup) still loads | PASS |
 
 ## Rollout steps
 
@@ -165,39 +167,25 @@ no real project)
    diff against the deployed rules - confirm with
    `git diff origin/main -- firestore.rules` before merging, not just by
    eye.
-3. **Merge to `main` with `incremental-save-config.js`'s allowlist still
-   empty.** This is a no-behavior-change merge - every company keeps
-   using `_saveExperiencesLegacy()`. Deploy to Vercel as normal (no rules
-   deploy step - there is nothing to deploy on the rules side).
-4. **Add one real test company's `companyId`** to
-   `ALLOWLISTED_COMPANY_IDS`, deploy that one-line change, and verify
-   directly in that company's account: saves land with deterministic
-   ids, a resave with no edits writes nothing, and (if that company had
-   legacy-scheme docs) migration ran cleanly - spot-check its
-   `experiences` subcollection in the console.
-5. **Widen the allowlist gradually** once step 4 looks right - a handful
-   of companies, then all of them. Each widening is its own small,
-   revertible deploy (just the config file), independent of any further
-   code changes.
+3. *(Done)* Merged to `main` with the allowlist empty - a
+   no-behavior-change merge. No rules deploy step.
+4. *(Done)* One real company (`MTOiWl6wdifnVNOqKMHJ`) was allowlisted and
+   verified: saves land with deterministic ids, a no-edit resave writes
+   nothing, and its 10 legacy docs migrated cleanly.
+5. *(Done 2026-09-24)* The other companies were removed from production
+   and the gate itself was deleted; there is no allowlist left to widen.
 
 ## Rollback steps
 
-- **Before merge**: nothing to undo - no rules deploy either.
-- **After merge, before widening past the empty/test-company allowlist**:
-  revert `incremental-save-config.js` to an empty array (or drop the one
-  test company) and redeploy - a one-line, instant rollback with no data
-  migration to reverse, since only allowlisted companies were ever
-  touched by the new code.
-- **After widening, if a problem surfaces**: narrow or empty the
-  allowlist again (same one-line redeploy) to fall back every affected
-  company to `_saveExperiencesLegacy()` immediately. A company that
-  already completed migration stays on the new doc-id scheme even after
-  this - the legacy code doesn't care what scheme existing docs are under,
-  it just deletes-and-recreates everything on its next save regardless.
-  If a specific company's data looks actually wrong (not just "using the
-  new code again while flow is being reworked"), restore that company's
-  `./backups/<companyId>.json` via a one-off Admin SDK script (not
-  written - only needed if this is actually hit).
+The allowlist rollback described in earlier revisions of this document no
+longer exists. To undo the gate removal, revert the
+`feat/incremental-default` commits and redeploy - that restores the gate
+(empty allowlist, i.e. every company on the legacy path) and the
+`limit(500)` load. A company already migrated stays on the new doc-id
+scheme either way. If a company's data looks actually wrong, restore its
+`backups/<date>/<companyId>.json` (from `scripts/backup-and-audit.js`, or
+the older `scripts/export-experiences-backup.js`) with a one-off Admin SDK
+script (not written - only needed if this is actually hit).
 
 ## Vercel / `api/` impact
 
