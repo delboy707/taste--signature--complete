@@ -190,3 +190,70 @@ test('queue is capped at SUPABASE_RETRY_QUEUE_MAX distinct ids, oldest dropped f
     const queue = sync.readRetryQueue();
     assert.equal(queue.length, sync.SUPABASE_RETRY_QUEUE_MAX);
 });
+
+// ------------------------------------------------------------
+// Stage 2A: tssProjectId/sourceVersionId ("Start Full Evaluation from this
+// target" - see target-prefill.js / app.js) must reach the exact payload
+// upsert_signature_profile is called with, verbatim, since nothing in this
+// file or save-diff.js's diffKey() strips unknown top-level experience
+// fields. A re-test experience (no pending link at submit time - see
+// app.js) must NOT carry them.
+// ------------------------------------------------------------
+
+test('tssProjectId/sourceVersionId on an experience reach the upsert_signature_profile RPC payload verbatim', async () => {
+    let capturedParams = null;
+    const sync = freshSync({
+        enabled: true,
+        rpcImpl: (name, params) => {
+            if (name === 'upsert_signature_profile') capturedParams = params;
+            return { error: null };
+        },
+    });
+
+    const exp = fakeExperience('1', { tssProjectId: 'proj-123', sourceVersionId: 'ver-456' });
+    await sync.syncSignatureExperiences([exp]);
+
+    assert.ok(capturedParams, 'upsert_signature_profile should have been called');
+    assert.equal(capturedParams.experience.tssProjectId, 'proj-123');
+    assert.equal(capturedParams.experience.sourceVersionId, 'ver-456');
+});
+
+test('an experience with no target link (a plain submission, or a re-test) is pushed with tssProjectId/sourceVersionId null - never inherited from a stale value', async () => {
+    let capturedParams = null;
+    const sync = freshSync({
+        enabled: true,
+        rpcImpl: (name, params) => {
+            if (name === 'upsert_signature_profile') capturedParams = params;
+            return { error: null };
+        },
+    });
+
+    // As app.js's handleFormSubmit always does for a non-target submission
+    // (including a re-test, where pendingTargetLink is explicitly cleared).
+    const exp = fakeExperience('1', { tssProjectId: null, sourceVersionId: null });
+    await sync.syncSignatureExperiences([exp]);
+
+    assert.ok(capturedParams);
+    assert.equal(capturedParams.experience.tssProjectId, null);
+    assert.equal(capturedParams.experience.sourceVersionId, null);
+});
+
+test('a re-test copy pushed alongside its original does not inherit the original\'s target link', async () => {
+    const pushed = [];
+    const sync = freshSync({
+        enabled: true,
+        rpcImpl: (name, params) => {
+            if (name === 'upsert_signature_profile') pushed.push(params.experience);
+            return { error: null };
+        },
+    });
+
+    const original = fakeExperience('1', { tssProjectId: 'proj-123', sourceVersionId: 'ver-456' });
+    const retestCopy = fakeExperience('2', { tssProjectId: null, sourceVersionId: null, isRetest: true, originalTestId: 1 });
+    await sync.syncSignatureExperiences([original, retestCopy]);
+
+    const byId = Object.fromEntries(pushed.map((e) => [String(e.id), e]));
+    assert.equal(byId['1'].tssProjectId, 'proj-123');
+    assert.equal(byId['2'].tssProjectId, null);
+    assert.equal(byId['2'].sourceVersionId, null);
+});
