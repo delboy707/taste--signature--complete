@@ -276,7 +276,8 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - Model allowlist: default `claude-sonnet-5`; also
   `claude-haiku-4-5-20251001` (alias `claude-haiku-4-5`) and
   `claude-opus-5-5`. Anything else is ignored and the default is used.
-  `max_tokens` is capped at 4096. `temperature` / `top_p` / `top_k` are never
+  `max_tokens` is capped at 16000 (client default `CLAUDE_MAX_TOKENS` in
+  `config.js` is 16000 too; thinking tokens count toward it). `temperature` / `top_p` / `top_k` are never
   forwarded (Sonnet 5 / Opus 5.5 reject them with HTTP 400).
 - Rate limit: 60 requests/hour per Clerk user id (optional env
   `AI_RATE_LIMIT_PER_HOUR`), fixed hourly window, stored in Firestore

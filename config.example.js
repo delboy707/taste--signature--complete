@@ -11,7 +11,7 @@
 const CONFIG = {
     // API Settings - all calls go through server proxy (no client-side key needed)
     ANTHROPIC_API_URL: '/api/claude',
-    CLAUDE_MAX_TOKENS: 4096,
+    CLAUDE_MAX_TOKENS: 16000,
 
     // Feature flags
     ENABLE_AI_INSIGHTS: true,

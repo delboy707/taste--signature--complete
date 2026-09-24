@@ -7,7 +7,7 @@ const CONFIG = {
     ANTHROPIC_API_URL: '/api/claude',
     // Note: no temperature here on purpose. The proxy never forwards sampling
     // parameters (Sonnet 5 / Opus 5.5 reject them) and enforces a model allowlist.
-    CLAUDE_MAX_TOKENS: 4096,
+    CLAUDE_MAX_TOKENS: 16000,
 
     // Feature flags
     ENABLE_AI_INSIGHTS: true,

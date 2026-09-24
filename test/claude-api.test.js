@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 
 // claude-api.js and ai-chat.js are browser scripts: give them a window.
 global.window = {
-  AI_CONFIG: { ANTHROPIC_API_URL: '/api/claude', CLAUDE_MAX_TOKENS: 4096, CLAUDE_MODEL: 'claude-sonnet-5' },
+  AI_CONFIG: { ANTHROPIC_API_URL: '/api/claude', CLAUDE_MAX_TOKENS: 16000, CLAUDE_MODEL: 'claude-sonnet-5' },
   UsageTracker: class {
     canUseAI() { return { allowed: true, remaining: { today: 9 } }; }
     getUserTier() { return { name: 'Free', quotas: { aiInsightsPerDay: -1 } }; }
@@ -127,4 +127,16 @@ test('sensory inference: when the AI path fails, the fallback warning says why',
   } finally { console.log = origLog; console.error = origErr; delete global.window.claudeAI; }
   assert.equal(result.inferenceMethod, 'keyword_rules');
   assert.ok(result.warnings.some(w => /AI unavailable: AI request limit reached/.test(w.message)), JSON.stringify(result.warnings));
+});
+
+test('callAPI sends CLAUDE_MAX_TOKENS as max_tokens and no thinking/sampling params', async () => {
+  let sent;
+  global.fetch = async (url, opts) => {
+    sent = JSON.parse(opts.body);
+    return { ok: true, status: 200, headers: { get: () => null }, json: async () => ({ content: [{ type: 'text', text: 'ok' }] }) };
+  };
+  const ai = new ClaudeAI();
+  await ai.callAPI('q', 'sys', null, 'tok');
+  assert.equal(sent.max_tokens, 16000);
+  assert.ok(!('thinking' in sent) && !('temperature' in sent));
 });

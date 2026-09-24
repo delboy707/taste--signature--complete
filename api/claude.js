@@ -31,7 +31,7 @@ const {
 
 // Configuration
 const MAX_MESSAGE_LENGTH = 5000;      // Limit message size to prevent abuse
-const MAX_TOKENS = 4096;              // Maximum tokens per request
+const MAX_TOKENS = 16000;             // Maximum tokens per request (thinking tokens count toward it)
 const REQUEST_TIMEOUT = 30000;        // 30 second timeout
 const MAX_REQUEST_BODY_SIZE = 50000;  // Max total request body size in chars
 
@@ -303,4 +303,5 @@ module.exports = createHandler();
 module.exports.createHandler = createHandler;
 module.exports.resolveModel = resolveModel;
 module.exports.DEFAULT_MODEL = DEFAULT_MODEL;
+module.exports.MAX_TOKENS = MAX_TOKENS;
 module.exports.ALLOWED_MODELS = ALLOWED_MODELS;

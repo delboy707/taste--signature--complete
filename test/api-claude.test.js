@@ -141,10 +141,10 @@ test('temperature / top_p / top_k are never forwarded; no thinking or tool_choic
   assert.deepEqual(Object.keys(sent).sort(), ['max_tokens', 'messages', 'model']);
 });
 
-test('max_tokens is capped at 4096', async () => {
+test('max_tokens is capped at 16000', async () => {
   const { handler, calls } = build();
   await handler(mockReq({ body: { max_tokens: 999999, messages: [{ role: 'user', content: 'hi' }] } }), mockRes());
-  assert.equal(calls[0].body.max_tokens, 4096);
+  assert.equal(calls[0].body.max_tokens, 16000);
 });
 
 test('input caps: oversized message and system prompt -> 400', async () => {
@@ -370,4 +370,28 @@ test('proxy logs a warning (metadata only) when Anthropic returns 200 without a 
   assert.match(line, /max_tokens/);
   assert.match(line, /thinking/);
   assert.ok(!line.includes('SECRET'), 'must not log content');
+});
+
+test('max_tokens: values up to the cap pass through unchanged; thinking is not overridden', async () => {
+  const { handler, calls } = build();
+  await handler(mockReq({ body: { max_tokens: 16000, messages: [{ role: 'user', content: 'hi' }] } }), mockRes());
+  await handler(mockReq({ body: { max_tokens: 5000, messages: [{ role: 'user', content: 'hi' }] } }), mockRes());
+  assert.equal(calls[0].body.max_tokens, 16000);
+  assert.equal(calls[1].body.max_tokens, 5000);
+  // Thinking stays at the API default: the proxy never sends a thinking param.
+  assert.ok(!('thinking' in calls[0].body));
+});
+
+test('client default (config.js CLAUDE_MAX_TOKENS) is 16000 and is not above the proxy cap', () => {
+  const vm = require('node:vm');
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { MAX_TOKENS } = require('../api/claude.js');
+  const ctx = { window: {}, console };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'config.js'), 'utf8'), ctx);
+  const clientDefault = ctx.window.AI_CONFIG.CLAUDE_MAX_TOKENS;
+  assert.equal(clientDefault, 16000);
+  assert.equal(MAX_TOKENS, 16000);
+  assert.ok(clientDefault <= MAX_TOKENS, 'client would be silently capped by the proxy');
 });
