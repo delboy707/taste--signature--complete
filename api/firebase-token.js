@@ -5,10 +5,13 @@
 // custom token so the client can call signInWithCustomToken().
 // Runtime: Node.js (>=22, required by firebase-admin@14 - see package.json)
 
-const { verifyToken } = require('@clerk/backend');
-const { initializeApp, cert, getApps } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { FieldValue } = require('firebase-admin/firestore');
+const { getAdminAuth, getAdminFirestore } = require('./_lib/firebase-admin');
+const {
+    extractBearerToken,
+    verifyClerkSessionToken,
+    isProvisioned
+} = require('./_lib/clerk-auth');
 
 // Allowed origins - same pattern as api/claude.js
 const ALLOWED_ORIGINS = [
@@ -18,38 +21,10 @@ const ALLOWED_ORIGINS = [
     process.env.ALLOWED_ORIGIN // Set in Vercel env vars for custom domains
 ].filter(Boolean);
 
-// Clerk authorized parties - the frontend origins allowed to present a
-// session token here. Distinct from ALLOWED_ORIGINS (that's CORS; this is
-// the token's own azp claim check).
-const CLERK_AUTHORIZED_PARTIES = [
-    'https://signature.qeptss.com',
-    'https://qeptss.com'
-];
-
-// Initialize Firebase Admin once per cold start (module scope singleton).
-let firebaseApp;
-if (getApps().length === 0) {
-    let privateKey = (process.env.FIREBASE_PRIVATE_KEY || '').trim();
-    // Strip accidental surrounding quotes from env var paste
-    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-        privateKey = privateKey.slice(1, -1);
-    }
-    // Convert escaped newlines only if the value has no real newlines
-    if (!privateKey.includes('\n')) {
-        privateKey = privateKey.replace(/\\n/g, '\n');
-    }
-    firebaseApp = initializeApp({
-        credential: cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey
-        })
-    });
-} else {
-    firebaseApp = getApps()[0];
-}
-const firebaseAuth = getAuth(firebaseApp);
-const firestoreDb = getFirestore(firebaseApp);
+// Firebase Admin is initialised once per cold start (shared, memoised init in
+// api/_lib/firebase-admin.js; reuses an app the caller already initialised).
+const firebaseAuth = getAdminAuth();
+const firestoreDb = getAdminFirestore();
 
 // Auto-provision Firestore company/user docs on first sign-in.
 // Idempotent: uses a transaction so a create-if-missing race between two
@@ -150,9 +125,9 @@ module.exports = async function handler(req, res) {
 
     try {
         // Get authentication header
-        const authHeader = req.headers.authorization;
+        const sessionToken = extractBearerToken(req.headers.authorization);
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!sessionToken) {
             return res.status(401).json({
                 error: {
                     type: 'authentication_error',
@@ -161,21 +136,10 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const sessionToken = authHeader.replace('Bearer ', '');
-
         // Verify the Clerk session token
-        let claims = null;
-        try {
-            const result = await verifyToken(sessionToken, {
-                secretKey: process.env.CLERK_SECRET_KEY,
-                authorizedParties: CLERK_AUTHORIZED_PARTIES
-            });
-            claims = result && result.data ? result.data : result;
-        } catch (verifyError) {
-            claims = null;
-        }
+        const claims = await verifyClerkSessionToken(sessionToken);
 
-        if (!claims || !claims.sub) {
+        if (!claims) {
             return res.status(401).json({
                 error: {
                     type: 'authentication_error',
@@ -186,8 +150,7 @@ module.exports = async function handler(req, res) {
 
         // SECURITY GATE: require provisioning before minting a Firebase token.
         // Clerk session token template must include: "metadata": "{{user.public_metadata}}"
-        const provisioned = claims.metadata && claims.metadata.provisioned === true;
-        if (!provisioned) {
+        if (!isProvisioned(claims)) {
             return res.status(403).json({
                 error: {
                     type: 'forbidden',
