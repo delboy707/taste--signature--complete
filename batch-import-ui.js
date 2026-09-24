@@ -775,7 +775,7 @@ function renderAutoEvalPreviewSection() {
             </div>
 
             <div class="data-type-badge" style="display: inline-block; padding: 8px 16px; background: #8A5E12; color: white; border-radius: 20px; font-size: 13px; margin-bottom: 16px;">
-                📊 Data Type: <strong>${formatDataType(preview.dataType)}</strong>
+                📊 Data Type: <strong>${escapeHtml(formatDataType(preview.dataType))}</strong>
             </div>
 
             <div class="preview-table-container">
@@ -805,11 +805,11 @@ function renderAutoEvalPreviewSection() {
                             return `
                                 <tr>
                                     <td>${escapeHtml(row.original.name || row.original.product_name || row.original.productName || row.original.Name || row.original.Product_Name || '-')}</td>
-                                    <td><span class="need-state-badge ${needState}">${formatNeedState(needState)}</span></td>
-                                    <td>${topEmotions}</td>
+                                    <td><span class="need-state-badge ${escapeHtml(needState)}">${escapeHtml(formatNeedState(needState))}</span></td>
+                                    <td>${escapeHtml(topEmotions)}</td>
                                     <td>
                                         <span class="confidence-badge" style="background: ${confidence.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                                            ${confidence.label} (${Math.round(row.confidence * 100)}%)
+                                            ${escapeHtml(confidence.label)} (${Math.round(row.confidence * 100)}%)
                                         </span>
                                     </td>
                                 </tr>
@@ -1042,7 +1042,7 @@ function showImportSummaryModal(results) {
 
                 <div style="background: #f3f4f6; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
                     <span style="color: #6b7280;">Data Type:</span>
-                    <strong style="color: #1f2937;">${formatDataType(results.autoEvalStats.dataType)}</strong>
+                    <strong style="color: #1f2937;">${escapeHtml(formatDataType(results.autoEvalStats.dataType))}</strong>
                 </div>
 
                 <button class="btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="closeImportSummaryModal()">
