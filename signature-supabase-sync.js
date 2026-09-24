@@ -4,7 +4,7 @@
 // Firestore. Firestore remains the system of record - this call never
 // blocks a save/delete and never surfaces an error to the user.
 //
-// Gated three ways, all of which fail closed (dual-write off) if
+// Gated four ways, all of which fail closed (dual-write off) if
 // anything is missing or looks wrong:
 //   1. qep-capture-config.js's ENABLE_SUPABASE_DUAL_WRITE (default false).
 //   2. qep-capture-config.js itself may simply be absent at runtime
@@ -15,6 +15,8 @@
 //      production hostname (signature.qeptss.com) self-disables with a
 //      console warning - dev Supabase data must never be written from
 //      a session a real customer could be using.
+//   4. Demo mode (no Clerk session, sample data only) - see
+//      _blockedByDemoMode(); nothing is queued.
 
 const SUPABASE_RETRY_QUEUE_KEY = 'signatureSupabaseRetryQueue';
 const SUPABASE_RETRY_QUEUE_MAX = 50; // capped by distinct id - never grows unbounded
@@ -31,6 +33,7 @@ function _saveDiff() {
 // Firestore save path (legacy or incremental) produced it.
 let _lastPushedSnapshot = new Map();
 let _envGuardWarned = false;
+let _demoModeLogged = false;
 
 function _dualWriteConfig() {
     return (typeof window !== 'undefined' && window.QEP_CAPTURE_CONFIG) || null;
@@ -52,10 +55,25 @@ function _blockedByEnvGuard(config) {
     return true;
 }
 
+// Demo mode: sample data only, no Clerk session. Dual-write is off - nothing
+// is queued (a queued demo entry would otherwise be retried later under a
+// real sign-in). Uses qep-capture-client.js's shared isQepDemoModeActive().
+function _blockedByDemoMode() {
+    const isDemo = typeof window !== 'undefined' && typeof window.isQepDemoModeActive === 'function'
+        ? window.isQepDemoModeActive()
+        : false;
+    if (isDemo && !_demoModeLogged) {
+        console.info('Supabase dual-write skipped: demo mode is active.');
+        _demoModeLogged = true;
+    }
+    return isDemo;
+}
+
 function isSupabaseDualWriteEnabled() {
     const config = _dualWriteConfig();
     if (!config || !config.ENABLE_SUPABASE_DUAL_WRITE) return false;
     if (_blockedByEnvGuard(config)) return false;
+    if (_blockedByDemoMode()) return false;
     return true;
 }
 
@@ -206,7 +224,7 @@ if (typeof module !== 'undefined' && module.exports) {
         SUPABASE_RETRY_QUEUE_KEY,
         SUPABASE_RETRY_QUEUE_MAX,
         PROD_HOSTNAME,
-        _resetForTests: () => { _lastPushedSnapshot = new Map(); _envGuardWarned = false; },
+        _resetForTests: () => { _lastPushedSnapshot = new Map(); _envGuardWarned = false; _demoModeLogged = false; },
     };
 }
 if (typeof window !== 'undefined') {

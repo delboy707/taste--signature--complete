@@ -257,3 +257,39 @@ test('a re-test copy pushed alongside its original does not inherit the original
     assert.equal(byId['2'].tssProjectId, null);
     assert.equal(byId['2'].sourceVersionId, null);
 });
+
+// Demo mode (no Clerk session, sample data only): dual-write must not queue
+// anything. Before the fix a demo delete/clear queued 'delete' entries in
+// localStorage and each flush waited ~15 s for a Clerk that never loads.
+// Uses the REAL qep-capture-client.js isQepDemoModeActive() helper.
+function freshSyncInDemo({ demo, rpcImpl }) {
+    const sync = freshSync({ enabled: true, hostname: 'signature.qeptss.com', supabaseEnv: 'prod', rpcImpl });
+    const clientPath = require.resolve('../qep-capture-client.js');
+    delete require.cache[clientPath];
+    const realGetClient = global.window.getQepCaptureClient;
+    require(clientPath); // installs window.isQepDemoModeActive (and a real getQepCaptureClient)
+    global.window.getQepCaptureClient = realGetClient; // keep the strict mock for RPCs
+    global.window.demoMode = { isDemoActive: () => demo };
+    return sync;
+}
+
+test('demo mode: dual-write is off - sync and delete queue nothing and make no RPC calls, fast', async () => {
+    let calls = 0;
+    const sync = freshSyncInDemo({ demo: true, rpcImpl: () => { calls++; return { error: null }; } });
+    const started = Date.now();
+    assert.equal(sync.isSupabaseDualWriteEnabled(), false);
+    await sync.syncSignatureExperiences([fakeExperience('demo-001')]);
+    await sync.deleteSignatureProfile('demo-001', []);
+    assert.ok(Date.now() - started < 1000);
+    assert.equal(calls, 0);
+    assert.equal(sync.readRetryQueue().length, 0);
+});
+
+test('not demo mode (demo-mode.js loaded, inactive): dual-write still pushes as before', async () => {
+    const calls = [];
+    const sync = freshSyncInDemo({ demo: false, rpcImpl: (name) => { calls.push(name); return { error: null }; } });
+    assert.equal(sync.isSupabaseDualWriteEnabled(), true);
+    await sync.syncSignatureExperiences([fakeExperience('1')]);
+    assert.deepEqual(calls, ['upsert_signature_profile']);
+    assert.equal(sync.readRetryQueue().length, 0);
+});
