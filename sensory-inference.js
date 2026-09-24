@@ -229,6 +229,7 @@ class SensoryInference {
 
         try {
             // Try Claude API first if available
+            let claudeError = null;
             if (this.isClaudeAvailable()) {
                 const apiResult = await this.inferWithClaude(productData);
                 if (apiResult.success) {
@@ -238,6 +239,7 @@ class SensoryInference {
                     result.warnings = apiResult.warnings || [];
                     return result;
                 }
+                claudeError = apiResult.error || 'unknown error';
             }
 
             // Fallback to keyword-based inference
@@ -249,7 +251,9 @@ class SensoryInference {
             result.warnings = keywordResult.warnings || [];
             result.warnings.push({
                 type: 'fallback',
-                message: 'Used keyword-based inference (Claude API unavailable)'
+                message: claudeError
+                    ? `Used keyword-based inference (AI unavailable: ${claudeError})`
+                    : 'Used keyword-based inference (Claude API unavailable)'
             });
 
         } catch (error) {

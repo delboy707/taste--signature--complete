@@ -1,6 +1,44 @@
 // ===== CLAUDE AI INTEGRATION MODULE =====
 // Handles all interactions with Anthropic's Claude API
 
+/**
+ * Pull the answer text out of a Messages API response.
+ *
+ * `content` is a list of blocks, NOT always [text]: Sonnet 5 runs adaptive
+ * thinking by default, so a `thinking` block (empty text) can come first.
+ * Reading content[0].text returned undefined for that shape, which chat then
+ * saved and rendered as an empty reply. Join every text block instead, and
+ * throw a clear error when there is none - never return an empty answer.
+ */
+function extractResponseText(data) {
+    const blocks = data && Array.isArray(data.content) ? data.content : [];
+    const text = blocks
+        .filter(b => b && typeof b.text === 'string' && (b.type === 'text' || b.type === undefined))
+        .map(b => b.text)
+        .join('')
+        .trim();
+
+    if (text) return text;
+
+    const stopReason = data && data.stop_reason;
+    console.warn('AI response had no text block', {
+        stop_reason: stopReason,
+        blockTypes: blocks.map(b => b && b.type)
+    });
+
+    let message;
+    if (stopReason === 'max_tokens') {
+        message = 'The AI ran out of room before it could answer. Please try again, or ask a shorter question.';
+    } else if (stopReason === 'refusal') {
+        message = 'The AI declined to answer this request.';
+    } else {
+        message = 'The AI returned an empty answer. Please try again.';
+    }
+    const error = new Error(message);
+    error.code = 'empty_ai_response';
+    throw error;
+}
+
 class ClaudeAI {
     constructor() {
         this.apiUrl = window.AI_CONFIG?.ANTHROPIC_API_URL || '/api/claude';
@@ -163,7 +201,7 @@ class ClaudeAI {
             }
 
             const data = await response.json();
-            return data.content[0].text;
+            return extractResponseText(data);
 
         } catch (error) {
             console.error('Claude API Error:', error);
@@ -653,4 +691,7 @@ ${experiences.map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} (${exp.prod
 // Export
 if (typeof window !== 'undefined') {
     window.ClaudeAI = ClaudeAI;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ClaudeAI, extractResponseText };
 }

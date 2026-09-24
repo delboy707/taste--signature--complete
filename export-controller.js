@@ -60,6 +60,7 @@ async function exportProductReport(experienceId) {
                 aiInsights = await claude.analyzeProduct(experience);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
+                showExportNotification(`⚠️ AI insights unavailable: ${error.message} The report will be generated without them.`, 'error');
             }
         }
 
@@ -98,6 +99,7 @@ async function exportPortfolioReport() {
                 aiInsights = await claude.suggestImprovements(experiences);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
+                showExportNotification(`⚠️ AI insights unavailable: ${error.message} The report will be generated without them.`, 'error');
             }
         }
 
@@ -138,6 +140,7 @@ async function exportComparisonReport(selectedIds) {
                 aiInsights = await claude.compareProducts(selectedExperiences);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
+                showExportNotification(`⚠️ AI insights unavailable: ${error.message} The report will be generated without them.`, 'error');
             }
         }
 
@@ -216,6 +219,7 @@ async function exportBeforeAfterReport() {
                 aiInsights = await claude.analyzeReformulation(beforeProducts[0], afterProducts[0]);
             } catch (error) {
                 console.log('Could not get AI insights:', error);
+                showExportNotification(`⚠️ AI insights unavailable: ${error.message} The report will be generated without them.`, 'error');
             }
         }
 

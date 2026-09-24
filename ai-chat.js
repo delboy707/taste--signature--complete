@@ -46,6 +46,11 @@ IMPORTANT: Remember previous conversation context. Build on earlier topics when 
             // Get response from Claude
             const response = await this.claude.sendMessage(fullMessage, systemPrompt);
 
+            // Never store or show an empty reply: treat it as a failure.
+            if (typeof response !== 'string' || !response.trim()) {
+                throw new Error('The AI returned an empty answer. Please try again.');
+            }
+
             // Store in conversation history
             this.conversationHistory.push({
                 role: 'user',
@@ -269,4 +274,7 @@ IMPORTANT: Remember previous conversation context. Build on earlier topics when 
 // Export
 if (typeof window !== 'undefined') {
     window.AIChatAssistant = AIChatAssistant;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AIChatAssistant };
 }
