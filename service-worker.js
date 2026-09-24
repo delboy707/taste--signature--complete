@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.9.0-stage-2a';
+const VERSION = '3.9.1-tss-shared-schema';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use
