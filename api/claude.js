@@ -265,6 +265,22 @@ async function callClaudeAPI({ fetchImpl, apiKey, model, max_tokens, system, mes
             return res.status(response.status).json(data);
         }
 
+        // Metadata only (never message content): lets a "blank reply" report be
+        // diagnosed from the Vercel logs (model, stop_reason, block types).
+        const blocks = data && Array.isArray(data.content) ? data.content : [];
+        const meta = {
+            model,
+            stop_reason: data && data.stop_reason,
+            blockTypes: blocks.map(b => b && b.type),
+            output_tokens: data && data.usage && data.usage.output_tokens
+        };
+        const hasText = blocks.some(b => b && b.type === 'text' && typeof b.text === 'string' && b.text.trim());
+        if (hasText) {
+            console.log('Anthropic response ok', JSON.stringify(meta));
+        } else {
+            console.warn('Anthropic returned 200 with NO text block', JSON.stringify(meta));
+        }
+
         return res.status(200).json(data);
 
     } catch (error) {

@@ -343,3 +343,31 @@ test('resolveLimit: default 60, positive integers only', () => {
   assert.equal(resolveLimit('-5'), 60);
   assert.equal(resolveLimit('120'), 120);
 });
+
+test('proxy passes a thinking-first response through unchanged (client extracts the text block)', async () => {
+  const body = { content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: 'answer' }], stop_reason: 'end_turn' };
+  const { handler } = build({ fetchImpl: anthropicOk(body) });
+  const res = mockRes();
+  await handler(mockReq(), res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body, body);
+});
+
+test('proxy logs a warning (metadata only) when Anthropic returns 200 without a text block', async () => {
+  const warnings = [];
+  const origWarn = console.warn;
+  console.warn = (...a) => warnings.push(a.join(' '));
+  try {
+    const { handler } = build({ fetchImpl: anthropicOk({ content: [{ type: 'thinking', thinking: 'SECRET' }], stop_reason: 'max_tokens' }) });
+    const res = mockRes();
+    await handler(mockReq(), res);
+    assert.equal(res.statusCode, 200);
+  } finally {
+    console.warn = origWarn;
+  }
+  const line = warnings.find(w => w.includes('NO text block'));
+  assert.ok(line, 'expected a no-text-block warning');
+  assert.match(line, /max_tokens/);
+  assert.match(line, /thinking/);
+  assert.ok(!line.includes('SECRET'), 'must not log content');
+});
