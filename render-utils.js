@@ -135,8 +135,13 @@
     `).join('');
   }
 
-  /** History list. Delete button passes the id as a JSON literal, escaped for the attribute. */
-  function buildHistoryHtml(experiences) {
+  /**
+   * History list. Delete button passes the id as a JSON literal, escaped for the attribute.
+   * opts.extraActionsHtml(e), if given, returns extra (already-escaped) button HTML
+   * rendered before Delete - e.g. send-to-capture.js's "Send to Capture".
+   */
+  function buildHistoryHtml(experiences, opts) {
+    const extraActions = opts && typeof opts.extraActionsHtml === 'function' ? opts.extraActionsHtml : () => '';
     return (experiences || []).map(e => `
             <div class="history-item">
                 <div class="history-item-header">
@@ -147,7 +152,7 @@
                     </div>
                     <div>
                         <span class="history-item-date">${esc(new Date(e.timestamp).toLocaleDateString())}</span>
-                        <button class="delete-btn" onclick="deleteExperience(${jsArgAttr(e.id)})">Delete</button>
+                        ${extraActions(e) || ''}<button class="delete-btn" onclick="deleteExperience(${jsArgAttr(e.id)})">Delete</button>
                     </div>
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem;">
