@@ -17,6 +17,36 @@
 
 let _qepCaptureClient = null;
 
+// How long a qep-capture call waits for ClerkJS to finish loading before
+// giving up. On a returning visit Firebase restores its own session and the
+// app (Targets Loaded picker, ?project= deep link, dual-write) can run BEFORE
+// auth.js's Clerk gate has loaded ClerkJS.
+const CLERK_WAIT_MS = 15000;
+const CLERK_POLL_MS = 100;
+
+function _notSignedInError() {
+    return new Error('Not signed in to QEP: no Clerk session, so qep-capture was not called. Please sign in again.');
+}
+
+/**
+ * Resolve a Clerk session token for qep-capture requests. Waits (up to
+ * CLERK_WAIT_MS) for ClerkJS to be on the page and loaded, then returns the
+ * token. NEVER returns null: supabase-js treats a null token as "use the anon
+ * key", and anon has no USAGE on tss_shared ("permission denied for schema
+ * tss_shared", 2026-09-24). Throws a clear not-signed-in error instead.
+ */
+async function _getClerkTokenOrThrow() {
+    const deadline = Date.now() + CLERK_WAIT_MS;
+    while (!(window.Clerk && window.Clerk.loaded)) {
+        if (Date.now() >= deadline) throw _notSignedInError();
+        await new Promise(resolve => setTimeout(resolve, CLERK_POLL_MS));
+    }
+    if (!window.Clerk.session) throw _notSignedInError();
+    const token = await window.Clerk.session.getToken();
+    if (!token) throw _notSignedInError();
+    return token;
+}
+
 function getQepCaptureClient() {
     if (_qepCaptureClient) {
         return _qepCaptureClient;
@@ -32,12 +62,7 @@ function getQepCaptureClient() {
         window.QEP_CAPTURE_CONFIG.SUPABASE_URL,
         window.QEP_CAPTURE_CONFIG.SUPABASE_ANON_KEY,
         {
-            accessToken: async () => {
-                if (!window.Clerk || !window.Clerk.session) {
-                    return null;
-                }
-                return window.Clerk.session.getToken();
-            },
+            accessToken: _getClerkTokenOrThrow,
         }
     );
     return _qepCaptureClient;
@@ -45,4 +70,7 @@ function getQepCaptureClient() {
 
 if (typeof window !== 'undefined') {
     window.getQepCaptureClient = getQepCaptureClient;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { getQepCaptureClient, CLERK_WAIT_MS };
 }
