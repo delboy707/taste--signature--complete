@@ -86,6 +86,14 @@ class AuthManager {
                     if (typeof initializeFirestore === 'function') {
                         initializeFirestore(user);
                     }
+
+                    // Consume any ?project=&version= deep link stashed before
+                    // the Clerk gate ran (see targets-loaded-ui.js) - now
+                    // that auth has fully resolved. No-op if nothing was
+                    // stashed or Targets Loaded is disabled.
+                    if (typeof window.handleQepCaptureDeepLink === 'function') {
+                        window.handleQepCaptureDeepLink();
+                    }
                 } else {
                     console.log('User logged out');
                     this.showAuthScreen();

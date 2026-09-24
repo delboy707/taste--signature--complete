@@ -9,6 +9,12 @@ let isCloudSyncEnabled = false;
 // session - lets an untouched slider save as null instead of its HTML
 // default. See touched-fields.js.
 let mainFormTouched = window.TouchedFields.createTouchedTracker();
+// Set by "Start Full Evaluation from this target" (targets-loaded-ui.js /
+// target-prefill.js) just before switching to this view - carried onto the
+// NEXT submitted experience's tssProjectId/sourceVersionId, then cleared.
+// A re-test (initRetestSelector below) explicitly clears this too, so a
+// re-test copy never inherits a stale target link from an earlier prefill.
+let pendingTargetLink = null;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -162,6 +168,10 @@ function initRetestSelector() {
         const originalExp = experiences.find(e => e.id == this.value);
         if (!originalExp) return;
 
+        // A re-test is never a target-prefilled evaluation, even if one was
+        // pending from an earlier "Start Full Evaluation from this target".
+        pendingTargetLink = null;
+
         // Auto-fill product info
         document.getElementById('item-name').value = originalExp.productInfo.name;
         document.getElementById('item-brand').value = originalExp.productInfo.brand;
@@ -191,6 +201,68 @@ function updateRetestOptions() {
     const previous = selector.value;
     selector.innerHTML = options;
     if (previous) selector.value = previous;
+}
+
+// ===== TARGET PREFILL (Full Evaluation, "Start Full Evaluation from this
+// target" - see target-prefill.js / targets-loaded-ui.js) =====
+//
+// Pre-filled sliders are deliberately left OUT of mainFormTouched - same
+// rule as every other slider (touched-fields.js) - so they save as null
+// unless the user actually moves them. This is a brief TARGET, not
+// measured data, and must never be persisted as if it were just because a
+// script set a slider's .value.
+function applyTargetPrefillToForm(prefill, linkInfo) {
+    if (linkInfo) {
+        pendingTargetLink = {
+            tssProjectId: linkInfo.projectId || null,
+            sourceVersionId: linkInfo.versionId || null,
+        };
+        const nameField = document.getElementById('item-name');
+        if (nameField && linkInfo.projectName && !nameField.value) {
+            nameField.value = linkInfo.projectName;
+        }
+    }
+
+    ((prefill && prefill.formValues) || []).forEach(({ elementId, valueSpanId, value }) => {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.value = String(value);
+        const span = document.getElementById(valueSpanId);
+        if (span) span.textContent = String(value);
+        // Intentionally no TouchedFields.markTouched(mainFormTouched, elementId) here.
+    });
+
+    showTargetPrefillBanner(prefill);
+}
+
+function showTargetPrefillBanner(prefill) {
+    const form = document.getElementById('taste-form');
+    if (!form || !form.parentNode) return;
+
+    let banner = document.getElementById('target-prefill-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'target-prefill-banner';
+        banner.style.cssText = 'background:#e8f0fe;border:1px solid #b3d0ff;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#1a3a6b;';
+        form.parentNode.insertBefore(banner, form);
+    }
+
+    let text = 'Values pre-filled from your brief target - adjust to your measured/evaluated values. Untouched sliders are not saved as measured data.';
+    const unmapped = (prefill && prefill.unmapped) || [];
+    const notes = (prefill && prefill.sensoryNotes) || [];
+    if (unmapped.length > 0) {
+        text += ` ${unmapped.length} target value${unmapped.length === 1 ? '' : 's'} could not be auto-filled (not in the Signature attribute crosswalk) - see console for details, nothing was silently dropped.`;
+        console.warn('Target prefill: unmapped targets (not applied to any slider):', unmapped);
+    }
+    if (notes.length > 0) {
+        text += ` ${notes.length} stage${notes.length === 1 ? '' : 's'} also ${notes.length === 1 ? 'has' : 'have'} free-text sensory notes from the brief - shown in console, not auto-filled (no attribute id to map from).`;
+        console.info('Target prefill: sensory notes (informational only, not applied to any slider):', notes);
+    }
+    banner.textContent = text;
+}
+
+if (typeof window !== 'undefined') {
+    window.applyTargetPrefillToForm = applyTargetPrefillToForm;
 }
 
 // Debounce helper to prevent excessive saves
@@ -471,6 +543,15 @@ function handleFormSubmit(e) {
     const experience = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
+        // Only set when this submission started from "Start Full Evaluation
+        // from this target" (see target-prefill.js) - null otherwise,
+        // including for re-tests (initRetestSelector clears
+        // pendingTargetLink on selection). Read by
+        // signature-supabase-sync.js's dual-write payload unchanged - see
+        // save-diff.js's diffKey, which only strips addedBy/updatedBy/
+        // companyId/updatedAt/createdAt, never these.
+        tssProjectId: pendingTargetLink ? pendingTargetLink.tssProjectId : null,
+        sourceVersionId: pendingTargetLink ? pendingTargetLink.sourceVersionId : null,
         productInfo: {
             name: document.getElementById('item-name').value,
             brand: document.getElementById('item-brand').value || 'N/A',
@@ -702,6 +783,9 @@ function handleFormSubmit(e) {
     // Reset form
     document.getElementById('taste-form').reset();
     TouchedFields.resetTouchedTracker(mainFormTouched);
+    pendingTargetLink = null;
+    const targetPrefillBanner = document.getElementById('target-prefill-banner');
+    if (targetPrefillBanner) targetPrefillBanner.remove();
     currentStage = 1;
     document.querySelectorAll('.form-stage').forEach(stage => stage.classList.remove('active'));
     document.querySelectorAll('.stage-indicator').forEach(indicator => {
