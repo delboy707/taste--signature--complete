@@ -308,6 +308,26 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
+## Status 2026-09-24b (Stage 2A, branch feat/stage-2a - NOT merged/deployed)
+
+Built on this branch only (not on main, not deployed): the Targets Loaded
+picker (`tss_shared.list_locked_projects()`, qep-capture migration 0037),
+deep links (`?project=&version=`, surviving the Clerk gate via a
+sessionStorage stash - see targets-loaded-ui.js), and "Start Full
+Evaluation from this target" (target-prefill.js's pure emotion-only
+crosswalk mapping, qep-capture-crosswalk.js's fetch wrapper, app.js's
+`applyTargetPrefillToForm`/`pendingTargetLink`). New files:
+target-prefill.js, qep-capture-crosswalk.js. `ENABLE_TARGETS_LOADED` is
+`true` on this branch (was `false` on main) - **do not merge this flag
+flip** until qep-capture migrations 0036 (upsert_signature_profile link
+columns) and 0037 (list_locked_projects) are applied in the environment
+this deploys against; until then the picker degrades to its RPC-missing
+message + manual project-id fallback, never a crash. Sensory brief
+targets are intentionally NOT auto-filled (Brief stores them as free text,
+not attribute-keyed - see target-prefill.js's header comment); only
+emotion targets are. `npm test` covers all of this with mocks only (see
+package.json's `test` script) - no live Supabase/Firebase/Clerk calls.
+
 ## Status 2026-09-24 (supersedes 2026-09-16)
 
 Handoff note - Signature to Supabase dual-write (Option A) and related
