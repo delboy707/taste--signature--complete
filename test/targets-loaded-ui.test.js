@@ -112,7 +112,7 @@ function loadTargetsLoadedUI({ locationSearch = '', sessionStorageInitial = {}, 
         fetchLockedProjects: async () => ({ projects: [] }),
         fetchQepCaptureTargetsByVersion: async () => ({ error: 'not mocked' }),
         fetchSignatureAttributeCrosswalk: async () => ({ rows: [] }),
-        TargetPrefill: { buildTargetPrefill: () => ({ stages: {}, formValues: [], unmapped: [], sensoryNotes: [] }) },
+        TargetPrefill: { buildTargetPrefill: () => ({ markers: [], briefText: {}, banner: '', unmapped: [] }) },
         applyTargetPrefillToForm: () => {},
     };
     const ctx = {
