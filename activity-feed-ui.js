@@ -30,13 +30,13 @@ function renderActivityFeed(limit = 20) {
             const timeAgo = getTimeAgo(activity.timestamp);
 
             html += `
-                <div class="activity-item activity-${activity.type}">
+                <div class="activity-item activity-${escapeHtml(activity.type)}">
                     <div class="activity-icon">${getActivityIcon(activity.type)}</div>
                     <div class="activity-content">
                         <div class="activity-text">
-                            <strong>${userName}</strong> ${getActivityText(activity)}
+                            <strong>${escapeHtml(userName)}</strong> ${escapeHtml(getActivityText(activity))}
                         </div>
-                        <div class="activity-time">${timeAgo}</div>
+                        <div class="activity-time">${escapeHtml(timeAgo)}</div>
                     </div>
                 </div>
             `;
@@ -140,7 +140,7 @@ function renderActivityWidget(limit = 5) {
                 <div class="activity-widget-item">
                     <span class="activity-widget-icon">${getActivityIcon(activity.type)}</span>
                     <span class="activity-widget-text">
-                        <strong>${userName}</strong> ${getActivityText(activity)}
+                        <strong>${escapeHtml(userName)}</strong> ${escapeHtml(getActivityText(activity))}
                     </span>
                 </div>
             `;
