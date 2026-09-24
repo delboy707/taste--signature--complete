@@ -94,7 +94,7 @@ function renderProductFormulationsList() {
                     return `
                         <div class="product-formulation-card">
                             <div class="product-formulation-header">
-                                <h5>${exp.productInfo.name}</h5>
+                                <h5>${escapeHtml(exp.productInfo.name)}</h5>
                                 <span class="formulation-count">${productFormulations.length} formulation${productFormulations.length !== 1 ? 's' : ''}</span>
                             </div>
 
@@ -103,9 +103,9 @@ function renderProductFormulationsList() {
                                     ${productFormulations.map(form => `
                                         <div class="formulation-item">
                                             <div class="formulation-info">
-                                                <strong>${form.name}</strong>
-                                                <span class="formulation-version">v${form.version}</span>
-                                                <span class="formulation-status status-${form.status}">${form.status}</span>
+                                                <strong>${escapeHtml(form.name)}</strong>
+                                                <span class="formulation-version">v${escapeHtml(form.version)}</span>
+                                                <span class="formulation-status status-${escapeHtml(form.status)}">${escapeHtml(form.status)}</span>
                                             </div>
                                             <div class="formulation-meta">
                                                 <span>${form.ingredients.length} ingredients</span>
@@ -113,16 +113,16 @@ function renderProductFormulationsList() {
                                                 <span>${new Date(form.createdDate).toLocaleDateString()}</span>
                                             </div>
                                             <div class="formulation-actions">
-                                                <button class="btn-small btn-primary" onclick="viewFormulation(${form.id})">
+                                                <button class="btn-small btn-primary" onclick="viewFormulation(${jsArgAttr(form.id)})">
                                                     👁️ View
                                                 </button>
-                                                <button class="btn-small btn-secondary" onclick="editFormulation(${form.id})">
+                                                <button class="btn-small btn-secondary" onclick="editFormulation(${jsArgAttr(form.id)})">
                                                     ✏️ Edit
                                                 </button>
-                                                <button class="btn-small btn-secondary" onclick="cloneFormulationDialog(${form.id})">
+                                                <button class="btn-small btn-secondary" onclick="cloneFormulationDialog(${jsArgAttr(form.id)})">
                                                     📋 Clone
                                                 </button>
-                                                <button class="btn-small btn-danger" onclick="deleteFormulationDialog(${form.id})">
+                                                <button class="btn-small btn-danger" onclick="deleteFormulationDialog(${jsArgAttr(form.id)})">
                                                     🗑️ Delete
                                                 </button>
                                             </div>
@@ -131,7 +131,7 @@ function renderProductFormulationsList() {
                                 </div>
                             ` : ''}
 
-                            <button class="btn-secondary" onclick="createFormulationDialog(${exp.id})">
+                            <button class="btn-secondary" onclick="createFormulationDialog(${jsArgAttr(exp.id)})">
                                 ➕ Create Formulation
                             </button>
                         </div>
@@ -157,7 +157,7 @@ function renderFormulationComparison() {
                     <select id="comparison-formulation-1" class="form-control">
                         <option value="">Select formulation...</option>
                         ${formulations.map(f => `
-                            <option value="${f.id}">${f.productName} - ${f.name} (v${f.version})</option>
+                            <option value="${escapeHtml(f.id)}">${escapeHtml(f.productName)} - ${escapeHtml(f.name)} (v${escapeHtml(f.version)})</option>
                         `).join('')}
                     </select>
                 </div>
@@ -166,7 +166,7 @@ function renderFormulationComparison() {
                     <select id="comparison-formulation-2" class="form-control">
                         <option value="">Select formulation...</option>
                         ${formulations.map(f => `
-                            <option value="${f.id}">${f.productName} - ${f.name} (v${f.version})</option>
+                            <option value="${escapeHtml(f.id)}">${escapeHtml(f.productName)} - ${escapeHtml(f.name)} (v${escapeHtml(f.version)})</option>
                         `).join('')}
                     </select>
                 </div>
@@ -218,7 +218,7 @@ function viewFormulation(formulationId) {
         <div class="modal-overlay" onclick="closeFormulationModal()">
             <div class="modal-content formulation-modal" onclick="event.stopPropagation()">
                 <div class="modal-header">
-                    <h3>${formulation.productName} - ${formulation.name} (v${formulation.version})</h3>
+                    <h3>${escapeHtml(formulation.productName)} - ${escapeHtml(formulation.name)} (v${escapeHtml(formulation.version)})</h3>
                     <button class="modal-close" onclick="closeFormulationModal()">✕</button>
                 </div>
 
@@ -229,7 +229,7 @@ function viewFormulation(formulationId) {
                             <div class="detail-grid">
                                 <div class="detail-item">
                                     <span class="detail-label">Status:</span>
-                                    <span class="formulation-status status-${formulation.status}">${formulation.status}</span>
+                                    <span class="formulation-status status-${escapeHtml(formulation.status)}">${escapeHtml(formulation.status)}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Created:</span>
@@ -258,10 +258,10 @@ function viewFormulation(formulationId) {
                                     <tbody>
                                         ${formulation.ingredients.map(ing => `
                                             <tr>
-                                                <td><strong>${ing.name}</strong></td>
-                                                <td>${ing.category}</td>
+                                                <td><strong>${escapeHtml(ing.name)}</strong></td>
+                                                <td>${escapeHtml(ing.category)}</td>
                                                 <td>${ing.percentage.toFixed(1)}%</td>
-                                                <td>${ing.amount || '-'}</td>
+                                                <td>${escapeHtml(ing.amount || '-')}</td>
                                                 <td>$${ing.cost.toFixed(2)}</td>
                                             </tr>
                                         `).join('')}
@@ -279,10 +279,10 @@ function viewFormulation(formulationId) {
                                 <ol class="processing-steps">
                                     ${formulation.processingSteps.map(step => `
                                         <li>
-                                            <strong>${step.description}</strong>
-                                            ${step.duration ? `<br><small>Duration: ${step.duration}</small>` : ''}
-                                            ${step.temperature ? `<br><small>Temperature: ${step.temperature}</small>` : ''}
-                                            ${step.equipment ? `<br><small>Equipment: ${step.equipment}</small>` : ''}
+                                            <strong>${escapeHtml(step.description)}</strong>
+                                            ${step.duration ? `<br><small>Duration: ${escapeHtml(step.duration)}</small>` : ''}
+                                            ${step.temperature ? `<br><small>Temperature: ${escapeHtml(step.temperature)}</small>` : ''}
+                                            ${step.equipment ? `<br><small>Equipment: ${escapeHtml(step.equipment)}</small>` : ''}
                                         </li>
                                     `).join('')}
                                 </ol>
@@ -292,14 +292,14 @@ function viewFormulation(formulationId) {
                         ${formulation.notes ? `
                             <div class="detail-section">
                                 <h4>📝 Notes</h4>
-                                <p>${formulation.notes}</p>
+                                <p>${escapeHtml(formulation.notes)}</p>
                             </div>
                         ` : ''}
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn-primary" onclick="editFormulation(${formulationId}); closeFormulationModal();">
+                    <button class="btn-primary" onclick="editFormulation(${jsArgAttr(formulationId)}); closeFormulationModal();">
                         Edit Formulation
                     </button>
                     <button class="btn-secondary" onclick="closeFormulationModal()">
@@ -324,7 +324,7 @@ function editFormulation(formulationId) {
         <div class="modal-overlay" onclick="closeFormulationModal()">
             <div class="modal-content formulation-edit-modal" onclick="event.stopPropagation()">
                 <div class="modal-header">
-                    <h3>Edit: ${formulation.name}</h3>
+                    <h3>Edit: ${escapeHtml(formulation.name)}</h3>
                     <button class="modal-close" onclick="closeFormulationModal()">✕</button>
                 </div>
 
@@ -333,12 +333,12 @@ function editFormulation(formulationId) {
                         <h4>Basic Information</h4>
                         <div class="form-group">
                             <label>Formulation Name:</label>
-                            <input type="text" id="edit-formulation-name" class="form-control" value="${formulation.name}">
+                            <input type="text" id="edit-formulation-name" class="form-control" value="${escapeHtml(formulation.name)}">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Version:</label>
-                                <input type="text" id="edit-formulation-version" class="form-control" value="${formulation.version}">
+                                <input type="text" id="edit-formulation-version" class="form-control" value="${escapeHtml(formulation.version)}">
                             </div>
                             <div class="form-group">
                                 <label>Status:</label>
@@ -356,17 +356,17 @@ function editFormulation(formulationId) {
                         <h4>Ingredients</h4>
                         <div id="ingredients-editor">
                             ${formulation.ingredients.map(ing => `
-                                <div class="ingredient-editor-row" data-ingredient-id="${ing.id}">
-                                    <input type="text" class="ingredient-name" value="${ing.name}" placeholder="Ingredient name">
+                                <div class="ingredient-editor-row" data-ingredient-id="${escapeHtml(ing.id)}">
+                                    <input type="text" class="ingredient-name" value="${escapeHtml(ing.name)}" placeholder="Ingredient name">
                                     <select class="ingredient-category">
                                         ${ingredientCategories.map(cat => `
-                                            <option value="${cat}" ${ing.category === cat ? 'selected' : ''}>${cat}</option>
+                                            <option value="${escapeHtml(cat)}" ${ing.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>
                                         `).join('')}
                                     </select>
-                                    <input type="number" class="ingredient-percentage" value="${ing.percentage}" min="0" max="100" step="0.1" placeholder="%">
-                                    <input type="text" class="ingredient-amount" value="${ing.amount}" placeholder="Amount">
-                                    <input type="number" class="ingredient-cost" value="${ing.cost}" min="0" step="0.01" placeholder="Cost">
-                                    <button class="btn-small btn-danger" onclick="removeIngredientRow('${ing.id}')">🗑️</button>
+                                    <input type="number" class="ingredient-percentage" value="${escapeHtml(ing.percentage)}" min="0" max="100" step="0.1" placeholder="%">
+                                    <input type="text" class="ingredient-amount" value="${escapeHtml(ing.amount)}" placeholder="Amount">
+                                    <input type="number" class="ingredient-cost" value="${escapeHtml(ing.cost)}" min="0" step="0.01" placeholder="Cost">
+                                    <button class="btn-small btn-danger" onclick="removeIngredientRow(${jsArgAttr(ing.id)})">🗑️</button>
                                 </div>
                             `).join('')}
                         </div>
@@ -375,12 +375,12 @@ function editFormulation(formulationId) {
 
                     <div class="form-section">
                         <h4>Notes</h4>
-                        <textarea id="edit-formulation-notes" class="form-control" rows="4">${formulation.notes || ''}</textarea>
+                        <textarea id="edit-formulation-notes" class="form-control" rows="4">${escapeHtml(formulation.notes || '')}</textarea>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn-primary" onclick="saveFormulationEdits(${formulationId})">
+                    <button class="btn-primary" onclick="saveFormulationEdits(${jsArgAttr(formulationId)})">
                         Save Changes
                     </button>
                     <button class="btn-secondary" onclick="closeFormulationModal()">
@@ -405,7 +405,7 @@ function addIngredientRow() {
         <div class="ingredient-editor-row" data-ingredient-id="${newId}">
             <input type="text" class="ingredient-name" placeholder="Ingredient name">
             <select class="ingredient-category">
-                ${ingredientCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                ${ingredientCategories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('')}
             </select>
             <input type="number" class="ingredient-percentage" min="0" max="100" step="0.1" placeholder="%">
             <input type="text" class="ingredient-amount" placeholder="Amount">
@@ -474,7 +474,7 @@ function cloneFormulationDialog(formulationId) {
     const formulation = formulations.find(f => f.id === formulationId);
     if (!formulation) return;
 
-    const name = prompt(`Enter name for cloned formulation:`, `${formulation.name} - Copy`);
+    const name = prompt(`Enter name for cloned formulation:`, `${escapeHtml(formulation.name)} - Copy`);
     if (!name) return;
 
     const version = prompt('Enter version number:', formulation.version);
@@ -494,7 +494,7 @@ function deleteFormulationDialog(formulationId) {
     const formulation = formulations.find(f => f.id === formulationId);
     if (!formulation) return;
 
-    if (!confirm(`Delete formulation "${formulation.name}"? This cannot be undone.`)) {
+    if (!confirm(`Delete formulation "${escapeHtml(formulation.name)}"? This cannot be undone.`)) {
         return;
     }
 
@@ -544,12 +544,12 @@ function runFormulationComparison() {
 
             <div class="comparison-summary">
                 <div class="comparison-item">
-                    <strong>${comparison.formulation1.name} (v${comparison.formulation1.version})</strong>
+                    <strong>${escapeHtml(comparison.formulation1.name)} (v${escapeHtml(comparison.formulation1.version)})</strong>
                     <span>${comparison.formulation1.ingredients.length} ingredients • $${comparison.formulation1.costAnalysis.totalCost.toFixed(2)}</span>
                 </div>
                 <div class="vs-text">vs</div>
                 <div class="comparison-item">
-                    <strong>${comparison.formulation2.name} (v${comparison.formulation2.version})</strong>
+                    <strong>${escapeHtml(comparison.formulation2.name)} (v${escapeHtml(comparison.formulation2.version)})</strong>
                     <span>${comparison.formulation2.ingredients.length} ingredients • $${comparison.formulation2.costAnalysis.totalCost.toFixed(2)}</span>
                 </div>
             </div>
@@ -567,7 +567,7 @@ function runFormulationComparison() {
                     <h6>✅ Added Ingredients (${comparison.ingredientChanges.added.length})</h6>
                     <ul>
                         ${comparison.ingredientChanges.added.map(ing => `
-                            <li>${ing.name} - ${ing.percentage.toFixed(1)}%</li>
+                            <li>${escapeHtml(ing.name)} - ${ing.percentage.toFixed(1)}%</li>
                         `).join('')}
                     </ul>
                 </div>
@@ -578,7 +578,7 @@ function runFormulationComparison() {
                     <h6>❌ Removed Ingredients (${comparison.ingredientChanges.removed.length})</h6>
                     <ul>
                         ${comparison.ingredientChanges.removed.map(ing => `
-                            <li>${ing.name} - ${ing.percentage.toFixed(1)}%</li>
+                            <li>${escapeHtml(ing.name)} - ${ing.percentage.toFixed(1)}%</li>
                         `).join('')}
                     </ul>
                 </div>
@@ -601,10 +601,10 @@ function runFormulationComparison() {
                             ${comparison.ingredientChanges.modified.flatMap(mod =>
                                 Object.keys(mod.changes).map(prop => `
                                     <tr>
-                                        <td>${mod.name}</td>
-                                        <td>${prop}</td>
-                                        <td>${mod.changes[prop].old}</td>
-                                        <td>${mod.changes[prop].new}</td>
+                                        <td>${escapeHtml(mod.name)}</td>
+                                        <td>${escapeHtml(prop)}</td>
+                                        <td>${escapeHtml(mod.changes[prop].old)}</td>
+                                        <td>${escapeHtml(mod.changes[prop].new)}</td>
                                         <td class="${mod.changes[prop].change >= 0 ? 'positive-change' : 'negative-change'}">
                                             ${prop === 'percentage' || prop === 'cost'
                                                 ? (mod.changes[prop].change >= 0 ? '+' : '') + mod.changes[prop].change.toFixed(2)

@@ -29,11 +29,23 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+/**
+ * Serialise a value as a JS literal that is safe inside a double-quoted
+ * inline event-handler attribute, e.g. onclick="del(${jsArgAttr(id)})".
+ * JSON.stringify yields a valid JS literal (quoted string / bare number),
+ * and escapeHtml then makes it safe to embed in the HTML attribute.
+ */
+function jsArgAttr(value) {
+  const json = JSON.stringify(value);
+  return escapeHtml(json === undefined ? 'null' : json);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { escapeHtml };
+  module.exports = { escapeHtml, jsArgAttr };
 }
 if (typeof window !== 'undefined') {
-  window.DomUtils = { escapeHtml };
+  window.DomUtils = { escapeHtml, jsArgAttr };
+  window.jsArgAttr = jsArgAttr;
   // Bare global too: every existing call site invokes escapeHtml(...)
   // unqualified, so it must resolve as a global, not just window.DomUtils.escapeHtml.
   window.escapeHtml = escapeHtml;

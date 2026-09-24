@@ -7,9 +7,11 @@
 // Exposed as window.RenderUtils in the browser and via module.exports in Node.
 
 (function () {
-  const esc = (typeof module !== 'undefined' && module.exports)
-    ? require('./dom-utils.js').escapeHtml
-    : window.escapeHtml;
+  const dom = (typeof module !== 'undefined' && module.exports)
+    ? require('./dom-utils.js')
+    : window.DomUtils;
+  const esc = dom.escapeHtml;
+  const jsArgAttr = dom.jsArgAttr;
 
   /**
    * <option> list for the "Is this a re-test?" selector.
@@ -145,7 +147,7 @@
                     </div>
                     <div>
                         <span class="history-item-date">${esc(new Date(e.timestamp).toLocaleDateString())}</span>
-                        <button class="delete-btn" onclick="deleteExperience(${esc(JSON.stringify(e.id))})">Delete</button>
+                        <button class="delete-btn" onclick="deleteExperience(${jsArgAttr(e.id)})">Delete</button>
                     </div>
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem;">

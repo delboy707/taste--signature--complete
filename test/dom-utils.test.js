@@ -63,3 +63,17 @@ test('closes the search-filter.js attribute-injection hole: a search term with a
     'value="&quot; onmouseover=&quot;alert(1)&quot; x=&quot;"'
   );
 });
+
+const { jsArgAttr } = require('../dom-utils.js');
+
+test('jsArgAttr: numbers stay bare literals, strings become attribute-safe JSON strings', () => {
+  assert.equal(jsArgAttr(1777019020364.0994), '1777019020364.0994');
+  assert.equal(jsArgAttr('abc'), '&quot;abc&quot;');
+  assert.equal(jsArgAttr(undefined), 'null');
+});
+
+test('jsArgAttr: hostile strings cannot close the attribute or the call', () => {
+  const out = jsArgAttr('x")"><img src=x onerror=alert(1)>');
+  assert.ok(!out.includes('"'));
+  assert.ok(!out.includes('<'));
+});
