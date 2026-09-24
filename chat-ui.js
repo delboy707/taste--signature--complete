@@ -180,11 +180,17 @@ async function handleQuickAnalysis(analysisType) {
         hideTypingIndicator();
 
         if (result.success) {
-            // The quick analysis already calls sendMessage internally
-            // So the message and response are already added
+            // AIChatAssistant.sendMessage stores the exchange in its history
+            // but never touches the DOM, so render the reply here.
+            addMessageToChat('user', `Quick analysis: ${String(analysisType).replace(/-/g, ' ')}`);
+            addMessageToChat('assistant', result.response);
+            if (result.suggestions && result.suggestions.length > 0) {
+                updateSuggestedQuestions(result.suggestions);
+            }
+            updateUsageIndicator();
             scrollChatToBottom();
         } else {
-            addMessageToChat('assistant', `Sorry, couldn't perform ${analysisType} analysis.`);
+            addMessageToChat('assistant', `Sorry, I couldn't perform the ${analysisType} analysis: ${result.error || 'unknown error'}`);
         }
 
     } catch (error) {
@@ -198,6 +204,11 @@ async function handleQuickAnalysis(analysisType) {
  * Add message to chat UI
  */
 function addMessageToChat(role, content) {
+    // Defence in depth: an assistant bubble must never be empty.
+    if (role === 'assistant' && (typeof content !== 'string' || !content.trim())) {
+        content = 'Sorry, the AI returned an empty answer. Please try again.';
+    }
+
     const messagesContainer = document.getElementById('chat-messages');
 
     const messageDiv = document.createElement('div');
