@@ -75,13 +75,21 @@ function isRpcMissingError(error) {
  * load the version's targets + stage notes and shape them. Never throws.
  */
 async function _loadVersionTargets(client, project, version) {
+    // Schemas matter: projects / project_versions / targets /
+    // version_stage_notes live in tss_shared; categories and qep_attribute live
+    // in public. PostgREST resolves an unqualified .from() against public only,
+    // so a tss_shared table MUST go through .schema('tss_shared'). The
+    // attribute labels are read with a second public query rather than a
+    // cross-schema embed (targets -> public.qep_attribute), which PostgREST may
+    // not resolve.
     const [categoryResult, targetsResult, notesResult] = await Promise.all([
         client.from('categories').select('name').eq('id', project.category_id).maybeSingle(),
         client
+            .schema('tss_shared')
             .from('targets')
-            .select('variable_key, role, intensity, qep_attribute:variable_key(label, stage_key, emotion_concept_id)')
+            .select('variable_key, role, intensity')
             .eq('version_id', version.id),
-        client.from('version_stage_notes').select('stage_key, notes').eq('version_id', version.id),
+        client.schema('tss_shared').from('version_stage_notes').select('stage_key, notes').eq('version_id', version.id),
     ]);
 
     if (targetsResult.error) {
@@ -91,12 +99,26 @@ async function _loadVersionTargets(client, project, version) {
         return { error: `Could not load stage notes: ${notesResult.error.message}` };
     }
 
+    const variableKeys = [...new Set((targetsResult.data || []).map(r => r.variable_key).filter(Boolean))];
+    const attributeById = {};
+    if (variableKeys.length > 0) {
+        const attrResult = await client
+            .from('qep_attribute')
+            .select('id, label, stage_key, emotion_concept_id')
+            .in('id', variableKeys);
+        if (attrResult.error) {
+            return { error: `Could not load target attributes: ${attrResult.error.message}` };
+        }
+        for (const a of attrResult.data || []) attributeById[a.id] = a;
+    }
+    const targetRows = (targetsResult.data || []).map(r => ({ ...r, qep_attribute: attributeById[r.variable_key] || null }));
+
     const stages = {};
     for (const signatureId of Object.keys(QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID)) {
         stages[signatureId] = { emotions: [], notes: '' };
     }
 
-    for (const row of targetsResult.data || []) {
+    for (const row of targetRows) {
         const attr = row.qep_attribute;
         if (!attr || !attr.stage_key) continue;
         const signatureId = Object.keys(QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID).find(
@@ -155,6 +177,7 @@ async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
     }
 
     const { data: project, error: projectError } = await client
+        .schema('tss_shared')
         .from('projects')
         .select('id, name, category_id')
         .eq('id', projectId)
@@ -167,6 +190,7 @@ async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
     }
 
     const { data: version, error: versionError } = await client
+        .schema('tss_shared')
         .from('project_versions')
         .select('id, version_number, status, locked_at')
         .eq('id', versionId)
@@ -208,6 +232,7 @@ async function fetchQepCaptureTargets(projectId) {
     }
 
     const { data: project, error: projectError } = await client
+        .schema('tss_shared')
         .from('projects')
         .select('id, name, category_id, current_version_id')
         .eq('id', projectId)
@@ -224,6 +249,7 @@ async function fetchQepCaptureTargets(projectId) {
     }
 
     const { data: version, error: versionError } = await client
+        .schema('tss_shared')
         .from('project_versions')
         .select('id, version_number, status, locked_at')
         .eq('id', project.current_version_id)
