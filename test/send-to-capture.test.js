@@ -550,3 +550,10 @@ test('successNotes: reused version, category fallback and out-of-category target
     assert.match(s, /default category was used/);
     assert.match(s, /2 target\(s\) fall outside/);
 });
+
+test('env guard: a dev-pointed config on signature.qeptss.com keeps Send to Capture off', () => {
+    const devCfg = { ENABLE_SEND_TO_CAPTURE: true, SUPABASE_ENV: 'dev' };
+    assert.equal(STC.isSendToCaptureEnabled(devCfg, 'signature.qeptss.com'), false);
+    assert.equal(STC.isSendToCaptureEnabled(devCfg, 'localhost'), true);
+    assert.equal(STC.isSendToCaptureEnabled({ ENABLE_SEND_TO_CAPTURE: true, SUPABASE_ENV: 'prod' }, 'signature.qeptss.com'), true);
+});

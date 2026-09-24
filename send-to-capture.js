@@ -46,8 +46,20 @@
     return (typeof window !== 'undefined' && window.QEP_CAPTURE_CONFIG) || {};
   }
 
-  function isSendToCaptureEnabled(config) {
-    return _config(config).ENABLE_SEND_TO_CAPTURE === true;
+  // Same env guard as signature-supabase-sync.js: a dev-pointed config on the
+  // production hostname must never send real users' data into the dev project.
+  const PROD_HOSTNAME = 'signature.qeptss.com';
+
+  function _hostname() {
+    return (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
+  }
+
+  function isSendToCaptureEnabled(config, hostname) {
+    const c = _config(config);
+    if (c.ENABLE_SEND_TO_CAPTURE !== true) return false;
+    const host = hostname !== undefined ? hostname : _hostname();
+    if (host === PROD_HOSTNAME && c.SUPABASE_ENV === 'dev') return false;
+    return true;
   }
 
   function _cleanPart(value) {
