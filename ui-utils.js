@@ -27,7 +27,7 @@ const UI = {
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.innerHTML = `
-                <span>${icons[type] || ''} ${message}</span>
+                <span>${icons[type] || ''} ${escapeHtml(message)}</span>
                 <button class="toast-close" onclick="this.parentElement.remove()">×</button>
             `;
 
@@ -59,7 +59,7 @@ const UI = {
                 this.overlay.className = 'page-loader';
                 this.overlay.innerHTML = `
                     <div class="loading-spinner large"></div>
-                    <div class="page-loader-text">${message}</div>
+                    <div class="page-loader-text">${escapeHtml(message)}</div>
                 `;
                 document.body.appendChild(this.overlay);
             } else {
@@ -126,8 +126,8 @@ const UI = {
             overlay.className = 'confirm-overlay';
             overlay.innerHTML = `
                 <div class="confirm-dialog scale-in">
-                    <h3>${title}</h3>
-                    <p>${message}</p>
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>${escapeHtml(message)}</p>
                     <div class="confirm-actions">
                         <button class="btn-secondary" data-action="cancel">Cancel</button>
                         <button class="btn-primary" data-action="confirm">Confirm</button>
