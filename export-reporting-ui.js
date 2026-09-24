@@ -129,17 +129,17 @@ function renderProductReportsSection() {
                 ${experiences.map(exp => `
                     <div class="product-export-item">
                         <div class="product-export-info">
-                            <strong>${exp.productInfo.name}</strong>
-                            <span class="product-meta">${exp.productInfo.brand} • ${exp.productInfo.category}</span>
+                            <strong>${escapeHtml(exp.productInfo.name)}</strong>
+                            <span class="product-meta">${escapeHtml(exp.productInfo.brand)} • ${escapeHtml(exp.productInfo.category)}</span>
                         </div>
                         <div class="product-export-actions">
-                            <button class="btn-small btn-primary" onclick="generateProductPDFReport(${exp.id})">
+                            <button class="btn-small btn-primary" onclick="generateProductPDFReport(${jsArgAttr(exp.id)})">
                                 📄 PDF Report
                             </button>
-                            <button class="btn-small btn-secondary" onclick="exportProductToExcel(${exp.id})">
+                            <button class="btn-small btn-secondary" onclick="exportProductToExcel(${jsArgAttr(exp.id)})">
                                 📊 Excel Export
                             </button>
-                            <button class="btn-small btn-secondary" onclick="showProductChartExport(${exp.id})">
+                            <button class="btn-small btn-secondary" onclick="showProductChartExport(${jsArgAttr(exp.id)})">
                                 📈 Charts
                             </button>
                         </div>
@@ -169,8 +169,8 @@ function renderComparisonReportsSection() {
                     <div class="product-checkbox-list">
                         ${experiences.map(exp => `
                             <label class="checkbox-item">
-                                <input type="checkbox" value="${exp.id}" class="comparison-product-checkbox">
-                                ${exp.productInfo.name} - ${exp.productInfo.brand}
+                                <input type="checkbox" value="${escapeHtml(exp.id)}" class="comparison-product-checkbox">
+                                ${escapeHtml(exp.productInfo.name)} - ${escapeHtml(exp.productInfo.brand)}
                             </label>
                         `).join('')}
                     </div>
@@ -213,7 +213,7 @@ function renderBenchmarkReportsSection() {
                     <select id="benchmark-export-product" class="form-control">
                         <option value="">Choose a product...</option>
                         ${experiences.map(exp => `
-                            <option value="${exp.id}">${exp.productInfo.name}</option>
+                            <option value="${escapeHtml(exp.id)}">${escapeHtml(exp.productInfo.name)}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -223,7 +223,7 @@ function renderBenchmarkReportsSection() {
                     <select id="benchmark-export-benchmark" class="form-control">
                         <option value="">Choose a benchmark...</option>
                         ${industryBenchmarks.map(bench => `
-                            <option value="${bench.id}">${bench.category} ${bench.subcategory ? `- ${bench.subcategory}` : ''}</option>
+                            <option value="${escapeHtml(bench.id)}">${escapeHtml(bench.category)} ${escapeHtml(bench.subcategory ? `- ${bench.subcategory}` : '')}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -530,9 +530,9 @@ function buildPortfolioSummaryHtml(experiences) {
         <tbody>
             ${experiences.map(exp => `
                 <tr>
-                    <td><strong>${exp.productInfo.name}</strong></td>
-                    <td>${exp.productInfo.brand}</td>
-                    <td>${exp.productInfo.category}</td>
+                    <td><strong>${escapeHtml(exp.productInfo.name)}</strong></td>
+                    <td>${escapeHtml(exp.productInfo.brand)}</td>
+                    <td>${escapeHtml(exp.productInfo.category)}</td>
                     <td style="font-weight: 600; color: #C2871B;">${calculateOverallScore(exp).toFixed(1)}</td>
                     <td>${new Date(exp.timestamp).toLocaleDateString()}</td>
                 </tr>
@@ -568,7 +568,7 @@ function buildPortfolioSummaryHtml(experiences) {
 function createProductExportButton(productId) {
     return `
         <div class="export-actions">
-            <button class="btn-secondary" onclick="showProductExportMenu(${productId})">
+            <button class="btn-secondary" onclick="showProductExportMenu(${jsArgAttr(productId)})">
                 📤 Export / Report
             </button>
         </div>

@@ -359,15 +359,15 @@ function generateProductReportContent(experience) {
     </div>
 
     <div class="product-info">
-        <h2>${experience.productInfo.name}</h2>
+        <h2>${escapeHtml(experience.productInfo.name)}</h2>
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Brand</span>
-                <span class="info-value">${experience.productInfo.brand}</span>
+                <span class="info-value">${escapeHtml(experience.productInfo.brand)}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Category</span>
-                <span class="info-value">${experience.productInfo.category}</span>
+                <span class="info-value">${escapeHtml(experience.productInfo.category)}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Evaluation Date</span>
@@ -382,7 +382,7 @@ function generateProductReportContent(experience) {
 
     <div class="summary-box">
         <h4>Executive Summary</h4>
-        <p>${generateExecutiveSummary(experience)}</p>
+        <p>${escapeHtml(generateExecutiveSummary(experience))}</p>
     </div>
     `;
 
@@ -406,10 +406,10 @@ function generateProductReportContent(experience) {
         attrs.forEach(([key, value], idx) => {
             html += `<tr>`;
             if (idx === 0) {
-                html += `<td rowspan="${attrs.length}" style="font-weight: 600; background: #f0f0f0;">${getStageLabel(stageId)}</td>`;
+                html += `<td rowspan="${attrs.length}" style="font-weight: 600; background: #f0f0f0;">${escapeHtml(getStageLabel(stageId))}</td>`;
             }
             html += `
-                <td>${getAttributeLabel(key)}</td>
+                <td>${escapeHtml(getAttributeLabel(key))}</td>
                 <td>
                     <div class="score-bar" style="width: ${value * 10}%;">
                         <span class="score-value">${value.toFixed(1)}</span>
@@ -436,9 +436,9 @@ function generateProductReportContent(experience) {
         const present = getPresentEmotions(stageData);
         if (present.length > 0) {
             html += `
-                <h4>${getStageLabel(stageId)}</h4>
+                <h4>${escapeHtml(getStageLabel(stageId))}</h4>
                 <div class="emotions-grid">
-                    ${present.map(([name, value]) => `<div class="emotion-chip">${name} (${value})</div>`).join('')}
+                    ${present.map(([name, value]) => `<div class="emotion-chip">${escapeHtml(name)} (${escapeHtml(value)})</div>`).join('')}
                 </div>
             `;
         }
@@ -451,7 +451,7 @@ function generateProductReportContent(experience) {
         html += `
         <div class="section">
             <h3>Taster Notes</h3>
-            <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${experience.notes}</p>
+            <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${escapeHtml(experience.notes)}</p>
         </div>
         `;
     }
@@ -481,9 +481,9 @@ function generateComparisonReportContent(products) {
         const overall = calculateOverallScore(product);
         html += `
             <div class="comparison-card">
-                <h4 style="margin: 0 0 10px 0; color: #C2871B;">${product.productInfo.name}</h4>
-                <p style="margin: 5px 0; color: #666;"><strong>Brand:</strong> ${product.productInfo.brand}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${product.productInfo.category}</p>
+                <h4 style="margin: 0 0 10px 0; color: #C2871B;">${escapeHtml(product.productInfo.name)}</h4>
+                <p style="margin: 5px 0; color: #666;"><strong>Brand:</strong> ${escapeHtml(product.productInfo.brand)}</p>
+                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${escapeHtml(product.productInfo.category)}</p>
                 <p style="margin: 5px 0;"><strong>Overall Score:</strong> ${overall.toFixed(1)} / 10</p>
             </div>
         `;
@@ -503,7 +503,7 @@ function generateComparisonReportContent(products) {
                 <tr>
                     <th>Stage</th>
                     <th>Attribute</th>
-                    ${products.map(p => `<th>${p.productInfo.name}</th>`).join('')}
+                    ${products.map(p => `<th>${escapeHtml(p.productInfo.name)}</th>`).join('')}
                 </tr>
             </thead>
             <tbody>
@@ -522,8 +522,8 @@ function generateComparisonReportContent(products) {
 
     allAttributes.forEach(({ stageId, key }) => {
         html += `<tr>`;
-        html += `<td style="font-weight: 600;">${getStageLabel(stageId)}</td>`;
-        html += `<td>${getAttributeLabel(key)}</td>`;
+        html += `<td style="font-weight: 600;">${escapeHtml(getStageLabel(stageId))}</td>`;
+        html += `<td>${escapeHtml(getAttributeLabel(key))}</td>`;
 
         products.forEach(product => {
             const value = product.stages[stageId]?.[key] ?? 0;
@@ -563,11 +563,11 @@ function generateBenchmarkReportContent(data) {
     </div>
 
     <div class="product-info">
-        <h2>${comparison.productName}</h2>
+        <h2>${escapeHtml(comparison.productName)}</h2>
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Benchmark Category</span>
-                <span class="info-value">${comparison.benchmarkName}</span>
+                <span class="info-value">${escapeHtml(comparison.benchmarkName)}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Overall Percentile</span>
@@ -575,7 +575,7 @@ function generateBenchmarkReportContent(data) {
             </div>
             <div class="info-item">
                 <span class="info-label">Performance Rating</span>
-                <span class="info-value">${comparison.overallSatisfaction.performance}</span>
+                <span class="info-value">${escapeHtml(comparison.overallSatisfaction.performance)}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Evaluation Date</span>
@@ -590,7 +590,7 @@ function generateBenchmarkReportContent(data) {
         compared to industry standards, with an overall score of <strong>${comparison.overallSatisfaction.productValue.toFixed(1)}</strong>
         versus the industry average of <strong>${comparison.overallSatisfaction.benchmarkMean.toFixed(1)}</strong>.</p>
         <div class="benchmark-badge badge-${getPerformanceClass(comparison.overallSatisfaction.percentile)}">
-            ${comparison.overallSatisfaction.performance}
+            ${escapeHtml(comparison.overallSatisfaction.performance)}
         </div>
     </div>
 
@@ -614,7 +614,7 @@ function generateBenchmarkReportContent(data) {
         const perfClass = getPerformanceClass(attr.percentile);
         html += `
             <tr>
-                <td style="font-weight: 600;">${attr.label.replace('.', ' - ')}</td>
+                <td style="font-weight: 600;">${escapeHtml(attr.label.replace('.', ' - '))}</td>
                 <td>${attr.productValue.toFixed(1)}</td>
                 <td>${attr.benchmarkMean.toFixed(1)}</td>
                 <td style="color: ${attr.difference >= 0 ? '#27ae60' : '#e74c3c'}; font-weight: 600;">
@@ -623,7 +623,7 @@ function generateBenchmarkReportContent(data) {
                 <td>${attr.percentile.toFixed(0)}th</td>
                 <td>
                     <span class="benchmark-badge badge-${perfClass}">
-                        ${attr.performance.split('(')[0].trim()}
+                        ${escapeHtml(attr.performance.split('(')[0].trim())}
                     </span>
                 </td>
             </tr>
@@ -681,9 +681,9 @@ function exportProductToExcel(productId) {
     if (!experience) return null;
 
     let csv = 'Taste Signature - Product Export\n\n';
-    csv += `Product Name,${experience.productInfo.name}\n`;
-    csv += `Brand,${experience.productInfo.brand}\n`;
-    csv += `Category,${experience.productInfo.category}\n`;
+    csv += `Product Name,${escapeHtml(experience.productInfo.name)}\n`;
+    csv += `Brand,${escapeHtml(experience.productInfo.brand)}\n`;
+    csv += `Category,${escapeHtml(experience.productInfo.category)}\n`;
     csv += `Date,${new Date(experience.timestamp).toLocaleDateString()}\n\n`;
 
     csv += 'Sensory Attributes\n';
@@ -691,7 +691,7 @@ function exportProductToExcel(productId) {
 
     Object.entries(experience.stages).forEach(([stageId, stageData]) => {
         getStageAttributeEntries(stageData).forEach(([key, value]) => {
-            csv += `${getStageLabel(stageId)},${getAttributeLabel(key)},${value}\n`;
+            csv += `${escapeHtml(getStageLabel(stageId))},${escapeHtml(getAttributeLabel(key))},${value}\n`;
         });
     });
 
@@ -700,16 +700,16 @@ function exportProductToExcel(productId) {
     Object.entries(experience.stages).forEach(([stageId, stageData]) => {
         const present = getPresentEmotions(stageData);
         if (present.length > 0) {
-            csv += `${getStageLabel(stageId)},"${present.map(([name, value]) => `${name} (${value})`).join(', ')}"\n`;
+            csv += `${escapeHtml(getStageLabel(stageId))},"${present.map(([name, value]) => `${name} (${value})`).join(', ')}"\n`;
         }
     });
 
     if (experience.notes) {
         csv += '\nNotes\n';
-        csv += `"${experience.notes}"\n`;
+        csv += `"${escapeHtml(experience.notes)}"\n`;
     }
 
-    downloadCSV(csv, `${experience.productInfo.name}_sensory_data.csv`);
+    downloadCSV(csv, `${escapeHtml(experience.productInfo.name)}_sensory_data.csv`);
     return true;
 }
 
@@ -734,7 +734,7 @@ function exportAllProductsToExcel() {
 
     csv += Array.from(allAttributes).map(attrKey => {
         const [stageId, key] = attrKey.split('::');
-        return `${getStageLabel(stageId)} - ${getAttributeLabel(key)}`;
+        return `${escapeHtml(getStageLabel(stageId))} - ${escapeHtml(getAttributeLabel(key))}`;
     }).join(',') + '\n';
 
     // Add data rows
@@ -775,7 +775,7 @@ function exportComparisonToExcel(productIds) {
     // Get all attributes from first product
     Object.entries(products[0].stages).forEach(([stageId, stageData]) => {
         getStageAttributeEntries(stageData).forEach(([key]) => {
-            csv += `${getStageLabel(stageId)} - ${getAttributeLabel(key)},`;
+            csv += `${escapeHtml(getStageLabel(stageId))} - ${escapeHtml(getAttributeLabel(key))},`;
 
             products.forEach(product => {
                 const value = product.stages[stageId]?.[key];
