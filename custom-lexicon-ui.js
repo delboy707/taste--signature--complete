@@ -48,12 +48,12 @@ function renderActiveLexiconCard() {
             <div class="active-lexicon-card">
                 <div class="lexicon-header">
                     <div>
-                        <h3>${lexicon.name}</h3>
-                        <p class="lexicon-meta">${lexicon.category} | Version ${lexicon.version}</p>
-                        <p class="lexicon-description">${lexicon.description}</p>
+                        <h3>${escapeHtml(lexicon.name)}</h3>
+                        <p class="lexicon-meta">${escapeHtml(lexicon.category)} | Version ${escapeHtml(lexicon.version)}</p>
+                        <p class="lexicon-description">${escapeHtml(lexicon.description)}</p>
                     </div>
                     ${lexicon.id !== 'default' ? `
-                        <button class="btn-secondary" onclick="editLexicon('${lexicon.id}')">
+                        <button class="btn-secondary" onclick="editLexicon(${jsArgAttr(lexicon.id)})">
                             ✏️ Edit Lexicon
                         </button>
                     ` : ''}
@@ -92,8 +92,8 @@ function renderLexiconSelector() {
             <div class="lexicon-selector">
                 <select id="lexicon-selector" class="form-control" onchange="handleLexiconChange(this.value)">
                     ${allLexicons.map(lex => `
-                        <option value="${lex.id}" ${lex.id === activeLexicon.id ? 'selected' : ''}>
-                            ${lex.name} ${lex.isCustom ? '(Custom)' : '(Default)'}
+                        <option value="${escapeHtml(lex.id)}" ${lex.id === activeLexicon.id ? 'selected' : ''}>
+                            ${escapeHtml(lex.name)} ${lex.isCustom ? '(Custom)' : '(Default)'}
                         </option>
                     `).join('')}
                 </select>
@@ -126,14 +126,14 @@ function renderLexiconManager() {
                     ${customLexicons.map(lex => `
                         <div class="lexicon-item">
                             <div class="lexicon-item-info">
-                                <h5>${lex.name}</h5>
+                                <h5>${escapeHtml(lex.name)}</h5>
                                 <p class="lexicon-item-meta">${lex.category} | ${lex.stages.length} stages, ${lex.stages.reduce((sum, s) => sum + s.attributes.length, 0)} attributes</p>
-                                <p class="lexicon-item-desc">${lex.description}</p>
+                                <p class="lexicon-item-desc">${escapeHtml(lex.description)}</p>
                             </div>
                             <div class="lexicon-item-actions">
-                                <button class="btn-small btn-secondary" onclick="editLexicon('${lex.id}')">✏️ Edit</button>
-                                <button class="btn-small btn-secondary" onclick="exportLexiconFile('${lex.id}')">📤 Export</button>
-                                <button class="btn-small btn-danger" onclick="confirmDeleteLexicon('${lex.id}')">🗑️ Delete</button>
+                                <button class="btn-small btn-secondary" onclick="editLexicon(${jsArgAttr(lex.id)})">✏️ Edit</button>
+                                <button class="btn-small btn-secondary" onclick="exportLexiconFile(${jsArgAttr(lex.id)})">📤 Export</button>
+                                <button class="btn-small btn-danger" onclick="confirmDeleteLexicon(${jsArgAttr(lex.id)})">🗑️ Delete</button>
                             </div>
                         </div>
                     `).join('')}
@@ -163,10 +163,10 @@ function renderTemplateGallery() {
             <div class="template-gallery">
                 ${templates.map(template => `
                     <div class="template-card">
-                        <div class="template-icon">${template.icon}</div>
-                        <h5>${template.name}</h5>
-                        <p>${template.description}</p>
-                        <button class="btn-secondary" onclick="useTemplate('${template.key}')">
+                        <div class="template-icon">${escapeHtml(template.icon)}</div>
+                        <h5>${escapeHtml(template.name)}</h5>
+                        <p>${escapeHtml(template.description)}</p>
+                        <button class="btn-secondary" onclick="useTemplate(${jsArgAttr(template.key)})">
                             Use Template
                         </button>
                     </div>
@@ -186,31 +186,31 @@ function renderLexiconEditor(lexiconId) {
     return `
         <div class="analytics-section lexicon-editor">
             <div class="editor-header">
-                <h4>✏️ Editing: ${lexicon.name}</h4>
+                <h4>✏️ Editing: ${escapeHtml(lexicon.name)}</h4>
                 <button class="btn-secondary" onclick="closeLexiconEditor()">← Back to List</button>
             </div>
 
             <div class="editor-meta">
                 <div class="form-group">
                     <label>Lexicon Name:</label>
-                    <input type="text" id="edit-lexicon-name" class="form-control" value="${lexicon.name}">
+                    <input type="text" id="edit-lexicon-name" class="form-control" value="${escapeHtml(lexicon.name)}">
                 </div>
                 <div class="form-group">
                     <label>Category:</label>
-                    <input type="text" id="edit-lexicon-category" class="form-control" value="${lexicon.category}">
+                    <input type="text" id="edit-lexicon-category" class="form-control" value="${escapeHtml(lexicon.category)}">
                 </div>
                 <div class="form-group">
                     <label>Description:</label>
-                    <textarea id="edit-lexicon-description" class="form-control" rows="2">${lexicon.description}</textarea>
+                    <textarea id="edit-lexicon-description" class="form-control" rows="2">${escapeHtml(lexicon.description)}</textarea>
                 </div>
-                <button class="btn-primary" onclick="saveLexiconMetadata('${lexiconId}')">
+                <button class="btn-primary" onclick="saveLexiconMetadata(${jsArgAttr(lexiconId)})">
                     💾 Save Metadata
                 </button>
             </div>
 
             <div class="stages-editor">
                 <h5>Stages & Attributes</h5>
-                <button class="btn-secondary" onclick="addNewStage('${lexiconId}')">
+                <button class="btn-secondary" onclick="addNewStage(${jsArgAttr(lexiconId)})">
                     ➕ Add Stage
                 </button>
 
@@ -218,8 +218,8 @@ function renderLexiconEditor(lexiconId) {
                     ${lexicon.stages.map((stage, stageIndex) => `
                         <div class="stage-editor-card">
                             <div class="stage-editor-header">
-                                <h6>${stage.name}</h6>
-                                <button class="btn-small btn-danger" onclick="removeStage('${lexiconId}', '${stage.id}')">
+                                <h6>${escapeHtml(stage.name)}</h6>
+                                <button class="btn-small btn-danger" onclick="removeStage(${jsArgAttr(lexiconId)}, ${jsArgAttr(stage.id)})">
                                     🗑️ Remove Stage
                                 </button>
                             </div>
@@ -228,18 +228,18 @@ function renderLexiconEditor(lexiconId) {
                                 ${stage.attributes.map((attr, attrIndex) => `
                                     <div class="attribute-editor-item">
                                         <div class="attribute-info">
-                                            <strong>${attr.label}</strong>
-                                            <span class="attribute-meta">${attr.type} | ${attr.min}-${attr.max} ${attr.unit}</span>
-                                            <span class="attribute-desc">${attr.description}</span>
+                                            <strong>${escapeHtml(attr.label)}</strong>
+                                            <span class="attribute-meta">${escapeHtml(attr.type)} | ${escapeHtml(attr.min)}-${escapeHtml(attr.max)} ${escapeHtml(attr.unit)}</span>
+                                            <span class="attribute-desc">${escapeHtml(attr.description)}</span>
                                         </div>
-                                        <button class="btn-small btn-danger" onclick="removeAttribute('${lexiconId}', '${stage.id}', '${attr.id}')">
+                                        <button class="btn-small btn-danger" onclick="removeAttribute(${jsArgAttr(lexiconId)}, ${jsArgAttr(stage.id)}, ${jsArgAttr(attr.id)})">
                                             ✕
                                         </button>
                                     </div>
                                 `).join('')}
                             </div>
 
-                            <button class="btn-small btn-secondary" onclick="showAddAttributeDialog('${lexiconId}', '${stage.id}')">
+                            <button class="btn-small btn-secondary" onclick="showAddAttributeDialog(${jsArgAttr(lexiconId)}, ${jsArgAttr(stage.id)})">
                                 ➕ Add Attribute
                             </button>
 
@@ -247,10 +247,10 @@ function renderLexiconEditor(lexiconId) {
                                 <strong>Emotions:</strong>
                                 <div class="emotions-tags">
                                     ${stage.emotions.map(emotion => `
-                                        <span class="emotion-tag">${emotion}</span>
+                                        <span class="emotion-tag">${escapeHtml(emotion)}</span>
                                     `).join('')}
                                 </div>
-                                <button class="btn-small btn-secondary" onclick="showAddEmotionDialog('${lexiconId}', '${stage.id}')">
+                                <button class="btn-small btn-secondary" onclick="showAddEmotionDialog(${jsArgAttr(lexiconId)}, ${jsArgAttr(stage.id)})">
                                     ➕ Add Emotion
                                 </button>
                             </div>
@@ -372,7 +372,7 @@ function confirmDeleteLexicon(lexiconId) {
     const lexicon = getAllLexicons().find(l => l.id === lexiconId);
     if (!lexicon) return;
 
-    if (!confirm(`Delete "${lexicon.name}"? This cannot be undone.`)) return;
+    if (!confirm(`Delete "${escapeHtml(lexicon.name)}"? This cannot be undone.`)) return;
 
     deleteCustomLexicon(lexiconId);
     renderCustomLexiconDashboard();
@@ -431,7 +431,7 @@ function useTemplate(templateKey) {
     const lexicon = createLexiconFromTemplate(templateKey);
     if (lexicon) {
         renderCustomLexiconDashboard();
-        alert(`Template "${lexicon.name}" created successfully!`);
+        alert(`Template "${escapeHtml(lexicon.name)}" created successfully!`);
     } else {
         alert('Error creating lexicon from template');
     }
