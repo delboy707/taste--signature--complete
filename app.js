@@ -927,25 +927,12 @@ function updateDashboard() {
     }
 
     // Recent activity
-    const recentHTML = validExperiences
-        .slice(-5)
-        .reverse()
-        .map(e => `
-            <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
-                <strong>${e?.productInfo?.name || 'Unknown'}</strong> - ${e?.productInfo?.brand || 'Unknown'}<br>
-                <small style="color: var(--text-light);">${new Date(e?.timestamp || Date.now()).toLocaleDateString()}</small>
-            </div>
-        `).join('');
+    const recentHTML = RenderUtils.buildRecentActivityHtml(validExperiences.slice(-5).reverse());
     document.getElementById('recent-activity').innerHTML = recentHTML || '<p class="empty-state">No activity yet</p>';
 
     // Quick insights
     const insights = generateQuickInsights();
-    const insightsHTML = insights.map(i => `
-        <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
-            <strong style="color: var(--primary-color);">${i.title}</strong><br>
-            <small>${i.text}</small>
-        </div>
-    `).join('');
+    const insightsHTML = RenderUtils.buildQuickInsightsHtml(insights);
     document.getElementById('quick-insights').innerHTML = insightsHTML || '<p class="empty-state">No insights yet</p>';
 }
 
@@ -989,8 +976,7 @@ function generateQuickInsights() {
 // ===== SHAPE OF TASTE =====
 function updateShapeOfTasteView() {
     const select = document.getElementById('shape-product-select');
-    select.innerHTML = '<option value="">Choose a product...</option>' +
-        experiences.filter(e => e && e.productInfo).map(e => `<option value="${e.id}">${e.productInfo?.name ?? 'Unknown'} - ${e.productInfo?.brand ?? 'Unknown'}</option>`).join('');
+    select.innerHTML = RenderUtils.buildProductOptionsHtml(experiences);
 
     select.onchange = function() {
         const exp = experiences.find(e => e && e.id == this.value);
@@ -1368,12 +1354,7 @@ function updateComparisonView() {
         return;
     }
 
-    container.innerHTML = experiences.map(e => `
-        <div class="comparison-checkbox">
-            <input type="checkbox" id="compare-${e.id}" value="${e.id}">
-            <label for="compare-${e.id}">${e.productInfo.name}</label>
-        </div>
-    `).join('');
+    container.innerHTML = RenderUtils.buildComparisonListHtml(experiences);
 
     document.getElementById('btn-run-comparison').onclick = runComparison;
     document.getElementById('btn-ai-compare').onclick = getAIComparisonInsights;
@@ -1508,14 +1489,7 @@ function renderComparisonShapeChart(products) {
 }
 
 function renderComparisonNeedState(products) {
-    const html = products.map(p => `
-        <div style="padding: 15px; border: 2px solid var(--border-color); border-radius: 8px; margin-bottom: 10px;">
-            <strong>${p.productInfo.name}</strong><br>
-            <span style="display: inline-block; padding: 5px 10px; background: var(--primary-color); color: white; border-radius: 5px; margin-top: 5px;">
-                ${p.needState.charAt(0).toUpperCase() + p.needState.slice(1)}
-            </span>
-        </div>
-    `).join('');
+    const html = RenderUtils.buildComparisonNeedStateHtml(products);
 
     document.getElementById('comparison-need-state').innerHTML = html;
 }
@@ -1596,23 +1570,11 @@ function renderComparisonSummaryCards(products) {
     });
     const strongestEmotion = withEmotionSum.reduce((max, curr) => curr.emotionSum > max.emotionSum ? curr : max);
 
-    const html = `
-        <div class="summary-card">
-            <h4>🏆 Highest Rated</h4>
-            <div class="value">${highest.product.productInfo.name}</div>
-            <div class="label">Average: ${highest.avg.toFixed(1)}/10</div>
-        </div>
-        <div class="summary-card">
-            <h4>📊 Most Consistent</h4>
-            <div class="value">${mostConsistent.product.productInfo.name}</div>
-            <div class="label">Std Dev: ${mostConsistent.stdDev.toFixed(2)}</div>
-        </div>
-        <div class="summary-card">
-            <h4>💫 Strongest Emotions</h4>
-            <div class="value">${strongestEmotion.product.productInfo.name}</div>
-            <div class="label">Total Impact: ${strongestEmotion.emotionSum.toFixed(0)}</div>
-        </div>
-    `;
+    const html = RenderUtils.buildComparisonSummaryCardsHtml(
+        { name: highest.product.productInfo.name, label: highest.avg.toFixed(1) },
+        { name: mostConsistent.product.productInfo.name, label: mostConsistent.stdDev.toFixed(2) },
+        { name: strongestEmotion.product.productInfo.name, label: strongestEmotion.emotionSum.toFixed(0) }
+    );
 
     container.innerHTML = html;
 }
@@ -1678,7 +1640,7 @@ function renderComparisonAttributeMatrix(products) {
     let tableHTML = '<table class="comparison-table"><thead><tr>';
     tableHTML += '<th style="min-width: 200px;">Attribute</th>';
     products.forEach(p => {
-        tableHTML += `<th class="product-col">${p.productInfo.name}</th>`;
+        tableHTML += `<th class="product-col">${escapeHtml(p.productInfo.name)}</th>`;
     });
     tableHTML += '<th class="delta-col">Δ Range</th>';
     tableHTML += '</tr></thead><tbody>';
@@ -1857,14 +1819,14 @@ function renderComparisonEmotionHeatmap(products) {
     let tableHTML = '<table class="heatmap-table"><thead><tr>';
     tableHTML += '<th class="product-header">Product</th>';
     emotions.forEach(emotion => {
-        tableHTML += `<th>${emotion}</th>`;
+        tableHTML += `<th>${escapeHtml(emotion)}</th>`;
     });
     tableHTML += '</tr></thead><tbody>';
 
     // Build rows - one per product
     products.forEach(product => {
         tableHTML += '<tr>';
-        tableHTML += `<td class="product-name">${product.productInfo.name}</td>`;
+        tableHTML += `<td class="product-name">${escapeHtml(product.productInfo.name)}</td>`;
 
         // For each emotion, find the highest value across all stages
         emotions.forEach(emotion => {
@@ -1915,7 +1877,7 @@ function updateInsights() {
     const insights = generateProfessionalInsights();
     container.innerHTML = insights.map(i => `
         <div class="insight-item">
-            <strong>${i.title}</strong>
+            <strong>${escapeHtml(i.title)}</strong>
             <p>${i.description}</p>
         </div>
     `).join('');
@@ -1939,7 +1901,7 @@ function generateProfessionalInsights() {
         needStateCounts[a] > needStateCounts[b] ? a : b);
     insights.push({
         title: 'Need State Focus',
-        description: `Your product portfolio primarily serves <strong>${dominantNeed}</strong> occasions (${((needStateCounts[dominantNeed] / experiences.length) * 100).toFixed(0)}% of products).`
+        description: `Your product portfolio primarily serves <strong>${escapeHtml(dominantNeed)}</strong> occasions (${((needStateCounts[dominantNeed] / experiences.length) * 100).toFixed(0)}% of products).`
     });
 
     // Emotional Trigger Analysis
@@ -1983,7 +1945,7 @@ function generateProfessionalInsights() {
         e.stages.aftertaste.emotions.satisfaction > max.stages.aftertaste.emotions.satisfaction ? e : max);
     insights.push({
         title: 'Top Performer',
-        description: `<strong>${topProduct.productInfo.name}</strong> by ${topProduct.productInfo.brand} achieves the highest satisfaction (${topProduct.stages.aftertaste.emotions.satisfaction}/10).`
+        description: `<strong>${escapeHtml(topProduct.productInfo.name)}</strong> by ${escapeHtml(topProduct.productInfo.brand)} achieves the highest satisfaction (${topProduct.stages.aftertaste.emotions.satisfaction}/10).`
     });
 
     return insights;
@@ -1998,30 +1960,9 @@ function updateHistory() {
         return;
     }
 
-    container.innerHTML = experiences
-        .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-        .map(e => `
-            <div class="history-item">
-                <div class="history-item-header">
-                    <div>
-                        <span class="history-item-title">${e.productInfo.name}</span>
-                        <span class="history-item-brand">${e.productInfo.brand}</span>
-                        <span class="history-item-type">${e.productInfo.type}</span>
-                    </div>
-                    <div>
-                        <span class="history-item-date">${new Date(e.timestamp).toLocaleDateString()}</span>
-                        <button class="delete-btn" onclick="deleteExperience(${e.id})">Delete</button>
-                    </div>
-                </div>
-                <div style="margin-top: 10px; font-size: 0.9rem;">
-                    <strong>Need State:</strong> ${e.needState.charAt(0).toUpperCase() + e.needState.slice(1)}<br>
-                    <strong>Satisfaction:</strong> ${e.stages.aftertaste.emotions.satisfaction}/10
-                    ${e.productInfo.occasion && e.productInfo.occasion !== 'Not specified' ? `<br><strong>Occasion:</strong> ${e.productInfo.occasion.replace('-', ' ')}` : ''}
-                    ${e.productInfo.temperature && e.productInfo.temperature !== 'Not specified' ? `<br><strong>Temperature:</strong> ${e.productInfo.temperature.replace('-', ' ')}` : ''}
-                </div>
-                ${e.notes ? `<div class="history-item-notes">${e.notes}</div>` : ''}
-            </div>
-        `).join('');
+    container.innerHTML = RenderUtils.buildHistoryHtml(
+        experiences.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    );
 }
 
 async function deleteExperience(id) {
@@ -2092,8 +2033,7 @@ document.getElementById('clear-data').addEventListener('click', async () => {
 // ===== EMOTIONAL MAPPING & CORRELATION =====
 function updateEmotionalMappingView() {
     const select = document.getElementById('emotional-product-select');
-    select.innerHTML = '<option value="">Choose a product...</option>' +
-        experiences.map(e => `<option value="${e.id}">${e.productInfo.name} - ${e.productInfo.brand}</option>`).join('');
+    select.innerHTML = RenderUtils.buildProductOptionsHtml(experiences);
 
     select.onchange = function() {
         const exp = experiences.find(e => e.id == this.value);
@@ -2401,18 +2341,18 @@ function renderCorrelationHeatmap(exp) {
         <table class="heatmap-table"><thead><tr><th>Sensory → Emotional</th>`;
 
     Object.keys(emotions).forEach(emotion => {
-        html += `<th>${emotion.charAt(0).toUpperCase() + emotion.slice(1)}</th>`;
+        html += `<th>${escapeHtml(emotion.charAt(0).toUpperCase() + emotion.slice(1))}</th>`;
     });
     html += '</tr></thead><tbody>';
 
     Object.entries(sensoryAttributes).forEach(([sensory, sensoryValue]) => {
-        html += `<tr><td>${sensory}</td>`;
+        html += `<tr><td>${escapeHtml(sensory)}</td>`;
         Object.entries(emotions).forEach(([emotion, emotionValue]) => {
             // Calculate normalized correlation strength (0-1 scale)
             // Formula: (sensory/10) * (emotion/10) - represents combined intensity
             const correlation = (sensoryValue * emotionValue) / 100;
             const correlationClass = getCorrelationClass(correlation);
-            html += `<td><div class="heatmap-cell ${correlationClass}" title="${sensory} × ${emotion}: ${correlation.toFixed(2)}">${correlation.toFixed(2)}</div></td>`;
+            html += `<td><div class="heatmap-cell ${correlationClass}" title="${escapeHtml(sensory)} × ${escapeHtml(emotion)}: ${correlation.toFixed(2)}">${correlation.toFixed(2)}</div></td>`;
         });
         html += '</tr>';
     });
@@ -2479,7 +2419,7 @@ function renderEmotionalDriversInsights(exp) {
     emotionAverages.slice(0, 5).forEach((item, idx) => {
         html += `
             <div class="driver-item">
-                <h4>#${idx + 1} ${item.emotion.charAt(0).toUpperCase() + item.emotion.slice(1)}</h4>
+                <h4>#${idx + 1} ${escapeHtml(item.emotion.charAt(0).toUpperCase() + item.emotion.slice(1))}</h4>
                 <div class="driver-strength">
                     <span>Average:</span>
                     <div class="strength-bar">
@@ -2568,7 +2508,7 @@ function renderCorrelationInsights(exp) {
             html += `
                 <li>
                     <span class="insight-icon">${icon}</span>
-                    <span><strong>${corr.sensory}</strong> drives <strong>${corr.emotion}</strong>
+                    <span><strong>${escapeHtml(corr.sensory)}</strong> drives <strong>${escapeHtml(corr.emotion)}</strong>
                     <span class="insight-strength ${strengthClass}">${corr.strength.toFixed(2)}</span></span>
                 </li>
             `;
@@ -2578,7 +2518,7 @@ function renderCorrelationInsights(exp) {
         const topCorr = correlations[0];
         html += '</ul>';
         html += `<div style="margin-top: 15px; padding: 12px; background: rgba(76, 175, 80, 0.1); border-radius: 6px;">
-            <strong>💡 Formulation Tip:</strong> ${getActionableInsight(topCorr.sensory, topCorr.emotion, topCorr.category)}
+            <strong>💡 Formulation Tip:</strong> ${escapeHtml(getActionableInsight(topCorr.sensory, topCorr.emotion, topCorr.category))}
         </div>`;
     }
 
@@ -2859,7 +2799,7 @@ function renderDiversityScore() {
             <div style="margin-top: 20px; font-size: 0.9rem; color: var(--text-light);">
                 <strong>Need State Distribution:</strong><br>
                 ${Object.entries(needStateCounts).map(([state, count]) =>
-                    `${state.charAt(0).toUpperCase() + state.slice(1)}: ${count}`
+                    `${escapeHtml(state.charAt(0).toUpperCase() + state.slice(1))}: ${count}`
                 ).join(' • ')}
             </div>
         </div>
@@ -2879,7 +2819,7 @@ function renderClusterInsights() {
         insights.push({
             icon: '⚠️',
             title: 'Potential Cannibalization',
-            text: overlaps.map(o => `${o.product1} and ${o.product2} are emotionally similar (may compete for same consumer)`).join('<br>')
+            text: overlaps.map(o => `${escapeHtml(o.product1)} and ${escapeHtml(o.product2)} are emotionally similar (may compete for same consumer)`).join('<br>')
         });
     }
 
@@ -2889,7 +2829,7 @@ function renderClusterInsights() {
         insights.push({
             icon: '🎯',
             title: 'Unique Positioning',
-            text: unique.map(p => `${p.name} occupies distinct emotional territory`).join('<br>')
+            text: unique.map(p => `${escapeHtml(p.name)} occupies distinct emotional territory`).join('<br>')
         });
     }
 
@@ -3045,8 +2985,7 @@ function updateAIInsightsView() {
 
     // Populate product selector
     const productSelect = document.getElementById('ai-product-select');
-    productSelect.innerHTML = '<option value="">Choose a product...</option>' +
-        experiences.map(e => `<option value="${e.id}">${e.productInfo.name} - ${e.productInfo.brand}</option>`).join('');
+    productSelect.innerHTML = RenderUtils.buildProductOptionsHtml(experiences);
 
     // Set up event listeners
     initAIEventListeners();

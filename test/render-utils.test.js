@@ -59,3 +59,43 @@ test('AI response formatting: markdown still renders after escaping', () => {
   assert.equal(RU.formatAIResponse(''), '');
   assert.equal(RU.formatAIResponse(null), '');
 });
+
+function full(id, name, extra = {}) {
+  return {
+    id, timestamp: '2024-01-02T00:00:00.000Z', needState: 'reward', notes: '',
+    productInfo: { name, brand: 'Brand', type: 'snack' },
+    stages: { aftertaste: { emotions: { satisfaction: 7 } } },
+    ...extra,
+  };
+}
+
+test('product select options, dashboard and comparison lists escape product names', () => {
+  for (const p of PAYLOADS) {
+    const list = [full(1, p)];
+    assertNoUnescapedTag(RU.buildProductOptionsHtml(list), p);
+    assertNoUnescapedTag(RU.buildRecentActivityHtml(list), p);
+    assertNoUnescapedTag(RU.buildQuickInsightsHtml([{ title: p, text: p }]), p);
+    assertNoUnescapedTag(RU.buildComparisonListHtml(list), p);
+    assertNoUnescapedTag(RU.buildComparisonNeedStateHtml(list), p);
+    assertNoUnescapedTag(
+      RU.buildComparisonSummaryCardsHtml({ name: p, label: '1' }, { name: p, label: '1' }, { name: p, label: '1' }), p);
+  }
+});
+
+test('history list escapes name, brand, type, notes, occasion and needState', () => {
+  for (const p of PAYLOADS) {
+    const e = full(1, p, {
+      needState: p, notes: p,
+      productInfo: { name: p, brand: p, type: p, occasion: p, temperature: p },
+    });
+    assertNoUnescapedTag(RU.buildHistoryHtml([e]), p);
+  }
+});
+
+test('history delete button: a hostile id cannot break out of the onclick attribute', () => {
+  const html = RU.buildHistoryHtml([full('1)"><img src=x onerror=alert(1)>', 'ok')]);
+  assert.ok(!html.includes('<img'));
+  assert.ok(!/onclick="[^"]*"[^>]*onerror/.test(html));
+  // numeric ids still render as a bare number literal
+  assert.match(RU.buildHistoryHtml([full(1777019020364.0994, 'ok')]), /deleteExperience\(1777019020364\.0994\)/);
+});
