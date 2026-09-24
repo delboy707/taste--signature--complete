@@ -882,7 +882,7 @@ function showQuickEntrySuccess(experience) {
     notification.innerHTML = `
         <div class="success-icon">✓</div>
         <div class="success-content">
-            <strong>${experience.productInfo.name}</strong> saved successfully!
+            <strong>${escapeHtml(experience.productInfo.name)}</strong> saved successfully!
             <span class="success-hint">Ready for next product</span>
         </div>
     `;
