@@ -25,9 +25,13 @@ const QEP_CAPTURE_CONFIG = {
     // explicit decision to pause the rollout.
     ENABLE_SUPABASE_DUAL_WRITE: true,
 
-    // Dev-only feature flag - flip to false before any merge that could
-    // reach production until this feature has been explicitly reviewed.
-    ENABLE_TARGETS_LOADED: false,
+    // Stage 2A: on for this branch only (feat/stage-2a) - the picker/deep
+    // link/prefill work targets qep-capture RPC/columns that migrations
+    // 0036/0037 add, and those are NOT applied anywhere yet (see
+    // qep-capture-crosswalk.js, targets-loaded.js's fetchLockedProjects()
+    // rpcMissing handling). Do not merge this flag flip to main until
+    // 0036/0037 are applied in the environment this deploys against.
+    ENABLE_TARGETS_LOADED: true,
 
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link. Defaults to production; set to

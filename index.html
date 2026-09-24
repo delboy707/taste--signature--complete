@@ -2232,6 +2232,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="qep-capture-config.js"></script>
     <script src="qep-capture-client.js"></script>
+    <script src="qep-capture-crosswalk.js"></script>
     <script src="signature-supabase-sync.js"></script>
 
     <!-- App Scripts -->
@@ -2293,9 +2294,12 @@
     <script src="quick-entry.js"></script>
     <script src="sensory-attributes.js"></script>
 
-    <!-- Targets Loaded (QEP-Capture, dev-only, feature-flagged) - shared
-         qep-capture-config.js/qep-capture-client.js loaded earlier above -->
+    <!-- Targets Loaded (QEP-Capture, feature-flagged) - shared
+         qep-capture-config.js/qep-capture-client.js/qep-capture-crosswalk.js
+         loaded earlier above. target-prefill.js is the pure mapping module
+         behind "Start Full Evaluation from this target" (app.js). -->
     <script src="targets-loaded.js"></script>
+    <script src="target-prefill.js"></script>
     <script src="targets-loaded-ui.js"></script>
 
     <script src="app.js"></script>
