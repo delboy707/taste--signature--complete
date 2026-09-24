@@ -19,7 +19,7 @@ function renderTeamCollaborationDashboard() {
         <div class="team-overview-section">
             <div class="team-header">
                 <div>
-                    <h2>${team.name}</h2>
+                    <h2>${escapeHtml(team.name)}</h2>
                     <p class="team-subtitle">${stats.totalMembers} team members · ${stats.totalShares} shared products</p>
                 </div>
                 ${canManage ? `
@@ -78,29 +78,29 @@ function renderTeamCollaborationDashboard() {
         html += `
             <div class="team-member-card ${isCurrentUser ? 'current-user' : ''}">
                 <div class="member-avatar">
-                    ${member.avatar ? `<img src="${member.avatar}" alt="${member.name}">` :
-                      `<div class="avatar-placeholder">${member.name.charAt(0).toUpperCase()}</div>`}
+                    ${member.avatar ? `<img src="${escapeHtml(member.avatar)}" alt="${escapeHtml(member.name)}">` :
+                      `<div class="avatar-placeholder">${escapeHtml(member.name.charAt(0).toUpperCase())}</div>`}
                     ${isCurrentUser ? '<span class="current-user-badge">You</span>' : ''}
                 </div>
                 <div class="member-info">
-                    <div class="member-name">${member.name}</div>
-                    <div class="member-email">${member.email}</div>
+                    <div class="member-name">${escapeHtml(member.name)}</div>
+                    <div class="member-email">${escapeHtml(member.email)}</div>
                     <div class="member-meta">
                         <span class="member-role" style="background-color: ${roleColor}20; color: ${roleColor};">
-                            ${member.role.toUpperCase()}
+                            ${escapeHtml(member.role.toUpperCase())}
                         </span>
                         <span class="member-joined">Joined ${formatDate(member.joinedAt)}</span>
                     </div>
                 </div>
                 ${canManage && !isCurrentUser ? `
                     <div class="member-actions">
-                        <select class="role-selector" onchange="changeMemberRole('${member.id}', this.value)">
+                        <select class="role-selector" onchange="changeMemberRole(${jsArgAttr(member.id)}, this.value)">
                             <option value="">Change Role...</option>
                             <option value="${UserRoles.ADMIN}" ${member.role === UserRoles.ADMIN ? 'selected' : ''}>Admin</option>
                             <option value="${UserRoles.ANALYST}" ${member.role === UserRoles.ANALYST ? 'selected' : ''}>Analyst</option>
                             <option value="${UserRoles.VIEWER}" ${member.role === UserRoles.VIEWER ? 'selected' : ''}>Viewer</option>
                         </select>
-                        <button class="btn-icon btn-danger" onclick="removeMemberDialog('${member.id}', '${member.name}')" title="Remove member">
+                        <button class="btn-icon btn-danger" onclick="removeMemberDialog(${jsArgAttr(member.id)}, ${jsArgAttr(member.name)})" title="Remove member">
                             🗑️
                         </button>
                     </div>
@@ -288,14 +288,14 @@ function showShareProductDialog(productId) {
             html += `
                 <div class="shared-user-item">
                     <div class="member-avatar-small">
-                        ${share.user.avatar ? `<img src="${share.user.avatar}" alt="${share.user.name}">` :
-                          `<div class="avatar-placeholder-small">${share.user.name.charAt(0)}</div>`}
+                        ${share.user.avatar ? `<img src="${escapeHtml(share.user.avatar)}" alt="${escapeHtml(share.user.name)}">` :
+                          `<div class="avatar-placeholder-small">${escapeHtml(share.user.name.charAt(0))}</div>`}
                     </div>
                     <div class="shared-user-info">
-                        <div class="shared-user-name">${share.user.name}</div>
-                        <div class="shared-user-meta">${share.permission} access</div>
+                        <div class="shared-user-name">${escapeHtml(share.user.name)}</div>
+                        <div class="shared-user-meta">${escapeHtml(share.permission)} access</div>
                     </div>
-                    <button class="btn-icon btn-danger-outline" onclick="unshareProductConfirm('${productId}', '${share.userId}', '${share.user.name}')">
+                    <button class="btn-icon btn-danger-outline" onclick="unshareProductConfirm(${jsArgAttr(productId)}, ${jsArgAttr(share.userId)}, ${jsArgAttr(share.user.name)})">
                         Remove
                     </button>
                 </div>
@@ -315,15 +315,15 @@ function showShareProductDialog(productId) {
         availableUsers.forEach(user => {
             html += `
                 <label class="user-checkbox-item">
-                    <input type="checkbox" name="share-user" value="${user.id}">
+                    <input type="checkbox" name="share-user" value="${escapeHtml(user.id)}">
                     <div class="user-checkbox-content">
                         <div class="member-avatar-small">
-                            ${user.avatar ? `<img src="${user.avatar}" alt="${user.name}">` :
-                              `<div class="avatar-placeholder-small">${user.name.charAt(0)}</div>`}
+                            ${user.avatar ? `<img src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.name)}">` :
+                              `<div class="avatar-placeholder-small">${escapeHtml(user.name.charAt(0))}</div>`}
                         </div>
                         <div>
-                            <div class="user-checkbox-name">${user.name}</div>
-                            <div class="user-checkbox-role">${user.role}</div>
+                            <div class="user-checkbox-name">${escapeHtml(user.name)}</div>
+                            <div class="user-checkbox-role">${escapeHtml(user.role)}</div>
                         </div>
                     </div>
                 </label>
@@ -351,7 +351,7 @@ function showShareProductDialog(productId) {
                 <div class="modal-footer">
                     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
                     ${availableUsers.length > 0 ? `
-                        <button class="btn-primary" onclick="submitShareProduct('${productId}')">Share</button>
+                        <button class="btn-primary" onclick="submitShareProduct(${jsArgAttr(productId)})">Share</button>
                     ` : ''}
                 </div>
             </div>

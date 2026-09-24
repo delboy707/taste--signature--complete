@@ -21,7 +21,7 @@ function renderTargetsLoadedDashboard() {
                     type="text"
                     id="qep-capture-project-id-input"
                     placeholder="qep-capture project id (uuid)"
-                    value="${lastId.replace(/"/g, '&quot;')}"
+                    value="${escapeHtml(lastId)}"
                     style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;"
                 />
                 <button id="qep-capture-load-btn" class="btn btn-primary">Load targets</button>
@@ -103,7 +103,7 @@ function renderTargetsLoadedResult(result) {
         <div class="card">
             <h3 style="margin-top: 0;">${escapeHtml(project.name)}</h3>
             <p style="color: #666; margin-bottom: 16px;">
-                ${escapeHtml(project.categoryName)} &middot; v${version.versionNumber} &middot;
+                ${escapeHtml(project.categoryName)} &middot; v${escapeHtml(version.versionNumber)} &middot;
                 ${escapeHtml(version.status)}${version.lockedAt ? ' &middot; locked ' + escapeHtml(new Date(version.lockedAt).toLocaleDateString()) : ''}
             </p>
             ${testInCaptureHtml}
