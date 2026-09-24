@@ -6,6 +6,17 @@
 **Hosting:** Vercel
 **Overall Risk Level:** HIGH
 
+> **Status note (snapshot).** This report is a dated snapshot from **2026-02-12** and
+> is not kept up to date automatically. Status of the Critical findings as of 2026-09-24:
+>
+> | Finding | Status |
+> |---|---|
+> | **C1** Exposed Anthropic API key | Key removed from the working tree (redacted below). **The key must still be revoked/rotated in the Anthropic console** - it remains in git history. |
+> | **C2** No server-side token verification | **Fixed.** `/api/firebase-token` and `/api/claude` verify Clerk session tokens server-side. |
+> | **C3** Pervasive XSS via innerHTML | **Fixed in the Phase 1 hygiene pass** - shared `escapeHtml`/`jsArgAttr` applied across the UI modules (with unit tests). |
+> | **C4** All access control is client-side only | **Still open.** |
+> | **C5** Client-side API key storage + CORS wildcard | **Fixed.** AI calls go through `/api/claude` (server-side key, CORS allow-list, Clerk auth, model allowlist, per-user rate limit). |
+
 ---
 
 ## Executive Summary
@@ -40,7 +51,7 @@ This audit identified **47 security findings** across the Taste Signature applic
 
 The file contains a complete, valid-format Anthropic API key:
 ```
-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
+[REDACTED - rotated]
 ```
 
 **Action Required:** Immediately rotate this key in your Anthropic account. Scrub it from git history using `git filter-branch` or BFG Repo-Cleaner.

@@ -1,16 +1,17 @@
-// ===== CONFIGURATION EXAMPLE =====
-// Copy this file to config.js and add your actual keys
-// For production deployment, use environment variables instead
+// ===== ANTHROPIC API CONFIGURATION (EXAMPLE) =====
+// Mirror of config.js. All AI calls are proxied through the server-side
+// /api/claude endpoint, so there is NO API key here and the browser never
+// talks to the Anthropic API directly. The Anthropic key lives only in the
+// ANTHROPIC_API_KEY environment variable on the server (Vercel).
+//
+// The proxy also owns model choice (server-side allowlist) and never
+// forwards sampling parameters (temperature/top_p/top_k), so none are
+// configured here.
 
 const CONFIG = {
-    // 🔑 ADD YOUR ANTHROPIC API KEY HERE 👇
-    ANTHROPIC_API_KEY: 'YOUR_API_KEY_HERE',
-
-    // API Settings
-    ANTHROPIC_API_URL: 'https://api.anthropic.com/v1/messages',
-    CLAUDE_MODEL: 'claude-sonnet-4-20250514', // Latest Claude Sonnet 4.5
+    // API Settings - all calls go through server proxy (no client-side key needed)
+    ANTHROPIC_API_URL: '/api/claude',
     CLAUDE_MAX_TOKENS: 4096,
-    CLAUDE_TEMPERATURE: 1.0,
 
     // Feature flags
     ENABLE_AI_INSIGHTS: true,
@@ -21,17 +22,16 @@ const CONFIG = {
     AI_QUERY_PLACEHOLDER: 'Ask Claude about your taste data... (e.g., "What makes my products unique?")'
 };
 
-// Validation
+/**
+ * Check if AI features are available (user is authenticated)
+ */
 function validateAPIKey() {
-    if (!CONFIG.ANTHROPIC_API_KEY || CONFIG.ANTHROPIC_API_KEY === 'YOUR_API_KEY_HERE') {
-        console.warn('⚠️ Anthropic API key not configured. AI features will be disabled.');
-        return false;
+    // AI calls are proxied server-side; the user just needs to be authenticated
+    if (window.authManager && window.authManager.isAuthenticated()) {
+        return true;
     }
-    if (!CONFIG.ANTHROPIC_API_KEY.startsWith('sk-ant-')) {
-        console.error('❌ Invalid API key format. Anthropic keys start with "sk-ant-"');
-        return false;
-    }
-    return true;
+    console.warn('AI features require authentication. Please sign in.');
+    return false;
 }
 
 // Export for use in app
