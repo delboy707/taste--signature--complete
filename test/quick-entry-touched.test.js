@@ -81,6 +81,7 @@ function setUp() {
   const touchedFields = require(path.join('..', 'touched-fields.js'));
   global.TouchedFields = touchedFields;
   global.window = { TouchedFields: touchedFields };
+  global.escapeHtml = require(path.join('..', 'dom-utils.js')).escapeHtml;
   global.document = buildFakeDocument();
   global.alert = () => {};
   global.experiences = [];
