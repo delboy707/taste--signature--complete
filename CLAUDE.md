@@ -284,6 +284,9 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   `aiRateLimits/{clerkUserId}` via the Admin SDK, transactional. 429 with
   `retry-after` over the limit; 503 (fail closed) if Firestore is down. The
   `firestore.rules` catch-all already denies clients on that collection.
+- Timeouts: `vercel.json` `maxDuration` for `api/claude.js` is 300s (Pro plan
+  with Fluid compute, capped at 300) and the upstream `REQUEST_TIMEOUT` is 295s.
+  Keep the 5s margin (a test enforces it).
 - Gate optional AI paths on `isAIAvailable()` (`config.js`).
 - The handler is built by `createHandler(deps)`; tests in
   `test/api-claude.test.js`.

@@ -395,3 +395,13 @@ test('client default (config.js CLAUDE_MAX_TOKENS) is 16000 and is not above the
   assert.equal(MAX_TOKENS, 16000);
   assert.ok(clientDefault <= MAX_TOKENS, 'client would be silently capped by the proxy');
 });
+
+test('timeouts: upstream REQUEST_TIMEOUT is exactly 5s below vercel.json maxDuration for api/claude.js', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { REQUEST_TIMEOUT } = require('../api/claude.js');
+  const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+  const maxDuration = cfg.functions['api/claude.js'].maxDuration;
+  assert.equal(maxDuration, 300);
+  assert.equal(REQUEST_TIMEOUT, (maxDuration - 5) * 1000);
+});

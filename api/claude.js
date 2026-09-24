@@ -32,7 +32,10 @@ const {
 // Configuration
 const MAX_MESSAGE_LENGTH = 5000;      // Limit message size to prevent abuse
 const MAX_TOKENS = 16000;             // Maximum tokens per request (thinking tokens count toward it)
-const REQUEST_TIMEOUT = 30000;        // 30 second timeout
+// Upstream timeout. Must stay 5s below api/claude.js maxDuration in vercel.json
+// (300s: Pro plan, capped) so the proxy can return its own 408 before Vercel
+// kills the function. Enforced by test/api-claude.test.js.
+const REQUEST_TIMEOUT = 295000;       // 295 second timeout
 const MAX_REQUEST_BODY_SIZE = 50000;  // Max total request body size in chars
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
@@ -304,4 +307,5 @@ module.exports.createHandler = createHandler;
 module.exports.resolveModel = resolveModel;
 module.exports.DEFAULT_MODEL = DEFAULT_MODEL;
 module.exports.MAX_TOKENS = MAX_TOKENS;
+module.exports.REQUEST_TIMEOUT = REQUEST_TIMEOUT;
 module.exports.ALLOWED_MODELS = ALLOWED_MODELS;
