@@ -108,16 +108,36 @@ class PDFExporter {
                 ...allEmotions.map(e => [e.emotion.charAt(0).toUpperCase() + e.emotion.slice(1), e.stage, `${e.value}/10`])
             ];
 
-            doc.autoTable({
-                startY: y,
-                head: [emotionData[0]],
-                body: emotionData.slice(1),
-                theme: 'striped',
-                headStyles: { fillColor: this.hexToRgb(this.brandColor) },
-                margin: { left: 20, right: 20 }
-            });
+            // Consumer selections (CATA) from a QEP CSV import: never a 0-10 value.
+            const cataRows = window.CataEmotions ? window.CataEmotions.buildCataTableRows(experience) : [];
 
-            return doc.lastAutoTable.finalY + 10;
+            if (allEmotions.length > 0 || cataRows.length === 0) {
+                doc.autoTable({
+                    startY: y,
+                    head: [emotionData[0]],
+                    body: emotionData.slice(1),
+                    theme: 'striped',
+                    headStyles: { fillColor: this.hexToRgb(this.brandColor) },
+                    margin: { left: 20, right: 20 }
+                });
+                y = doc.lastAutoTable.finalY + 10;
+            }
+
+            if (cataRows.length > 0) {
+                doc.setFontSize(9);
+                doc.text('Selected by consumers (check-all-that-apply): a % is the share of consumers; not a 0-10 rating.', 20, y);
+                doc.autoTable({
+                    startY: y + 4,
+                    head: [['Emotion', 'Stage', 'Selected by consumers']],
+                    body: cataRows,
+                    theme: 'striped',
+                    headStyles: { fillColor: this.hexToRgb(this.brandColor) },
+                    margin: { left: 20, right: 20 }
+                });
+                y = doc.lastAutoTable.finalY + 10;
+            }
+
+            return y;
         });
 
         // Emotional Triggers
@@ -453,6 +473,8 @@ class PDFExporter {
         Object.entries(experience.stages).forEach(([stageName, stage]) => {
             if (stage.emotions) {
                 Object.entries(stage.emotions).forEach(([emotion, value]) => {
+                    // null = not rated (untouched slider or a CATA stage): no "null/10" row
+                    if (typeof value !== 'number') return;
                     emotions.push({ stage: stageName, emotion, value });
                 });
             }

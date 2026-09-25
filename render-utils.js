@@ -12,6 +12,18 @@
     : window.DomUtils;
   const esc = dom.escapeHtml;
   const jsArgAttr = dom.jsArgAttr;
+  // Consumer emotion selections (CATA) from a QEP CSV import - listed, never
+  // shown as a 0-10 value (cata-emotions.js, loaded before this file).
+  const cataMod = (typeof module !== 'undefined' && module.exports) ? require('./cata-emotions.js') : null;
+  function cataHistoryHtml(e) {
+    const m = cataMod || (typeof window !== 'undefined' ? window.CataEmotions : null);
+    return m ? m.buildCataHistoryHtml(e) : '';
+  }
+  // A null satisfaction (untouched slider, or a CATA stage) is "Not rated", not "/10".
+  function satisfactionText(e) {
+    const v = e.stages.aftertaste.emotions.satisfaction;
+    return typeof v === 'number' ? `${esc(v)}/10` : 'Not rated';
+  }
 
   /**
    * <option> list for the "Is this a re-test?" selector.
@@ -157,7 +169,7 @@
                 </div>
                 <div style="margin-top: 10px; font-size: 0.9rem;">
                     <strong>Need State:</strong> ${esc(cap(e.needState))}<br>
-                    <strong>Satisfaction:</strong> ${esc(e.stages.aftertaste.emotions.satisfaction)}/10
+                    <strong>Satisfaction:</strong> ${satisfactionText(e)}${cataHistoryHtml(e)}
                     ${e.productInfo.occasion && e.productInfo.occasion !== 'Not specified' ? `<br><strong>Occasion:</strong> ${esc(String(e.productInfo.occasion).replace('-', ' '))}` : ''}
                     ${e.productInfo.temperature && e.productInfo.temperature !== 'Not specified' ? `<br><strong>Temperature:</strong> ${esc(String(e.productInfo.temperature).replace('-', ' '))}` : ''}
                 </div>

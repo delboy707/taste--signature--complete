@@ -365,8 +365,20 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   stage's emotion sliders stay null and the selection is stored in
   `experience.cataEmotions = { <stageKey>: { <emotionKey>: proportion|null } }`
   (a number only when the token carried one, e.g. `x:0.62` / `x (62%)`).
-  No reader uses `cataEmotions` yet; every reader already tolerates null
-  sliders (touched-fields). 262-column files still import.
+  Every reader already tolerates null sliders (touched-fields). 262-column
+  files still import.
+- **CATA display (2026-09-26b).** `cata-emotions.js` (`window.CataEmotions`,
+  pure escaped builders, `test/cata-emotions*.test.js`) lists
+  `cataEmotions` as "Selected by consumers" (a % only when the file gave a
+  share) in: the History row (a null satisfaction reads "Not rated"), a box
+  under the Emotional Journey and the emotional map charts, a block under
+  the Comparison heatmap table, the HTML PDF report, the product CSV, the
+  jsPDF report (own table) and the AI product prompt. Never a 0-10 value:
+  no chart, heatmap cell, average or score reads `cataEmotions` (a test
+  checks the chart data is identical with and without it). Left out on
+  purpose (numeric aggregates): dashboard/insight satisfaction, radars,
+  heatmap cells, portfolio/white space, correlations, benchmarks,
+  statistics, temporal analysis, the AI portfolio summary.
 
 ## Status 2026-09-25 (Stage 2B - Send to Capture, on main)
 

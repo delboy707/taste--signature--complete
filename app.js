@@ -1248,6 +1248,19 @@ function renderShapeOfTaste(exp) {
     });
 }
 
+// CSV-imported Capture profiles keep consumer emotion selections (CATA) in
+// experience.cataEmotions. A selection is not a 0-10 value, so no chart
+// plots it: it is listed in a box beside the chart instead (cata-emotions.js).
+// Hidden and emptied for an experience without selections.
+function renderCataSelections(containerId, exp) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const ce = window.CataEmotions;
+    const html = ce ? ce.buildCataChipsHtml(exp, { note: ce.NOT_PLOTTED_NOTE }) : '';
+    el.innerHTML = html;
+    el.style.display = html ? 'block' : 'none';
+}
+
 function renderEmotionalJourney(exp) {
     if (!exp || !exp.stages) return;
 
@@ -1315,6 +1328,8 @@ function renderEmotionalJourney(exp) {
             }
         }
     });
+
+    renderCataSelections('emotional-journey-cata', exp);
 }
 
 // ===== NEED STATES =====
@@ -1975,6 +1990,9 @@ function renderComparisonEmotionHeatmap(products) {
         </div>
     `;
 
+    // Consumer selections (CATA) are listed below the table, never as cells.
+    if (window.CataEmotions) tableHTML += window.CataEmotions.buildCataComparisonHtml(products);
+
     container.innerHTML = tableHTML;
 }
 
@@ -2309,6 +2327,8 @@ function renderEmotionalMap(exp) {
             }
         }
     });
+
+    renderCataSelections('emotional-map-cata', exp);
 }
 
 function renderShapeOfEmotion(exp) {

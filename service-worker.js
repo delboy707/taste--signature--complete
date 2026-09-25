@@ -2,7 +2,7 @@
 // Provides offline caching and improved performance
 
 // Version: Update this when making significant changes
-const VERSION = '3.13.0-consumer-results';
+const VERSION = '3.13.1-cata-emotions';
 const CACHE_NAME = `taste-signature-${VERSION}`;
 
 // Files to cache for offline use

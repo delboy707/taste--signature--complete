@@ -1847,6 +1847,7 @@
                     <div class="card">
                         <h3>Emotional Journey</h3>
                         <canvas id="emotional-journey-chart"></canvas>
+                        <div id="emotional-journey-cata" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -1870,6 +1871,7 @@
                             <span class="tooltip-text">This chart shows how each emotion evolves across the consumption journey. Look for peaks to identify emotional high points.</span>
                         </div>
                         <canvas id="emotional-map-chart"></canvas>
+                        <div id="emotional-map-cata" style="display:none;"></div>
                     </div>
 
                     <div class="grid-2col">
@@ -2241,6 +2243,9 @@
     <script src="save-diff.js"></script>
     <script src="touched-fields.js"></script>
     <script src="dom-utils.js"></script>
+    <!-- Consumer emotion selections (CATA) from QEP CSV imports: pure builders,
+         needs dom-utils.js above; used by render-utils.js and app.js. -->
+    <script src="cata-emotions.js"></script>
     <script src="render-utils.js"></script>
     <script src="firestore-data.js"></script>
     <script src="config.js"></script>
