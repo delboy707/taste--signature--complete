@@ -345,13 +345,13 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
-## Status 2026-09-25c (Stage 2C - Consumer results, branch feat/consumer-results)
+## Status 2026-09-26 (Stage 2C - Consumer results, on main)
 
 - History rows of a linked experience (`tssProjectId`) get a read-only
-  "Consumer results" panel (`consumer-results.js`, `ENABLE_CONSUMER_RESULTS`
-  in `qep-capture-config.js`, **false** until qep-capture migration 0041's
-  `public.get_version_results` is applied to the project the config points
-  at). It lists the project's versions (`tss_shared.project_versions`),
+  "Consumer results" panel (`consumer-results.js`, `ENABLE_CONSUMER_RESULTS:
+  true` in `qep-capture-config.js`; qep-capture migration 0041's
+  `public.get_version_results` is applied to production and dev since
+  2026-09-25; the example config ships it off). It lists the project's versions (`tss_shared.project_versions`),
   calls `get_version_results` for each LOCKED one (max 3 in parallel) and
   shows Signature's own slider value beside the consumer mean (n, SD) for
   sensory/trigger codes and "% selected (x of n)" for emotion codes. Never
