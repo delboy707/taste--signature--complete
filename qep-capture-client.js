@@ -17,10 +17,11 @@
 
 let _qepCaptureClient = null;
 
-// How long a qep-capture call waits for ClerkJS to finish loading before
-// giving up. On a returning visit Firebase restores its own session and the
-// app (Targets Loaded picker, ?project= deep link, dual-write) can run BEFORE
-// auth.js's Clerk gate has loaded ClerkJS.
+// How long a qep-capture call waits for auth.js's Clerk-ready signal (or,
+// without auth.js, for ClerkJS to finish loading) before giving up. On a
+// returning visit Firebase restores its own session and the app (Targets
+// Loaded picker, ?project= deep link, dual-write) can run BEFORE auth.js's
+// Clerk gate has loaded ClerkJS and activated the org.
 const CLERK_WAIT_MS = 15000;
 const CLERK_POLL_MS = 100;
 
@@ -63,20 +64,31 @@ function _notSignedInError() {
 }
 
 /**
- * Resolve a Clerk session token for qep-capture requests. Waits (up to
- * CLERK_WAIT_MS) for ClerkJS to be on the page and loaded, then returns the
- * token. NEVER returns null: supabase-js treats a null token as "use the anon
+ * Resolve a Clerk session token for qep-capture requests. Awaits auth.js's
+ * Clerk-ready signal (authManager.whenClerkReady(), up to CLERK_WAIT_MS),
+ * which settles only after Clerk.load() AND the gate's single-org setActive,
+ * so the token carries the org claim that tss_shared.auth_user_org_ids()
+ * reads (audit A2 #2/#9). Without auth.js on the page it falls back to
+ * polling for Clerk.loaded, as before.
+ * NEVER returns null: supabase-js treats a null token as "use the anon
  * key", and anon has no USAGE on tss_shared ("permission denied for schema
  * tss_shared", 2026-09-24). Throws a clear not-signed-in error instead.
  */
 async function _getClerkTokenOrThrow() {
     if (isQepDemoModeActive()) throw _demoModeError();
-    const deadline = Date.now() + CLERK_WAIT_MS;
-    while (!(window.Clerk && window.Clerk.loaded)) {
-        if (Date.now() >= deadline) throw _notSignedInError();
-        await new Promise(resolve => setTimeout(resolve, CLERK_POLL_MS));
+    const authManager = window.authManager;
+    if (authManager && typeof authManager.whenClerkReady === 'function') {
+        const state = await authManager.whenClerkReady(CLERK_WAIT_MS);
+        if (isQepDemoModeActive() || (state && state.status === 'demo')) throw _demoModeError();
+        if (!state || state.status !== 'signed-in') throw _notSignedInError();
+    } else {
+        const deadline = Date.now() + CLERK_WAIT_MS;
+        while (!(window.Clerk && window.Clerk.loaded)) {
+            if (Date.now() >= deadline) throw _notSignedInError();
+            await new Promise(resolve => setTimeout(resolve, CLERK_POLL_MS));
+        }
     }
-    if (!window.Clerk.session) throw _notSignedInError();
+    if (!(window.Clerk && window.Clerk.session)) throw _notSignedInError();
     const token = await window.Clerk.session.getToken();
     if (!token) throw _notSignedInError();
     return token;

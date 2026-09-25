@@ -36,6 +36,12 @@ function validateAPIKey() {
  * /api/claude proxy, so there is no client-side key to test for: the proxy is
  * usable when a Claude client exists (or can be constructed) AND the user is
  * signed in. Quiet (no console warning) so it can be called freely.
+ * "Signed in" means Firebase AND, once auth.js's Clerk gate has settled
+ * (authManager.clerkReadyState), a Clerk session - the proxy only accepts a
+ * Clerk token, so a stale Firebase session with Clerk signed out, errored or
+ * in demo is NOT available (audit A2 #6). While the gate is still running
+ * this is Firebase-only; the AI call itself awaits the gate
+ * (claude-api.js getAuthToken).
  */
 function isAIAvailable() {
     if (typeof window === 'undefined') return false;
@@ -43,6 +49,8 @@ function isAIAvailable() {
         typeof window.authManager.isAuthenticated === 'function' &&
         window.authManager.isAuthenticated());
     if (!signedIn) return false;
+    const clerkState = window.authManager.clerkReadyState;
+    if (clerkState && clerkState.status !== 'signed-in') return false;
     return !!window.claudeAI || typeof ClaudeAI === 'function';
 }
 

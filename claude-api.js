@@ -52,9 +52,17 @@ class ClaudeAI {
      * Clerk session tokens are short-lived, so this is fetched per request
      * (Clerk caches and refreshes internally; getToken() is cheap).
      * Returns null when the user has no Clerk session.
+     * Awaits auth.js's Clerk-ready signal first (audit A2 #5): on a returning
+     * visit the app is usable before Clerk.load() has finished, and
+     * window.Clerk.session is undefined until then.
      */
     async getAuthToken() {
         try {
+            const authManager = window.authManager;
+            if (authManager && typeof authManager.whenClerkReady === 'function') {
+                const state = await authManager.whenClerkReady();
+                if (!state || state.status !== 'signed-in') return null;
+            }
             const clerk = window.Clerk;
             if (clerk && clerk.session && typeof clerk.session.getToken === 'function') {
                 const token = await clerk.session.getToken();

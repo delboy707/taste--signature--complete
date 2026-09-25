@@ -12,12 +12,78 @@ const CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsucWVwdHNzLmNvbSQ';
 const CLERK_PORTAL_URL = 'https://qeptss.com';
 const DEMO_MODE_KEY = 'taste_demo_mode_active';
 
+// "Clerk ready" signal (audit A2, 2026-09-25). On a returning visit Firebase
+// restores its own session and onAuthStateChanged(user) -> showApp() runs
+// BEFORE the Clerk gate below has loaded ClerkJS, run Clerk.load(), activated
+// the org (setActive) and checked provisioning. Anything that needs a Clerk
+// token (qep-capture dual-write, /api/claude, logout, the deep link) awaits
+// authManager.whenClerkReady() instead of polling Clerk or assuming it.
+// Each waiter gives up after this long (the same 15 s budget
+// qep-capture-client.js used for its Clerk poll) - it never hangs.
+const CLERK_READY_TIMEOUT_MS = 15000;
+// logout() waits at most this long for a still-running gate before it
+// signs out of Clerk (if loaded) and hard-redirects to the portal anyway.
+const LOGOUT_CLERK_WAIT_MS = 3000;
+// Bound on Clerk.signOut() itself, so a stuck call can't block the redirect.
+const LOGOUT_CLERK_SIGNOUT_MS = 5000;
+// How long the gate waits for Firebase's first auth-state callback (the
+// IndexedDB restore) before deciding whether a persisted Firebase user exists.
+const FIREBASE_RESTORE_WAIT_MS = 2000;
+
+// Resolve with `promise`'s value, or undefined after `ms` - whichever comes
+// first. Clears its timer either way; rejections pass through.
+function _withTimeout(promise, ms) {
+    let timer;
+    const timeout = new Promise(resolve => { timer = setTimeout(resolve, ms); });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 class AuthManager {
     constructor() {
         this.currentUser = null;
         this.auth = null;
         this.db = null;
         this.onAuthChangeCallbacks = [];
+
+        // Settled once, by the Clerk gate (or demo mode). null until then.
+        // Shape: { status: 'signed-in' | 'signed-out' | 'demo' | 'error',
+        //          session, reason?, error? }
+        this.clerkReadyState = null;
+        this._clerkReadyPromise = new Promise(resolve => { this._resolveClerkReady = resolve; });
+        this._firstAuthStatePromise = new Promise(resolve => { this._resolveFirstAuthState = resolve; });
+        this._loggingOut = false;
+        this.logoutClerkWaitMs = LOGOUT_CLERK_WAIT_MS;
+    }
+
+    /**
+     * Settle the Clerk-ready signal. Idempotent: the first call wins.
+     */
+    _settleClerkReady(status, extra) {
+        if (this.clerkReadyState) return this.clerkReadyState;
+        const session = (status === 'signed-in' && window.Clerk) ? (window.Clerk.session || null) : null;
+        this.clerkReadyState = Object.assign({ status, session }, extra || {});
+        this._resolveClerkReady(this.clerkReadyState);
+        return this.clerkReadyState;
+    }
+
+    /**
+     * Resolves once ClerkJS is loaded, Clerk.load() has finished, the
+     * single-org setActive attempt is done and provisioning has passed - with
+     * { status: 'signed-in', session }. Otherwise 'signed-out' (no session, or
+     * reason 'not-provisioned'), 'demo' (ClerkJS is never loaded) or 'error'
+     * (the gate failed, or reason 'timeout' when this waiter gave up after
+     * timeoutMs, default CLERK_READY_TIMEOUT_MS). Always settles; never rejects.
+     */
+    whenClerkReady(timeoutMs) {
+        if (this.clerkReadyState) return Promise.resolve(this.clerkReadyState);
+        const ms = (typeof timeoutMs === 'number' && timeoutMs >= 0) ? timeoutMs : CLERK_READY_TIMEOUT_MS;
+        return new Promise(resolve => {
+            const timer = setTimeout(() => resolve({ status: 'error', reason: 'timeout', session: null }), ms);
+            this._clerkReadyPromise.then(state => {
+                clearTimeout(timer);
+                resolve(state);
+            });
+        });
     }
 
     /**
@@ -76,9 +142,12 @@ class AuthManager {
             // Listen for auth state changes - unchanged downstream behavior.
             this.auth.onAuthStateChanged((user) => {
                 this.currentUser = user;
+                this._resolveFirstAuthState(user);
                 this.onAuthChangeCallbacks.forEach(callback => callback(user));
 
                 if (user) {
+                    // A logout in progress must not re-show the app.
+                    if (this._loggingOut) return;
                     console.log('User authenticated');
                     this.showApp();
 
@@ -88,12 +157,18 @@ class AuthManager {
                     }
 
                     // Consume any ?project=&version= deep link stashed before
-                    // the Clerk gate ran (see targets-loaded-ui.js) - now
-                    // that auth has fully resolved. No-op if nothing was
-                    // stashed or Targets Loaded is disabled.
-                    if (typeof window.handleQepCaptureDeepLink === 'function') {
-                        window.handleQepCaptureDeepLink();
-                    }
+                    // the Clerk gate ran (see targets-loaded-ui.js) - only
+                    // once the Clerk-ready signal says the session (and org)
+                    // is usable. On a returning visit this callback fires
+                    // before the gate finishes. No-op if nothing was stashed
+                    // or Targets Loaded is disabled; left stashed otherwise.
+                    this.whenClerkReady().then(state => {
+                        if (this._loggingOut) return;
+                        if (state.status !== 'signed-in' && state.status !== 'demo') return;
+                        if (typeof window.handleQepCaptureDeepLink === 'function') {
+                            window.handleQepCaptureDeepLink();
+                        }
+                    });
                 } else {
                     console.log('User logged out');
                     this.showAuthScreen();
@@ -104,11 +179,15 @@ class AuthManager {
             const demoActive = window.localStorage.getItem(DEMO_MODE_KEY) === 'true';
             if (demoActive) {
                 console.log('Demo mode active - skipping Clerk gate');
+                this._settleClerkReady('demo');
                 return true;
             }
 
             return await this.runClerkGate();
         } catch (error) {
+            // Whatever failed, anything awaiting the signal gets an answer
+            // (no-op if the gate already settled it, e.g. a later exchange).
+            this._settleClerkReady('error', { error });
             console.error('Firebase initialization error:', error);
 
             // Show user-friendly error message
@@ -131,10 +210,28 @@ class AuthManager {
      * a hard sign-out.
      */
     async runClerkGate() {
-        await this.loadClerkScript();
-        await window.Clerk.load();
+        try {
+            await this.loadClerkScript();
+            await window.Clerk.load();
+        } catch (error) {
+            this._settleClerkReady('error', { error });
+            throw error;
+        }
 
         if (!window.Clerk.session) {
+            this._settleClerkReady('signed-out');
+            // A Firebase session restored from IndexedDB must not outlive
+            // the Clerk session (e.g. signed out on the portal): sign it out
+            // first, or the app re-shows on every load with live Firestore
+            // listeners under a Clerk-revoked identity (audit A2 #8).
+            try {
+                await _withTimeout(this._firstAuthStatePromise, FIREBASE_RESTORE_WAIT_MS);
+                if (this.auth) {
+                    await this.auth.signOut();
+                }
+            } catch (error) {
+                console.warn('Clerk gate: Firebase sign-out for a signed-out Clerk session failed:', error);
+            }
             this.showAuthScreen();
             return true;
         }
@@ -160,10 +257,52 @@ class AuthManager {
 
         const publicMetadata = window.Clerk.user ? window.Clerk.user.publicMetadata : null;
         if (!publicMetadata || publicMetadata.provisioned !== true) {
+            this._settleClerkReady('signed-out', { reason: 'not-provisioned' });
             window.location.href = CLERK_PORTAL_URL;
             return false;
         }
 
+        // Clerk is loaded, the org is activated (or deliberately not) and the
+        // account is provisioned: tokens minted from here on carry the org
+        // claim. Settled BEFORE the Firebase exchange, which is Firebase's
+        // concern, not Clerk's.
+        this._settleClerkReady('signed-in');
+
+        // A logout started while the gate was loading: never re-sign-in.
+        if (this._loggingOut) return true;
+
+        try {
+            await this._exchangeClerkSessionForFirebase();
+        } catch (error) {
+            // Returning visit: Firebase already restored the SAME identity
+            // (uid === Clerk sub, see api/firebase-token.js), so the app is
+            // already usable - the exchange was only a refresh. Non-fatal
+            // (audit A2 #11). Fresh sign-in or a different identity: fatal.
+            if (await this._hasMatchingFirebaseUser()) {
+                console.warn('Clerk gate: Firebase token exchange failed on a returning visit; keeping the restored Firebase session:', error);
+                return true;
+            }
+            throw error;
+        }
+        return true;
+    }
+
+    /**
+     * True when Firebase has (or restores within FIREBASE_RESTORE_WAIT_MS) a
+     * user whose uid is the signed-in Clerk user's id.
+     */
+    async _hasMatchingFirebaseUser() {
+        await _withTimeout(this._firstAuthStatePromise, FIREBASE_RESTORE_WAIT_MS);
+        const fbUser = this.auth ? this.auth.currentUser : null;
+        const clerkUser = window.Clerk ? window.Clerk.user : null;
+        return !!(fbUser && clerkUser && fbUser.uid === clerkUser.id);
+    }
+
+    /**
+     * Exchange the Clerk session token for a Firebase custom token via
+     * /api/firebase-token and sign in to Firebase with it.
+     */
+    async _exchangeClerkSessionForFirebase() {
         const sessionToken = await window.Clerk.session.getToken();
         if (!sessionToken) {
             throw new Error('Unable to read Clerk session token.');
@@ -188,10 +327,9 @@ class AuthManager {
 
         // Yields a normal Firebase session (own refresh token), so the
         // onAuthStateChanged listener above fires and the rest of the app
-        // boots exactly as before.
+        // boots exactly as before. Skipped if logout() started meanwhile.
+        if (this._loggingOut) return;
         await this.auth.signInWithCustomToken(data.token);
-
-        return true;
     }
 
     // ----- Neutered: auth UI now lives on the Clerk-hosted portal. -----
@@ -250,22 +388,34 @@ class AuthManager {
      * Logout current user. Signs out of Firebase and Clerk, then redirects
      * to the portal - a Firebase-only signOut would leave a live Clerk
      * session that would just re-mint a new Firebase token on next load.
+     *
+     * Safe to call before the Clerk gate has finished (audit A2 #7): it marks
+     * logout in progress (so a pending gate can't signInWithCustomToken
+     * again), signs Firebase out, waits at most logoutClerkWaitMs for the
+     * Clerk-ready signal, signs out of Clerk only if ClerkJS actually loaded
+     * (bounded), and ALWAYS finishes with a hard redirect to the portal -
+     * whatever failed along the way.
      */
     async logout() {
+        this._loggingOut = true;
         try {
             if (this.auth) {
                 await this.auth.signOut();
             }
-            if (window.Clerk && typeof window.Clerk.signOut === 'function') {
-                await window.Clerk.signOut({ redirectUrl: CLERK_PORTAL_URL });
-            } else {
-                window.location.href = CLERK_PORTAL_URL;
-            }
-            return { success: true, message: 'Logged out successfully' };
         } catch (error) {
-            console.error('Logout error:', error);
-            return { success: false, message: 'Error logging out' };
+            console.error('Logout: Firebase sign-out failed:', error);
         }
+        try {
+            await this.whenClerkReady(this.logoutClerkWaitMs);
+            const clerk = window.Clerk;
+            if (clerk && clerk.loaded && clerk.session && typeof clerk.signOut === 'function') {
+                await _withTimeout(clerk.signOut({ redirectUrl: CLERK_PORTAL_URL }), LOGOUT_CLERK_SIGNOUT_MS);
+            }
+        } catch (error) {
+            console.error('Logout: Clerk sign-out failed:', error);
+        }
+        window.location.href = CLERK_PORTAL_URL;
+        return { success: true, message: 'Logged out successfully' };
     }
 
     /**

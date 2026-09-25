@@ -2312,6 +2312,18 @@
 
         // Initialize auth when page loads
         document.addEventListener('DOMContentLoaded', async () => {
+            // Wired BEFORE the Clerk gate is awaited (audit A2 #13): on a
+            // returning visit Firebase shows the app before the gate finishes,
+            // and a failed gate must not leave logout/demo dead or the SW
+            // unregistered. Logout itself waits (bounded) for the gate.
+            try {
+                initAuthUI();
+                initLogoutButton();
+                registerServiceWorker();
+            } catch (error) {
+                console.error('UI wiring error:', error);
+            }
+
             try {
                 // Wait for Firebase SDK to be fully loaded
                 if (typeof firebase === 'undefined') {
@@ -2339,10 +2351,6 @@
                         'error');
                     return;
                 }
-
-                initAuthUI();
-                initLogoutButton();
-                registerServiceWorker();
 
                 // Video is now embedded directly in HTML - no JS needed
 
@@ -2473,7 +2481,11 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async () => {
                     if (confirm('Are you sure you want to logout?')) {
-                        await window.authManager.logout();
+                        if (window.authManager && typeof window.authManager.logout === 'function') {
+                            await window.authManager.logout();
+                        } else {
+                            window.location.href = 'https://qeptss.com';
+                        }
                     }
                 });
             }
