@@ -2074,12 +2074,27 @@ function updateHistory() {
     }
 
     // "Send to Capture" button (send-to-capture.js) - renders nothing unless
-    // ENABLE_SEND_TO_CAPTURE is on in qep-capture-config.js.
+    // ENABLE_SEND_TO_CAPTURE is on in qep-capture-config.js. "Consumer
+    // results" (consumer-results.js) - only for a linked experience
+    // (tssProjectId) with ENABLE_CONSUMER_RESULTS on.
     const sendToCapture = window.SendToCapture;
+    const consumerResults = window.ConsumerResults;
+    const extraActionsHtml = (e) =>
+        (consumerResults ? consumerResults.buildConsumerResultsButtonHtml(e) : '') +
+        (sendToCapture ? sendToCapture.buildSendToCaptureButtonHtml(e) : '');
     container.innerHTML = RenderUtils.buildHistoryHtml(
         experiences.sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
-        sendToCapture ? { extraActionsHtml: (e) => sendToCapture.buildSendToCaptureButtonHtml(e) } : undefined
+        { extraActionsHtml }
     );
+}
+
+// Called from the history row's "Consumer results" button (read-only panel;
+// never changes the experience). Float id, strict equality - see below.
+function showConsumerResults(id) {
+    if (!window.ConsumerResults) return;
+    const experience = experiences.find(e => e.id === id);
+    if (!experience) return;
+    window.ConsumerResults.openConsumerResultsPanel(experience);
 }
 
 // Called from the history row's "Send to Capture" button. Ids are floats -
