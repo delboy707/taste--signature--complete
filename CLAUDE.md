@@ -64,13 +64,27 @@ registered in its `allowedRedirectOrigins`), not in this app. Flow:
    settled). Awaited by: qep-capture tokens (`qep-capture-client.js`), the
    AI token (`claude-api.js`), `isAIAvailable()` (sync view), the deep link
    and `logout()`. Logout is wired before the gate (index.html), waits at
-   most 3 s for the signal, and always hard-redirects to `https://qeptss.com`.
+   most 3 s for the signal, and always hard-redirects (see item 7).
    A Clerk-signed-out load signs Firebase out; a failed token exchange on a
    returning visit with the same uid is a warning, not a fatal alert.
    Not changed: the Firebase-restored app is still shown before the gate
    finishes (hiding it would show the sign-in card for the Clerk load time
    on every visit), and an org joined after first provisioning never
    changes the Firestore company (`api/firebase-token.js`).
+7. **Logout ends the Clerk session (2026-09-25b).** After the 3 s signal
+   wait, `logout()` makes ClerkJS usable - the gate's own in-flight load
+   (`_ensureClerkLoaded()`, shared, never a second `Clerk.load()`), or a
+   fresh load just for the sign-out after a gate error - within 8 s, then
+   `Clerk.signOut` (5 s bound). Confirmed sign-out, or a Clerk with no
+   session: redirect to `https://qeptss.com`. Anything else: an alert and
+   `https://qeptss.com/dashboard` (the Portal's page with its Sign out
+   button - the Portal has no sign-out route). Never a silent "signed out"
+   while Clerk may still be signed in. Demo mode never loads ClerkJS.
+8. **Exactly one `AuthManager`**: auth.js's `window.authManager`. Never
+   `const authManager = new AuthManager()` anywhere (a top-level const is a
+   global lexical binding that shadows `window.authManager` for every bare
+   `authManager` lookup - that is how export-controller.js/tutorial.js
+   used to read an uninitialised copy). New code reads `window.authManager`.
 
 ---
 
@@ -345,8 +359,13 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   one of Capture's categories, then re-sends with `tssCategoryId`.
   confectionery -> Chocolate Bar and snack -> Savoury Snack map automatically.
 - Demo mode and "nothing measured" are refused before any tab or RPC.
-- Not yet done: the returned `project_id` is not saved back to the
-  Firestore experience (0038 finds earlier sends server-side).
+- Link save-back (2026-09-25b): after a successful send an experience with
+  no `tssProjectId` gets `tssProjectId = project_id` and, when it has none,
+  `sourceVersionId = version_id` (`applyCaptureLink`), then `saveData()`
+  runs once. Never overwrites a link; `profile_link: 'linked_elsewhere'`
+  changes nothing; `'already_linked'` sets the project only (0036's upsert
+  would otherwise re-point the stored `source_version_id`). Failure,
+  needs_category and demo mode change nothing.
 
 ## Status 2026-09-24b (Stage 2A - on main and deployed)
 
