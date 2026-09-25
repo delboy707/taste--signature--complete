@@ -10,6 +10,11 @@
 const CLERK_FRONTEND_API = 'clerk.qeptss.com';
 const CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsucWVwdHNzLmNvbSQ';
 const CLERK_PORTAL_URL = 'https://qeptss.com';
+// Where logout sends the user when it could NOT confirm the Clerk session
+// ended (ClerkJS would not load, or Clerk.signOut failed/hung). The Portal
+// owns sign-out but has no sign-out route; its /dashboard page carries the
+// Sign out button (and bounces a signed-out visitor to /sign-in).
+const CLERK_PORTAL_SIGN_OUT_URL = 'https://qeptss.com/dashboard';
 const DEMO_MODE_KEY = 'taste_demo_mode_active';
 
 // "Clerk ready" signal (audit A2, 2026-09-25). On a returning visit Firebase
@@ -21,9 +26,11 @@ const DEMO_MODE_KEY = 'taste_demo_mode_active';
 // Each waiter gives up after this long (the same 15 s budget
 // qep-capture-client.js used for its Clerk poll) - it never hangs.
 const CLERK_READY_TIMEOUT_MS = 15000;
-// logout() waits at most this long for a still-running gate before it
-// signs out of Clerk (if loaded) and hard-redirects to the portal anyway.
+// logout() waits at most this long for a still-running gate's signal...
 const LOGOUT_CLERK_WAIT_MS = 3000;
+// ...then at most this long for ClerkJS to be usable: the gate's own
+// in-flight load, or (gate failed) a fresh load just for the sign-out.
+const LOGOUT_CLERK_LOAD_MS = 8000;
 // Bound on Clerk.signOut() itself, so a stuck call can't block the redirect.
 const LOGOUT_CLERK_SIGNOUT_MS = 5000;
 // How long the gate waits for Firebase's first auth-state callback (the
@@ -53,6 +60,8 @@ class AuthManager {
         this._firstAuthStatePromise = new Promise(resolve => { this._resolveFirstAuthState = resolve; });
         this._loggingOut = false;
         this.logoutClerkWaitMs = LOGOUT_CLERK_WAIT_MS;
+        this.logoutClerkLoadMs = LOGOUT_CLERK_LOAD_MS;
+        this.logoutClerkSignOutMs = LOGOUT_CLERK_SIGNOUT_MS;
     }
 
     /**
@@ -107,12 +116,35 @@ class AuthManager {
             script.src = 'https://' + CLERK_FRONTEND_API + '/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
             script.addEventListener('load', () => resolve());
             script.addEventListener('error', () => {
+                // Forget the failed attempt so a later caller (logout after a
+                // gate error) can inject the script again.
+                this._clerkScriptPromise = null;
                 reject(new Error('Failed to load ClerkJS from ' + CLERK_FRONTEND_API));
             });
             document.head.appendChild(script);
         });
 
         return this._clerkScriptPromise;
+    }
+
+    /**
+     * ClerkJS script loaded AND Clerk.load() finished. Shared by the gate and
+     * logout(), so a logout during the gate's load reuses that same load
+     * (never a second concurrent Clerk.load()). A failed attempt is
+     * forgotten, so logout after a gate error can try once more.
+     */
+    _ensureClerkLoaded() {
+        if (window.Clerk && window.Clerk.loaded) {
+            return Promise.resolve();
+        }
+        if (!this._clerkLoadPromise) {
+            const attempt = this.loadClerkScript().then(() => window.Clerk.load());
+            this._clerkLoadPromise = attempt;
+            attempt.catch(() => {
+                if (this._clerkLoadPromise === attempt) this._clerkLoadPromise = null;
+            });
+        }
+        return this._clerkLoadPromise;
     }
 
     /**
@@ -211,8 +243,7 @@ class AuthManager {
      */
     async runClerkGate() {
         try {
-            await this.loadClerkScript();
-            await window.Clerk.load();
+            await this._ensureClerkLoaded();
         } catch (error) {
             this._settleClerkReady('error', { error });
             throw error;
@@ -389,12 +420,19 @@ class AuthManager {
      * to the portal - a Firebase-only signOut would leave a live Clerk
      * session that would just re-mint a new Firebase token on next load.
      *
-     * Safe to call before the Clerk gate has finished (audit A2 #7): it marks
-     * logout in progress (so a pending gate can't signInWithCustomToken
-     * again), signs Firebase out, waits at most logoutClerkWaitMs for the
-     * Clerk-ready signal, signs out of Clerk only if ClerkJS actually loaded
-     * (bounded), and ALWAYS finishes with a hard redirect to the portal -
-     * whatever failed along the way.
+     * Safe to call at any point (audit A2 #7 + follow-up): it marks logout in
+     * progress (so a pending gate can't signInWithCustomToken again), signs
+     * Firebase out, waits at most logoutClerkWaitMs for the Clerk-ready
+     * signal, then makes ClerkJS usable - the gate's own in-flight load, or a
+     * fresh load just for the sign-out after a gate error - within
+     * logoutClerkLoadMs, and calls Clerk.signOut (bounded by
+     * logoutClerkSignOutMs). It ALWAYS ends with a hard redirect:
+     * - Clerk session ended (or Clerk had none): the portal home.
+     * - Not confirmed (ClerkJS would not load, signOut threw or hung): the
+     *   Portal's sign-out page (CLERK_PORTAL_SIGN_OUT_URL), after telling the
+     *   user - never a silent "signed out" while Clerk may still be signed in.
+     * Demo mode never loads ClerkJS (the app holds no Clerk session there).
+     * Resolves { success: true, clerkSignedOut, message }.
      */
     async logout() {
         this._loggingOut = true;
@@ -405,17 +443,62 @@ class AuthManager {
         } catch (error) {
             console.error('Logout: Firebase sign-out failed:', error);
         }
+
+        let clerkSignedOut = false;
         try {
-            await this.whenClerkReady(this.logoutClerkWaitMs);
-            const clerk = window.Clerk;
-            if (clerk && clerk.loaded && clerk.session && typeof clerk.signOut === 'function') {
-                await _withTimeout(clerk.signOut({ redirectUrl: CLERK_PORTAL_URL }), LOGOUT_CLERK_SIGNOUT_MS);
-            }
+            const state = await this.whenClerkReady(this.logoutClerkWaitMs);
+            const demo = state.status === 'demo' || window.localStorage.getItem(DEMO_MODE_KEY) === 'true';
+            clerkSignedOut = demo ? true : await this._endClerkSession();
         } catch (error) {
             console.error('Logout: Clerk sign-out failed:', error);
+            clerkSignedOut = false;
         }
-        window.location.href = CLERK_PORTAL_URL;
-        return { success: true, message: 'Logged out successfully' };
+
+        if (clerkSignedOut) {
+            window.location.href = CLERK_PORTAL_URL;
+            return { success: true, clerkSignedOut, message: 'Logged out successfully' };
+        }
+
+        const message = 'You are signed out of Taste Signature, but your QEP sign-in could not be ended from here. ' +
+            'Use "Sign out" on the QEP Portal page that opens next.';
+        console.error('Logout: could not confirm the Clerk session ended; sending the user to the Portal sign-out page');
+        try {
+            alert(message);
+        } catch (error) {
+            // No alert available (e.g. blocked) - the redirect still happens.
+        }
+        window.location.href = CLERK_PORTAL_SIGN_OUT_URL;
+        return { success: true, clerkSignedOut, message };
+    }
+
+    /**
+     * End the Clerk session. True when it was ended (or ClerkJS is loaded
+     * with no session - nothing to end); false when ClerkJS could not be
+     * made usable within logoutClerkLoadMs, or signOut threw or did not
+     * finish within logoutClerkSignOutMs. Never throws.
+     */
+    async _endClerkSession() {
+        const loaded = await _withTimeout(
+            this._ensureClerkLoaded().then(() => true, (error) => {
+                console.warn('Logout: could not load ClerkJS to sign out:', error);
+                return false;
+            }),
+            this.logoutClerkLoadMs
+        );
+        const clerk = window.Clerk;
+        if (loaded !== true || !clerk || !clerk.loaded) return false;
+        if (!clerk.session) return true;
+        if (typeof clerk.signOut !== 'function') return false;
+        try {
+            const done = await _withTimeout(
+                Promise.resolve(clerk.signOut({ redirectUrl: CLERK_PORTAL_URL })).then(() => true),
+                this.logoutClerkSignOutMs
+            );
+            return done === true;
+        } catch (error) {
+            console.error('Logout: Clerk sign-out failed:', error);
+            return false;
+        }
     }
 
     /**
