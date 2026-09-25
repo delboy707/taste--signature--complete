@@ -52,6 +52,25 @@ registered in its `allowedRedirectOrigins`), not in this app. Flow:
    fails immediately with a "Demo mode: ... sign in" message
    (`isQepDemoModeActive()` in `qep-capture-client.js`) and dual-write queues
    nothing - never a 15 s Clerk wait, never an anon request.
+6. **Clerk-ready signal (2026-09-25).** On a returning visit Firebase restores
+   its session and `showApp()` runs BEFORE the gate finishes. Anything that
+   needs Clerk awaits `authManager.whenClerkReady(timeoutMs)` (auth.js), never
+   `window.Clerk` directly. It resolves `{ status, session }` after ClerkJS
+   load + `Clerk.load()` + the single-org `setActive` + the provisioning
+   check: `'signed-in'`, `'signed-out'` (`reason: 'not-provisioned'` on the
+   portal redirect), `'demo'` (immediately) or `'error'` (gate failure, or
+   `reason: 'timeout'` after 15 s per waiter). It always settles, never
+   rejects; `authManager.clerkReadyState` is the sync view (null until
+   settled). Awaited by: qep-capture tokens (`qep-capture-client.js`), the
+   AI token (`claude-api.js`), `isAIAvailable()` (sync view), the deep link
+   and `logout()`. Logout is wired before the gate (index.html), waits at
+   most 3 s for the signal, and always hard-redirects to `https://qeptss.com`.
+   A Clerk-signed-out load signs Firebase out; a failed token exchange on a
+   returning visit with the same uid is a warning, not a fatal alert.
+   Not changed: the Firebase-restored app is still shown before the gate
+   finishes (hiding it would show the sign-in card for the Clerk load time
+   on every visit), and an org joined after first provisioning never
+   changes the Firestore company (`api/firebase-token.js`).
 
 ---
 
