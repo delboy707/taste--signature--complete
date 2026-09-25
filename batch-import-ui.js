@@ -1078,6 +1078,10 @@ function renderQEPTemplateSection() {
         'Download the full 262-column QEP template with all 7 stages, 242 attributes and stage emotions. ' +
         'The template is detected automatically on upload.' +
       '</p>' +
+      '<p style="margin:0 0 12px 0;font-size:13px;color:#8A5E12;">' +
+        '<strong>Capture results:</strong> the primary way to see them is the <em>Consumer results</em> button on a linked experience in History, which reads them from the QEP database. ' +
+        'Uploading a Capture export (266 columns) here is a fallback: its 4 trigger columns are kept, and emotions are recorded as selected by consumers - never as a made-up 0-10 score.' +
+      '</p>' +
       '<button class="btn-primary" onclick="downloadQEPTemplate()" style="margin-right:8px;">' +
         'Download CSV Template (262 columns)' +
       '</button>' +
@@ -1120,12 +1124,19 @@ function showQEPImportHelp() {
     "3. Fill in Row 4+ with your panel data:\n" +
     "   - Product_Name, Brand, Category, Variant are required\n" +
     "   - Attribute scores: 0 to 10, leave blank if not assessed\n" +
-    "   - Emotions: semicolon-separated, from the list shown in Row 2\n\n" +
+    "   - Emotions: semicolon-separated, from the list shown in Row 2\n" +
+    "     (recorded as selected, not as a 0-10 score; an optional share such as\n" +
+    "     excitement:0.62 or excitement (62%) is kept)\n\n" +
     "4. Save as CSV (not XLSX) and upload via Step 1.\n\n" +
     "TIPS:\n" +
     "- If a column is missing, that attribute is just skipped\n" +
     "- Case does not matter in column names\n" +
-    "- Non-numeric values in score cells are skipped with a warning";
+    "- Non-numeric values in score cells are skipped with a warning\n\n" +
+    "CAPTURE EXPORTS (FALLBACK):\n" +
+    "Capture results are best viewed with the Consumer results button on a\n" +
+    "linked experience in History (read from the QEP database). A Capture\n" +
+    "export (266 columns) can still be uploaded here: the 4 trigger columns\n" +
+    "are kept, and ;- or ,-separated emotions are recorded as selected.";
   alert(msg);
 }
 
@@ -1223,6 +1234,7 @@ function showQEPImportResultPanel(ctx) {
   } else {
     html += '<h4 style="color:#047857;">QEP Import Complete</h4>';
     html += '<p><strong>File:</strong> ' + escapeHtml(ctx.fileName || "") + '</p>';
+    html += '<p style="font-size:13px;color:#6b7280;">File import is a fallback for Capture results - the Consumer results panel on a linked experience reads them from the QEP database. Emotions from the file are recorded as selected (no 0-10 score); trigger columns, when present, are kept.</p>';
 
     var r = ctx.importResult;
     var s = ctx.parseResult.stats;

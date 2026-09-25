@@ -291,6 +291,7 @@ function buildBriefSaysHtml(text) {
 
 const TargetPrefillApi = {
     buildTargetPrefill,
+    buildCrosswalkIndex,
     buildEmotionCrosswalkIndex,
     buildSensoryCrosswalkIndex,
     splitSensoryLabels,

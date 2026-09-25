@@ -42,6 +42,13 @@ const QEP_CAPTURE_CONFIG = {
     // false until 0038 is applied in the environment this points at.
     ENABLE_SEND_TO_CAPTURE: false,
 
+    // Stage 2C "Consumer results" (consumer-results.js): read-only
+    // history-row panel on a linked experience (tssProjectId) showing
+    // Capture's consumer results per locked version via
+    // public.get_version_results (qep-capture migration 0041). OFF until
+    // 0041 is applied to the project SUPABASE_URL points at.
+    ENABLE_CONSUMER_RESULTS: false,
+
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link on a locked version
     // (?version=<project_version id>). Point at http://localhost:3000 to

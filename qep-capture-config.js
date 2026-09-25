@@ -36,6 +36,13 @@ const QEP_CAPTURE_CONFIG = {
     // 0038 was applied to production (and dev) on 2026-09-25.
     ENABLE_SEND_TO_CAPTURE: true,
 
+    // Stage 2C "Consumer results" (consumer-results.js): read-only
+    // history-row panel on a linked experience (tssProjectId) showing
+    // Capture's consumer results per locked version via
+    // public.get_version_results (qep-capture migration 0041). On: 0041 was
+    // applied to production (and dev) on 2026-09-25.
+    ENABLE_CONSUMER_RESULTS: true,
+
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link. Defaults to production; set to
     // http://localhost:3000 locally to test against a qep-capture dev

@@ -49,6 +49,8 @@ const SCHEMA_OF_RPC = {
     // Stage 2B Send to Capture (qep-capture migrations 0038 / 0031-0032)
     create_version_from_signature: 'tss_shared',
     create_study_from_version: 'public',
+    // Stage 2C Consumer results (qep-capture migration 0041)
+    get_version_results: 'public',
 };
 
 // PostgREST resource embedding (`alias:fk_col(cols)` / `table(cols)`) only
