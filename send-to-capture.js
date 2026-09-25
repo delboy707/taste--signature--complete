@@ -145,6 +145,8 @@
     return `${captureAppBaseUrl(config)}/studies/${encodeURIComponent(String(studyId))}`;
   }
 
+  const CATEGORY_REQUIRED_MESSAGE = 'Choose a Capture category for this product - its product type does not match one Capture category.';
+
   function _messageOf(err) {
     if (!err) return '';
     if (typeof err === 'string') return err;
@@ -167,6 +169,7 @@
       'This experience contains a stage Capture does not recognise, so it cannot be sent. Please contact QEP support.'],
     [/out of range 0-10/i,
       'This experience has a rating outside the 0-10 scale, so it cannot be sent to Capture. Edit or re-log it and try again.'],
+    [/category required/i, CATEGORY_REQUIRED_MESSAGE],
     [/is not a known category/i,
       'The product category chosen for Capture is not recognised. Please contact QEP support.'],
     [/profile was deleted/i,
@@ -225,7 +228,11 @@
     } catch (err) {
       throw _fail(mapSendToCaptureError(err), err);
     }
-    if (res && res.error) throw _fail(mapSendToCaptureError(res.error), res.error);
+    if (res && res.error) {
+      const e = _fail(mapSendToCaptureError(res.error), res.error);
+      if (/category required/i.test(_messageOf(res.error))) e.code = 'CATEGORY_REQUIRED';
+      throw e;
+    }
     return res ? res.data : null;
   }
 
@@ -239,6 +246,7 @@
     if (deps.isDemo && deps.isDemo()) throw _fail(DEMO_MODE_MESSAGE);
     const payload = buildSendToCapturePayload(experience);
     if (countMeasuredValues(payload) === 0) throw _fail(NOTHING_MEASURED_MESSAGE);
+    if (deps.categoryId) payload.tssCategoryId = String(deps.categoryId);
 
     let client;
     try {
@@ -275,9 +283,17 @@
     const v = (result && result.version) || {};
     let s = '';
     if (v.reused_existing_version === true) s += ' Nothing changed since the last send, so the existing version was reused.';
-    if (v.category_fallback === true) s += ' The product type did not match a Capture category, so a default category was used - check it in Capture.';
     if (result && result.outOfCategoryCount > 0) s += ` ${result.outOfCategoryCount} target(s) fall outside the study category.`;
     return s;
+  }
+
+  /** Capture's categories (public.categories), in display order. */
+  async function fetchCaptureCategories(client) {
+    const res = await client.from('categories').select('id, name').order('position');
+    if (res && res.error) throw _fail('Could not load Capture categories to choose from. Please try again.', res.error);
+    const rows = (res && res.data) || [];
+    if (!rows.length) throw _fail('Capture has no categories to choose from. Please contact QEP support.');
+    return rows.map(r => ({ id: String(r.id), name: String(r.name) }));
   }
 
   function sendToCaptureTooltip(experience) {
@@ -326,6 +342,67 @@
     return box;
   }
 
+  /**
+   * Modal asking the user to pick a Capture category. Built with
+   * textContent / option elements only (no innerHTML). onPick runs inside
+   * the Send click, so the caller can open the study tab synchronously.
+   */
+  function showCategoryPickerDialog({ categories, productType, onPick, onCancel }) {
+    if (typeof document === 'undefined') return null;
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 16px;';
+    const box = document.createElement('div');
+    box.style.cssText = 'background: white; color: #1f2937; border-radius: 10px; padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
+    const title = document.createElement('h3');
+    title.textContent = 'Choose a Capture category';
+    title.style.cssText = 'margin: 0 0 8px; font-size: 1.05rem;';
+    const text = document.createElement('p');
+    text.textContent = productType
+      ? `The product type "${productType}" matches more than one Capture category. Pick the one this study belongs to.`
+      : 'This product has no product type. Pick the Capture category this study belongs to.';
+    text.style.cssText = 'margin: 0 0 12px; font-size: 0.9rem;';
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Capture category');
+    select.style.cssText = 'width: 100%; padding: 8px; margin-bottom: 14px; font-size: 0.95rem;';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select a category...';
+    select.appendChild(placeholder);
+    for (const c of categories) {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name;
+      select.appendChild(o);
+    }
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn-secondary';
+    cancel.textContent = 'Cancel';
+    const send = document.createElement('button');
+    send.type = 'button';
+    send.className = 'btn btn-primary';
+    send.textContent = 'Send to Capture';
+    send.disabled = true;
+    select.addEventListener('change', () => { send.disabled = !select.value; });
+    const closeDialog = () => { if (overlay.parentNode) overlay.remove(); };
+    cancel.addEventListener('click', () => { closeDialog(); if (onCancel) onCancel(); });
+    send.addEventListener('click', () => { if (!select.value) return; const id = select.value; closeDialog(); onPick(id); });
+    actions.appendChild(cancel);
+    actions.appendChild(send);
+    box.appendChild(title);
+    box.appendChild(text);
+    box.appendChild(select);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    select.focus();
+    return overlay;
+  }
+
   function _defaultIsDemo() {
     return !!(typeof window !== 'undefined' && window.demoMode &&
       typeof window.demoMode.isDemoActive === 'function' && window.demoMode.isDemoActive());
@@ -353,6 +430,7 @@
     const isDemo = deps.isDemo || _defaultIsDemo;
     const openWindow = deps.openWindow || _defaultOpenWindow;
     const notify = deps.notify || showSendToCaptureToast;
+    const showCategoryPicker = deps.showCategoryPicker || showCategoryPickerDialog;
     const inFlight = new Set();
 
     function _setBusy(button, busy) {
@@ -368,7 +446,7 @@
       }
     }
 
-    async function handleClick(experience, button) {
+    async function handleClick(experience, button, opts = {}) {
       const config = deps.config || _config();
       if (!isSendToCaptureEnabled(config)) return { status: 'disabled' };
       if (!experience) {
@@ -396,7 +474,7 @@
       }
 
       try {
-        const result = await sendExperienceToCapture(experience, { getClient, isDemo, config });
+        const result = await sendExperienceToCapture(experience, { getClient, isDemo, config, categoryId: opts.categoryId });
         let opened = false;
         if (win && !win.closed) {
           try { win.location.href = result.url; opened = true; } catch { opened = false; }
@@ -411,6 +489,25 @@
         return { status: 'ok', result, opened };
       } catch (err) {
         if (win) { try { win.close(); } catch { /* ignore */ } }
+        if (err && err.code === 'CATEGORY_REQUIRED' && !opts.categoryId) {
+          let categories;
+          try {
+            categories = await fetchCaptureCategories(getClient());
+          } catch (listErr) {
+            const message = (listErr && listErr.userMessage) || 'Could not load Capture categories to choose from. Please try again.';
+            notify({ type: 'error', message });
+            return { status: 'error', message };
+          }
+          const productType = _cleanPart(experience.productInfo && (experience.productInfo.type || experience.productInfo.category));
+          showCategoryPicker({
+            categories,
+            productType,
+            // Runs inside the dialog's Send click, so the new tab opens synchronously.
+            onPick: (categoryId) => handleClick(experience, button, { categoryId }),
+            onCancel: () => {},
+          });
+          return { status: 'needs_category' };
+        }
         const message = (err && err.userMessage) || mapSendToCaptureError(err);
         notify({ type: 'error', message });
         return { status: 'error', message };
@@ -447,6 +544,9 @@
     sendExperienceToCapture,
     sendToCaptureTooltip,
     successNotes,
+    fetchCaptureCategories,
+    showCategoryPickerDialog,
+    CATEGORY_REQUIRED_MESSAGE,
     buildSendToCaptureButtonHtml,
     showSendToCaptureToast,
     createSendToCaptureController,
