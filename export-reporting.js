@@ -444,6 +444,9 @@ function generateProductReportContent(experience) {
         }
     });
 
+    // Consumer selections (CATA) from a QEP CSV import: listed, never scored.
+    if (window.CataEmotions) html += window.CataEmotions.buildCataChipsHtml(experience);
+
     html += `</div>`;
 
     // Notes Section
@@ -703,6 +706,14 @@ function exportProductToExcel(productId) {
             csv += `${escapeHtml(getStageLabel(stageId))},"${present.map(([name, value]) => `${name} (${value})`).join(', ')}"\n`;
         }
     });
+
+    // Consumer selections (CATA): a share only when the import carried one.
+    const cataRows = window.CataEmotions ? window.CataEmotions.buildCataCsvRows(experience) : [];
+    if (cataRows.length > 0) {
+        csv += '\nSelected by consumers (check-all-that-apply; % = share of consumers; not a 0-10 rating)\n';
+        csv += 'Stage,Emotions\n';
+        csv += cataRows.join('\n') + '\n';
+    }
 
     if (experience.notes) {
         csv += '\nNotes\n';

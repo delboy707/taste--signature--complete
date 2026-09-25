@@ -590,10 +590,16 @@ Analyze competitive position:
         Object.entries(experience.stages).forEach(([stageName, stage]) => {
             if (stage.emotions) {
                 Object.entries(stage.emotions).forEach(([emotion, value]) => {
+                    // null = not rated (untouched slider or a CATA stage): never "null/10"
+                    if (typeof value !== 'number') return;
                     emotions.push({ stage: stageName, emotion, value });
                 });
             }
         });
+
+        // Consumer selections (CATA) from a QEP CSV import, as selections.
+        const cataText = (typeof window !== 'undefined' && window.CataEmotions)
+            ? window.CataEmotions.buildCataPromptText(experience) : '';
 
         const topEmotions = emotions
             .sort((a, b) => b.value - a.value)
@@ -629,8 +635,8 @@ Analyze competitive position:
 - Texture: ${textureSummary}
 - Aftertaste: Duration ${experience.stages.aftertaste.duration}/10, Pleasantness ${experience.stages.aftertaste.pleasantness}/10
 
-**Top Emotions**: ${topEmotions}
-
+**Top Emotions**: ${topEmotions || 'None rated'}
+${cataText ? `\n${cataText}\n` : ''}
 **Emotional Triggers**:
 - Moreishness: ${experience.emotionalTriggers.moreishness}/10
 - Refreshment: ${experience.emotionalTriggers.refreshment}/10
