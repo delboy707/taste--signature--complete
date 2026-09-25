@@ -15,7 +15,10 @@
 // rating). Only numbers become Capture targets - same skip rule as 0036.
 // tssProjectId / sourceVersionId ride along unchanged, so a linked
 // experience becomes a new version of its Brief project without needing a
-// prior dual-write of the profile row.
+// prior dual-write of the profile row. After a successful send an unlinked
+// experience gets the returned project (and version) id written back
+// (applyCaptureLink - never overwriting a link) and app.js's saveData()
+// runs once, so later sends and the dual-write carry the link.
 //
 // Pure logic (name builder, payload prep, error mapping, URL building, the
 // RPC sequence) is DOM-free and unit-tested in test/send-to-capture.test.js.
@@ -119,6 +122,29 @@
 
   function isLinkedExperience(experience) {
     return !!(experience && experience.tssProjectId);
+  }
+
+  /**
+   * After a successful send, record the Capture project link on the
+   * in-memory experience so later sends and the dual-write carry it.
+   * Mirrors 0038's server-side profile link-back and never overwrites:
+   * - already linked (tssProjectId set) -> nothing changes;
+   * - version.profile_link 'linked_elsewhere' or no project_id -> nothing;
+   * - otherwise tssProjectId = project_id, and sourceVersionId = version_id
+   *   when the experience has none - except for 'already_linked' (0038 found
+   *   the project through the stored profile link and kept its version; our
+   *   new version id would make the dual-write re-point it).
+   * Returns true when the experience changed.
+   */
+  function applyCaptureLink(experience, version) {
+    if (!experience || typeof experience !== 'object' || !version) return false;
+    if (experience.tssProjectId) return false;
+    if (!version.project_id || version.profile_link === 'linked_elsewhere') return false;
+    experience.tssProjectId = String(version.project_id);
+    if (!experience.sourceVersionId && version.version_id && version.profile_link !== 'already_linked') {
+      experience.sourceVersionId = String(version.version_id);
+    }
+    return true;
   }
 
   /**
@@ -419,6 +445,14 @@
     try { return window.open('', '_blank'); } catch { return null; }
   }
 
+  // The normal save path: app.js's global saveData() (Firestore incremental
+  // save + fire-and-forget dual-write). Never in demo mode.
+  function _defaultSave() {
+    if (typeof window === 'undefined' || typeof window.saveData !== 'function') return undefined;
+    if (_defaultIsDemo()) return undefined;
+    return window.saveData();
+  }
+
   /**
    * Click handling with a per-experience in-flight guard (double-click never
    * sends twice) and button progress state. The new tab is opened
@@ -431,7 +465,22 @@
     const openWindow = deps.openWindow || _defaultOpenWindow;
     const notify = deps.notify || showSendToCaptureToast;
     const showCategoryPicker = deps.showCategoryPicker || showCategoryPickerDialog;
+    const save = deps.save || _defaultSave;
     const inFlight = new Set();
+
+    // Link save-back: best effort, never turns a successful send into an error.
+    function _saveLink(experience, version) {
+      if (isDemo()) return;
+      if (!applyCaptureLink(experience, version)) return;
+      try {
+        const p = save(experience);
+        if (p && typeof p.catch === 'function') {
+          p.catch((err) => console.error('Send to Capture: saving the Capture link failed:', err));
+        }
+      } catch (err) {
+        console.error('Send to Capture: saving the Capture link failed:', err);
+      }
+    }
 
     function _setBusy(button, busy) {
       if (!button) return;
@@ -475,6 +524,7 @@
 
       try {
         const result = await sendExperienceToCapture(experience, { getClient, isDemo, config, categoryId: opts.categoryId });
+        _saveLink(experience, result.version);
         let opened = false;
         if (win && !win.closed) {
           try { win.location.href = result.url; opened = true; } catch { opened = false; }
@@ -536,6 +586,7 @@
     studyNameForExperience,
     countMeasuredValues,
     isLinkedExperience,
+    applyCaptureLink,
     buildSendToCapturePayload,
     captureAppBaseUrl,
     buildCaptureStudyUrl,

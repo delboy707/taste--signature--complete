@@ -2311,8 +2311,10 @@
 
     <!-- Initialize Authentication & PWA -->
     <script>
-        // Create auth manager instance
-        const authManager = new AuthManager();
+        // auth.js creates the ONE AuthManager (window.authManager). Never
+        // create another here: a top-level const is a global lexical binding
+        // that every bare `authManager` lookup in other scripts would resolve
+        // to instead of the initialised window.authManager.
 
         // Initialize auth when page loads
         document.addEventListener('DOMContentLoaded', async () => {

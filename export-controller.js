@@ -12,7 +12,7 @@ function initializeExporters() {
     excelImporter = new ExcelImporter();
 
     // Set company branding if available
-    if (typeof authManager !== 'undefined' && authManager.currentUser) {
+    if (window.authManager && window.authManager.currentUser) {
         loadCompanyBrandingForExport();
     }
 
@@ -24,7 +24,7 @@ function initializeExporters() {
  */
 async function loadCompanyBrandingForExport() {
     try {
-        const companyData = await authManager.getCompanyData();
+        const companyData = await window.authManager.getCompanyData();
         if (companyData.success) {
             pdfExporter.setCompanyBranding({
                 companyName: companyData.company.companyName,

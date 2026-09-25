@@ -337,17 +337,19 @@ test('isAIAvailable (#6): true when Clerk is signed-in, and (Firebase-only) whil
 // Logout (#7)
 // ------------------------------------------------------------------
 
-test('logout (#7) before Clerk has loaded: signs Firebase out and still hard-redirects to the portal', async () => {
+test('logout (#7) before Clerk has loaded: signs Firebase out and still hard-redirects (to the Portal sign-out page when Clerk never loads)', async () => {
     const clerk = makeClerk(); // load() pending for the whole test
     const s = bootAuth({ clerk });
     s.am.initialize();
     s.auth.restore(FB_USER);
     await flushMany();
     s.am.logoutClerkWaitMs = 50;
+    s.am.logoutClerkLoadMs = 50; // follow-up: logout now also waits (bounded) for Clerk to load
     const res = await s.am.logout();
     assert.equal(res.success, true);
     assert.equal(s.auth.signOutCalls, 1);
-    assert.deepEqual(s.location.hrefSets, [PORTAL]);
+    // Clerk session state unknown -> never the portal home (see logout-clerk-signout.test.js).
+    assert.deepEqual(s.location.hrefSets, [PORTAL + '/dashboard']);
 });
 
 test('logout (#7): a gate still pending at logout can NOT re-sign-in Firebase afterwards', async () => {
@@ -392,7 +394,8 @@ test('logout (#7): Clerk.signOut throwing still signs Firebase out and redirects
     const res = await s.am.logout();
     assert.equal(res.success, true);
     assert.equal(s.auth.signOutCalls, 1);
-    assert.equal(s.location.href, PORTAL);
+    // Follow-up: a failed Clerk sign-out goes to the Portal sign-out page, not the home.
+    assert.equal(s.location.href, PORTAL + '/dashboard');
 });
 
 test('logout (#7): Firebase signOut throwing still redirects to the portal', async () => {
