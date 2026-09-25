@@ -48,6 +48,10 @@ registered in its `allowedRedirectOrigins`), not in this app. Flow:
    path failed, not something to silently paper over.
 5. Demo mode (`taste_demo_mode_active` in localStorage) bypasses the Clerk gate
    entirely and is checked before any Clerk call - it never redirects.
+   ClerkJS is therefore never loaded in demo mode, so every qep-capture call
+   fails immediately with a "Demo mode: ... sign in" message
+   (`isQepDemoModeActive()` in `qep-capture-client.js`) and dual-write queues
+   nothing - never a 15 s Clerk wait, never an anon request.
 
 ---
 
