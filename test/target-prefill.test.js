@@ -135,6 +135,33 @@ test('an ALIAS-only code (no canonical row) still gets its marker', () => {
     assert.equal(result.markers[0].elementId, 'appearance-shine');
 });
 
+test('an alias key whose form slider canonically belongs to ANOTHER code is never marked (real case: overall "satisfaction")', () => {
+    // qep-capture 0029 aliases ('overall','satisfaction','sensory') -> oa_Satisfaction,
+    // but overall-satisfaction in the form is the canonical EMOTION slider for
+    // overall_emo_satisfaction (0025). The sensory target goes only on its own
+    // canonical slider overall-overall-satisfaction.
+    const rows = [
+        crosswalkRow('overall', 'overall-satisfaction', 'oa_Satisfaction', 'sensory'),      // canonical
+        crosswalkRow('overall', 'satisfaction', 'overall_emo_satisfaction', 'emotion'),     // canonical
+        crosswalkRow('overall', 'satisfaction', 'oa_Satisfaction', 'sensory'),              // alias
+    ];
+    const stages = emptyStages();
+    stages.overall.targets.push(coded('Satisfaction', 'oa_Satisfaction', 'sensory', 7));
+    const result = buildTargetPrefill({ stages }, rows);
+    assert.deepEqual(result.markers.map((m) => m.elementId), ['overall-overall-satisfaction']);
+
+    // Only the colliding alias row (no canonical row of its own): listed, not marked.
+    const only = buildTargetPrefill({ stages }, [rows[1], rows[2]]);
+    assert.equal(only.markers.length, 0);
+    assert.equal(only.unmapped.length, 1);
+    assert.match(only.unmapped[0].reason, /belongs to another attribute/);
+
+    // The emotion target still gets its own slider.
+    const emo = emptyStages();
+    emo.overall.targets.push(coded('Satisfaction', 'overall_emo_satisfaction', 'emotion', 9));
+    assert.deepEqual(buildTargetPrefill({ stages: emo }, rows).markers.map((m) => m.elementId), ['overall-satisfaction']);
+});
+
 test('buildCrosswalkIndex keeps every row per code in input order (canonical rows are passed first)', () => {
     const index = buildCrosswalkIndex([
         crosswalkRow('appearance', 'canonicalKey', 'vk_shared'),
