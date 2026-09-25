@@ -380,6 +380,32 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   heatmap cells, portfolio/white space, correlations, benchmarks,
   statistics, temporal analysis, the AI portfolio summary.
 
+## Status 2026-09-25c (Stage 2A.5 - markers from master codes, branch only)
+
+Branch `feat/markers-from-codes` (local, not merged). Full Evaluation
+target markers come straight from the locked version's `tss_shared.targets`
+rows: `variable_key` is the master code (`public.qep_attribute.id`), and
+rows Brief Lock writes from an approved `tss_shared.vocab_mapping` carry
+`range_min = range_max = target` (0-10). `targets-loaded.js` now reads
+`range_min`/`range_max` and `qep_attribute.kind`; each stage is
+`{ targets: [...], notes }` (was `emotions`), plus a top-level
+`unplacedTargets` for codes it cannot put on a stage (never dropped).
+`target-prefill.js` maps each code through the crosswalk to EVERY
+same-stage Signature slider key (canonical, then alias) - except a form id
+that already belongs to another code (the 0029 alias `overall`/
+`satisfaction` sensory would otherwise land on the `overall-satisfaction`
+EMOTION slider). Marker: point -> "Target 7"; range -> midpoint, label
+"Target 6-8"; no range (legacy Brief emotion rows, intensity 'high') ->
+`TARGET_INTENSITY_SCALE`, still "Target 8". Codes with no marker-able slider
+(no crosswalk row, other stage only, trigger, owned slider) are listed on
+the stage's "Brief says:" text as `Not measurable in this form: Label (7)`
+and counted in the one-line banner. Stage notes stay brief text only,
+never parsed. The Brief sensory-label crosswalk module and its script tag
+are gone (a source-scan test enforces it). Slider values are still never
+set; untouched sliders save as null. Needs Brief Lock writing codes plus
+approved mappings (qep-capture 0040) before anything new shows; legacy
+targets render as before.
+
 ## Status 2026-09-25 (Stage 2B - Send to Capture, on main)
 
 - History rows have a "Send to Capture" button (`send-to-capture.js`,
@@ -418,14 +444,10 @@ banner is one line. Sliders stay untouched, so they save as null unless the
 user moves them. `tssProjectId` / `sourceVersionId` still ride on the saved
 experience and reach the dual-write (migration 0036).
 
-Emotion targets map through the qep-capture crosswalk. Sensory targets map
-only through `brief-sensory-crosswalk.js` (`BRIEF_SENSORY_TO_QEP_ATTRIBUTE`,
-keyed `stage|lowercased brief label` -> qep_attribute id), which is EMPTY:
-a review found 0 exact label matches out of Brief's 41 sensory labels.
-Derek fills it from `~/QEP-TSS/sensory-crosswalk.csv`; never add a guessed
-or cross-stage mapping. Unmapped labels stay as "Brief says:" text only.
-`npm test` covers all of this with mocks only - no live
-Supabase/Firebase/Clerk calls.
+Emotion targets map through the qep-capture crosswalk. (The hand-curated
+Brief sensory-label table that sat beside it here was retired in Stage
+2A.5 - see the 2026-09-25c status above.) `npm test` covers all of this
+with mocks only - no live Supabase/Firebase/Clerk calls.
 
 ## Status 2026-09-24 (supersedes 2026-09-16)
 
