@@ -49,6 +49,12 @@ const QEP_CAPTURE_CONFIG = {
     // 0041 is applied to the project SUPABASE_URL points at.
     ENABLE_CONSUMER_RESULTS: false,
 
+    // Stage 2D "Target vs measured" + "Amend" (target-vs-measured.js): needs
+    // 0038 and 0041 on the project SUPABASE_URL points at. Keep false until
+    // reviewed. TARGET_VS_MEASURED_TOLERANCE (optional, 0-5) overrides the
+    // default +/- 1.0 gap tolerance on the 0-10 scale.
+    ENABLE_TARGET_VS_MEASURED: false,
+
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link on a locked version
     // (?version=<project_version id>). Point at http://localhost:3000 to
