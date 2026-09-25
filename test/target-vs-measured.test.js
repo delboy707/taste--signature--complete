@@ -735,6 +735,27 @@ test('html: amend mode shows inputs, the plan warnings and a Create next version
     assert.match(html, /data-tvm-action="confirm-drops"/);
 });
 
+test('rows: targets first, then consumer-only, then Signature-only; kinds grouped inside each', () => {
+    const cmp = comparison();
+    const ap = cmp.stages.find((s) => s.stageId === 'appearance').rows.map((r) => r.code);
+    assert.deepEqual(ap, ['app_Color_Shade', 'ap_emo_curiosity', 'ap_emo_excitement', 'ap_emo_joy', 'app_Visual_Appeal']);
+    const ov = cmp.stages.find((s) => s.stageId === 'overall').rows.map((r) => r.code);
+    assert.equal(ov[0], 'overall_trig_moreishness');
+});
+
+test('html: a code missing from the results says "No answers"; the Signature-only filter is optional and off by default', async () => {
+    const m = await TVM.loadTargetVsMeasured(experience(), deps(mockClient()));
+    const all = TVM.buildTargetVsMeasuredHtml(m, { experience: experience(), rules: TVM.resolveRules({}) });
+    assert.match(all, /No answers/);
+    assert.ok(!/Not asked/.test(all));
+    assert.match(all, /Visual Appeal/);
+    assert.match(all, /data-tvm-action="hide-signature-only"/);
+    const hidden = TVM.buildTargetVsMeasuredHtml(m, { experience: experience(), rules: TVM.resolveRules({}), hideSignatureOnly: true });
+    assert.ok(!/Visual Appeal/.test(hidden));
+    assert.match(hidden, /row\(s\) with only a Signature score hidden/);
+    assert.match(hidden, /Color Shade/);
+});
+
 test('html: loading, not linked, no locked versions, error states', () => {
     assert.match(TVM.buildTargetVsMeasuredHtml({ state: 'loading' }), /Loading/);
     assert.match(TVM.buildTargetVsMeasuredHtml({ state: 'not_linked' }), /not linked/);
