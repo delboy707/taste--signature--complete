@@ -89,14 +89,25 @@
     return STAGE_ALIASES[flat] || null;
   }
 
-  /** code -> { stage, key } per kind, from crosswalk rows (canonical rows first). */
+  /**
+   * code -> { stage, key } per kind, from crosswalk rows (canonical rows
+   * first). target-prefill.js buildCrosswalkIndex(rows) returns
+   * code -> [{ stage, key, kind }, ...] (every mapping, input order), so the
+   * FIRST entry of the wanted kind is the canonical one - the same choice as
+   * before (first wins: canonical > alias).
+   */
   function buildSignatureIndex(crosswalkRows) {
-    const build = targetPrefill.buildCrosswalkIndex;
-    return {
-      sensory: build(crosswalkRows, 'sensory'),
-      emotion: build(crosswalkRows, 'emotion'),
-      trigger: build(crosswalkRows, 'trigger'),
+    const all = targetPrefill.buildCrosswalkIndex(crosswalkRows);
+    const pick = (kind) => {
+      const m = new Map();
+      for (const [code, entries] of all) {
+        const list = Array.isArray(entries) ? entries : [entries];
+        const hit = list.find((e) => e && e.kind === kind);
+        if (hit) m.set(code, { stage: hit.stage, key: hit.key });
+      }
+      return m;
     };
+    return { sensory: pick('sensory'), emotion: pick('emotion'), trigger: pick('trigger') };
   }
 
   // Crosswalk sensory keys are kebab-case lexicon ids; the experience stores
