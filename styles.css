@@ -302,12 +302,30 @@ body {
     margin-bottom: 15px;
 }
 
+/* Label text, its info icon and the ":" flow inline so they stay together on
+   the left, even when a long label wraps on a phone. The value span (id
+   ending in "-val") is pinned top-right in reserved padding, so it never
+   drops to its own line. The old flex + space-between spread the icon and
+   ":" text node across the row on every sensory attribute row. */
 .slider-group label {
-    display: flex;
-    justify-content: space-between;
+    display: block;
+    position: relative;
+    padding-right: 36px;
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 500;
+}
+
+.slider-group label > [id$="-val"] {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* "&nbsp;<icon>:" - keeps the icon and ":" on the same line as the label's
+   last word when a long label wraps. */
+.slider-group label .label-tail {
+    white-space: nowrap;
 }
 
 .slider-group input[type="range"] {
