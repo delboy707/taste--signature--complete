@@ -1170,7 +1170,10 @@
 
   function _stageTable(stage, view, hasResults) {
     const editing = !!(view.editing && view.draft);
-    const head = `<tr><th style="text-align:left;width:22%;">Attribute</th><th style="text-align:left;">Target</th><th style="text-align:left;">Signature</th><th style="text-align:left;">Consumers</th><th style="text-align:left;">Signature vs target</th><th style="text-align:left;">Consumers vs target</th>${editing ? '<th style="text-align:left;width:18%;">Amend</th>' : ''}</tr>`;
+    // Fixed widths so every stage table lines up (same fix as consumer-results.js).
+    const w = editing ? [20, 10, 8, 17, 13, 14, 18] : [24, 12, 10, 20, 17, 17];
+    const th = (label, i) => `<th style="text-align:left;width:${w[i]}%;">${label}</th>`;
+    const head = `<tr>${th('Attribute', 0)}${th('Target', 1)}${th('Signature', 2)}${th('Consumers', 3)}${th('Signature vs target', 4)}${th('Consumers vs target', 5)}${editing ? th('Amend', 6) : ''}</tr>`;
     const body = stage.rows.map((row) => {
       const kindNote = row.kind === 'trigger' ? ' (trigger)' : row.kind === 'emotion' ? ' (emotion)' : '';
       const title = row.code ? row.code : 'No master code';
@@ -1183,7 +1186,7 @@
           <td>${_gapHtml(row.conGap)}</td>${editing ? _amendCell(row, view) : ''}
         </tr>`;
     }).join('');
-    return `<table class="tvm-table" style="width:100%;border-collapse:collapse;font-size:0.85rem;margin:4px 0 12px;">
+    return `<table class="tvm-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:0.85rem;margin:4px 0 12px;">
         <thead>${head}</thead><tbody>${body}</tbody></table>`;
   }
 
