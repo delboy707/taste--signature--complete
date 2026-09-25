@@ -757,6 +757,26 @@ function getConfidenceLabel(confidence) {
  *
  * Stage prefixes: app, aroma, fom, mrm, tex, aft, oa
  * Expected columns: 6 metadata + 242 attributes + 14 emotion/notes = 262 total
+ * (the template and Brief exports). qep-capture's measured export adds 4
+ * trigger columns at the tail = 266 (lib/export/qep-export-contract.ts):
+ * overall_Trigger_Moreishness / _Refreshment / _The_Melt / _Texture_Crunch.
+ *
+ * FALLBACK ONLY for Capture results: the "Consumer results" panel
+ * (consumer-results.js) reads them straight from the QEP database and is
+ * the primary path. This import keeps what the file carries and invents
+ * nothing:
+ * - trigger columns -> experience.emotionalTriggers (blank cell = null);
+ * - *_Emotions cells only say WHICH emotions were selected (CATA), so a
+ *   stage with an emotions column gets every emotion slider = null (not
+ *   measured - the same state an untouched slider saves as, which every
+ *   reader already tolerates) and the selection is recorded in
+ *   experience.cataEmotions = { <stageKey>: { <emotionKey>: proportion|null } }
+ *   (null = selected, share unknown; a number = the share of consumers,
+ *   0-1, when the token carries one: "x:0.62", "x=62%", "x (62%)").
+ *   Emotion sliders are never set to a made-up intensity (previously 7),
+ *   and emotion inference never fills a stage whose emotions came from
+ *   the file. Tokens: ";" (measured side) or ", " (Brief side), slugs or
+ *   labels, matched case-insensitively against the stage's token list.
  */
 
 var QEP_STAGES = {
@@ -880,6 +900,24 @@ var QEP_STAGES = {
 };
 
 var QEP_METADATA_COLS = ["Product_Name","Brand","Category","Variant","Panel_Size","Test_Date"];
+
+// qep-capture export trigger header suffix (after "overall_Trigger_",
+// lowercased) -> Signature experience.emotionalTriggers key (same keys as
+// tss_shared.signature_attribute_map's trigger rows, migration 0025).
+var QEP_TRIGGER_HEADER_TO_KEY = {
+  moreishness: "moreishness",
+  refreshment: "refreshment",
+  the_melt: "melt",
+  texture_crunch: "crunch"
+};
+var QEP_TRIGGER_KEYS = ["moreishness", "refreshment", "melt", "crunch"];
+
+// Import token -> Signature emotion slider key where it is not simply the
+// camelCased token (qep-capture 0025: "craving (aftertaste emotion) ->
+// craving_want_more", the only such case - checked against every stage).
+var QEP_EMOTION_KEY_OVERRIDES = {
+  aft: { "craving-want-more": "craving" }
+};
 
 var QEP_STAGE_NAME_MAP = {
   app: "Appearance",
@@ -1143,6 +1181,7 @@ function buildQEPColumnMap(headers) {
     metadata: {},
     stages: {},
     unmatched: [],
+    triggers: {},
     foundAttributesPerStage: {},
     expectedAttributesPerStage: {}
   };
@@ -1165,6 +1204,18 @@ function buildQEPColumnMap(headers) {
     // Metadata column?
     if (metaLower.hasOwnProperty(hLower)) {
       map.metadata[metaLower[hLower]] = idx;
+      return;
+    }
+
+    // Capture export trigger column (266-column layout)?
+    var trig = /^overall_trigger_(.+)$/i.exec(header);
+    if (trig) {
+      var trigKey = QEP_TRIGGER_HEADER_TO_KEY[trig[1].toLowerCase()];
+      if (trigKey) {
+        map.triggers[trigKey] = idx;
+      } else {
+        map.unmatched.push(header);
+      }
       return;
     }
 
@@ -1384,12 +1435,10 @@ function buildQEPProductFromRow(row, colMap, csvRowNum, warnings) {
     });
 
     if (stageMap.emotions !== -1) {
-      var eRaw = row[stageMap.emotions];
-      if (eRaw) {
-        stageData.emotions = String(eRaw).split(/[;,]/)
-          .map(function(s) { return s.trim(); })
-          .filter(function(s) { return s; });
-      }
+      var parsedEmotions = parseQEPEmotionCell(row[stageMap.emotions], prefix, csvRowNum, warnings);
+      stageData.emotions = parsedEmotions.tokens;
+      stageData.cata = parsedEmotions.cata;
+      stageData.hasEmotionsColumn = true;
     }
 
     if (stageMap.notes !== -1) {
@@ -1399,7 +1448,83 @@ function buildQEPProductFromRow(row, colMap, csvRowNum, warnings) {
     product.stages[prefix] = stageData;
   });
 
+  // Trigger columns (Capture's 266-column export). null when the file has
+  // none - the importer then keeps its previous trigger behaviour.
+  product.triggers = null;
+  var trigMap = colMap.triggers || {};
+  if (Object.keys(trigMap).length > 0) {
+    product.triggers = {};
+    QEP_TRIGGER_KEYS.forEach(function(key) {
+      product.triggers[key] = null;
+      if (trigMap[key] === undefined) return;
+      var tRaw = row[trigMap[key]];
+      var tStr = (tRaw === undefined || tRaw === null) ? "" : String(tRaw).trim();
+      if (tStr === "") return;
+      var tNum = parseFloat(tStr);
+      if (isNaN(tNum)) {
+        warnings.push("Row " + csvRowNum + ", trigger " + key + ": \"" + tStr + "\" is not a number, cell skipped.");
+        return;
+      }
+      product.triggers[key] = Math.max(0, Math.min(10, tNum));
+    });
+  }
+
   return product;
+}
+
+function qepNormalizeEmotionToken(str) {
+  return String(str).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * parseQEPEmotionCell(cell, prefix, csvRowNum, warnings)
+ *
+ * One *_Emotions cell -> { tokens: [canonical tokens], cata: { signatureKey: proportion|null } }.
+ * Accepts ";" or "," separators, slugs or labels in any case (term-set
+ * match against QEP_STAGES[prefix].emotions), and an optional proportion
+ * suffix per token: "x:0.62", "x=0.62", "x:62%", "x (62%)". Values above 1
+ * are read as percentages. Unknown tokens are warned about and skipped.
+ */
+function parseQEPEmotionCell(cell, prefix, csvRowNum, warnings) {
+  var out = { tokens: [], cata: {} };
+  if (cell === undefined || cell === null) return out;
+  var text = String(cell).trim();
+  if (!text) return out;
+  var known = {};
+  (QEP_STAGES[prefix] ? QEP_STAGES[prefix].emotions : []).forEach(function(t) {
+    known[qepNormalizeEmotionToken(t)] = t;
+  });
+  text.split(/[;,]/).forEach(function(piece) {
+    var part = piece.trim();
+    if (!part) return;
+    var name = part;
+    var proportion = null;
+    var m = /^(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)$/.exec(part);
+    if (m) {
+      name = m[1];
+      proportion = parseFloat(m[2]) / 100;
+    } else {
+      m = /^(.*?)\s*[:=]\s*(\d+(?:\.\d+)?)\s*(%?)$/.exec(part);
+      if (m) {
+        name = m[1];
+        proportion = parseFloat(m[2]);
+        if (m[3] === "%" || proportion > 1) proportion = proportion / 100;
+      }
+    }
+    if (proportion !== null) {
+      if (isNaN(proportion)) proportion = null;
+      else proportion = Math.max(0, Math.min(1, proportion));
+    }
+    var token = known[qepNormalizeEmotionToken(name)];
+    if (!token) {
+      warnings.push("Row " + csvRowNum + ", column " + prefix + "_Emotions: \"" + part +
+                    "\" is not an emotion of this stage and was ignored.");
+      return;
+    }
+    if (out.tokens.indexOf(token) === -1) out.tokens.push(token);
+    out.cata[qepEmotionToSignatureKey(prefix, token)] = proportion;
+  });
+  return out;
 }
 
 /**
@@ -1454,6 +1579,14 @@ function qepEmotionToCamel(emoName) {
   return qepHyphenToCamel(String(emoName));
 }
 
+/** Import token -> the Signature emotion slider key for that stage. */
+function qepEmotionToSignatureKey(prefix, emoName) {
+  var overrides = QEP_EMOTION_KEY_OVERRIDES[prefix];
+  var token = String(emoName);
+  if (overrides && Object.prototype.hasOwnProperty.call(overrides, token)) return overrides[token];
+  return qepEmotionToCamel(token);
+}
+
 async function executeQEPBatchImport(products, onProgress) {
   var results = { success: 0, failed: 0, errors: [], warnings: [] };
 
@@ -1461,6 +1594,8 @@ async function executeQEPBatchImport(products, onProgress) {
     var p = products[i];
     try {
       var stages = {};
+      var cataEmotions = {};
+      var cataStageKeys = {};
       Object.keys(QEP_STAGES).forEach(function(prefix) {
         var manualKey = QEP_PREFIX_TO_MANUAL_KEY[prefix];
         if (!manualKey) return;
@@ -1474,15 +1609,23 @@ async function executeQEPBatchImport(products, onProgress) {
           }
         });
 
+        // A stage with an emotions column is CATA data: sliders stay null
+        // (not measured) and the selection goes to cataEmotions. Without
+        // the column the previous behaviour (0, then inference) is kept.
+        var isCata = stageData.hasEmotionsColumn === true;
         var emotionsObj = {};
         QEP_STAGES[prefix].emotions.forEach(function(emoName) {
-          emotionsObj[qepEmotionToCamel(emoName)] = 0;
-        });
-        var selectedEmotions = Array.isArray(stageData.emotions) ? stageData.emotions : [];
-        selectedEmotions.forEach(function(emoName) {
-          emotionsObj[qepEmotionToCamel(emoName)] = 7;
+          emotionsObj[qepEmotionToSignatureKey(prefix, emoName)] = isCata ? null : 0;
         });
         stageObj.emotions = emotionsObj;
+        if (isCata) {
+          cataStageKeys[manualKey] = true;
+          var cata = stageData.cata || {};
+          if (Object.keys(cata).length > 0) {
+            cataEmotions[manualKey] = {};
+            Object.keys(cata).forEach(function(k) { cataEmotions[manualKey][k] = cata[k]; });
+          }
+        }
 
         if (stageData.notes && String(stageData.notes).trim() !== "") {
           stageObj._notes = String(stageData.notes);
@@ -1502,6 +1645,17 @@ async function executeQEPBatchImport(products, onProgress) {
         importSource: "QEP_CSV",
         importedAt: new Date().toISOString()
       };
+      var hasTriggerColumns = !!p.triggers;
+      if (hasTriggerColumns) {
+        experience.emotionalTriggers = {};
+        QEP_TRIGGER_KEYS.forEach(function(key) {
+          var tv = p.triggers[key];
+          experience.emotionalTriggers[key] = (typeof tv === "number" && !isNaN(tv)) ? tv : null;
+        });
+      }
+      if (Object.keys(cataEmotions).length > 0) {
+        experience.cataEmotions = cataEmotions;
+      }
 
       if (typeof window !== "undefined" && window.EmotionInference &&
           typeof window.EmotionInference.inferFromSensory === "function") {
@@ -1510,7 +1664,7 @@ async function executeQEPBatchImport(products, onProgress) {
           if (inferred && inferred.needState) {
             experience.needState = inferred.needState;
           }
-          if (inferred && inferred.emotionalTriggers) {
+          if (inferred && inferred.emotionalTriggers && !hasTriggerColumns) {
             experience.emotionalTriggers = inferred.emotionalTriggers;
           }
           if (inferred && inferred.stages) {
@@ -1519,6 +1673,7 @@ async function executeQEPBatchImport(products, onProgress) {
               var inferredStageEmotions = infStage ? infStage.emotions : null;
               if (!inferredStageEmotions) return;
               if (!experience.stages[stageKey]) return;
+              if (cataStageKeys[stageKey]) return; // emotions came from the file (CATA)
               if (!experience.stages[stageKey].emotions) {
                 experience.stages[stageKey].emotions = {};
               }
