@@ -331,6 +331,23 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
+## Status 2026-09-25 (Stage 2B - Send to Capture, on main)
+
+- History rows have a "Send to Capture" button (`send-to-capture.js`,
+  `ENABLE_SEND_TO_CAPTURE: true` in `qep-capture-config.js`; the example
+  config ships it off). It sends the raw experience to qep-capture's
+  `tss_shared.create_version_from_signature` (migration 0038, applied to prod
+  and dev 2026-09-25), then `public.create_study_from_version`, and opens
+  `<CAPTURE_APP_URL>/studies/<id>` in a tab opened inside the click.
+- Only measured (numeric) sliders become targets; untouched sliders are null.
+- No default category: for product types dessert, food and beverage (or no
+  type) the RPC raises `category required` and a dialog asks the user to pick
+  one of Capture's categories, then re-sends with `tssCategoryId`.
+  confectionery -> Chocolate Bar and snack -> Savoury Snack map automatically.
+- Demo mode and "nothing measured" are refused before any tab or RPC.
+- Not yet done: the returned `project_id` is not saved back to the
+  Firestore experience (0038 finds earlier sends server-side).
+
 ## Status 2026-09-24b (Stage 2A - on main and deployed)
 
 Live on main: the Targets Loaded picker (`tss_shared.list_locked_projects()`,

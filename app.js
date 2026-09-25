@@ -2073,9 +2073,22 @@ function updateHistory() {
         return;
     }
 
+    // "Send to Capture" button (send-to-capture.js) - renders nothing unless
+    // ENABLE_SEND_TO_CAPTURE is on in qep-capture-config.js.
+    const sendToCapture = window.SendToCapture;
     container.innerHTML = RenderUtils.buildHistoryHtml(
-        experiences.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+        experiences.sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
+        sendToCapture ? { extraActionsHtml: (e) => sendToCapture.buildSendToCaptureButtonHtml(e) } : undefined
     );
+}
+
+// Called from the history row's "Send to Capture" button. Ids are floats -
+// the button passes the id as a JSON number literal (jsArgAttr), so strict
+// equality matches like deleteExperience() does.
+function sendExperienceToCapture(id, buttonEl) {
+    if (!window.SendToCapture) return;
+    const experience = experiences.find(e => e.id === id);
+    window.SendToCapture.handleClick(experience, buttonEl);
 }
 
 async function deleteExperience(id) {
