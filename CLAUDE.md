@@ -345,6 +345,29 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
+## Status 2026-09-25c (Stage 2C - Consumer results, branch feat/consumer-results)
+
+- History rows of a linked experience (`tssProjectId`) get a read-only
+  "Consumer results" panel (`consumer-results.js`, `ENABLE_CONSUMER_RESULTS`
+  in `qep-capture-config.js`, **false** until qep-capture migration 0041's
+  `public.get_version_results` is applied to the project the config points
+  at). It lists the project's versions (`tss_shared.project_versions`),
+  calls `get_version_results` for each LOCKED one (max 3 in parallel) and
+  shows Signature's own slider value beside the consumer mean (n, SD) for
+  sensory/trigger codes and "% selected (x of n)" for emotion codes. Never
+  convert a CATA proportion into a 0-10 value. Codes map to sliders through
+  the same reverse crosswalk as the target markers (`target-prefill.js`
+  `buildCrosswalkIndex`); unmapped codes show as "Capture only"; a
+  crosswalk row for another stage is never used. Never writes anything.
+- The QEP CSV import (`batch-import.js`) is the FALLBACK for Capture
+  results. Capture's 266-column export's 4 `overall_Trigger_*` columns go
+  to `emotionalTriggers` (blank = null). `*_Emotions` cells are CATA: the
+  stage's emotion sliders stay null and the selection is stored in
+  `experience.cataEmotions = { <stageKey>: { <emotionKey>: proportion|null } }`
+  (a number only when the token carried one, e.g. `x:0.62` / `x (62%)`).
+  No reader uses `cataEmotions` yet; every reader already tolerates null
+  sliders (touched-fields). 262-column files still import.
+
 ## Status 2026-09-25 (Stage 2B - Send to Capture, on main)
 
 - History rows have a "Send to Capture" button (`send-to-capture.js`,
