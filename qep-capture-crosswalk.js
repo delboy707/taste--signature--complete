@@ -4,7 +4,7 @@
 // additions, migration 0029) - read-only, RLS open to any authenticated
 // caller (this is global reference data, same posture as the lexicon
 // tables, not org-scoped). Feeds target-prefill.js's
-// buildEmotionCrosswalkIndex, which is the pure/unit-tested half of this
+// buildCrosswalkIndex (one code -> every slider key), which is the pure/unit-tested half of this
 // - nothing in that module talks to Supabase, only this wrapper does.
 //
 // Returns { rows } with canonical rows BEFORE alias rows, so a

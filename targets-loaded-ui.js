@@ -265,20 +265,37 @@ function renderTargetsResultOrError(result) {
     wireStartEvaluationButton(result);
 }
 
+// " 7" / " 6-8" after a coded target's label (range_min/range_max, Stage
+// 2A.5); nothing for a legacy target with no numeric range. Escaped.
+function formatTargetValueSuffix(target) {
+    const num = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
+    const lo = num(target.rangeMin);
+    const hi = num(target.rangeMax);
+    if (lo === null && hi === null) return '';
+    let label;
+    if (lo !== null && hi !== null && lo !== hi) {
+        label = `${Math.min(lo, hi)}-${Math.max(lo, hi)}`;
+    } else {
+        label = String(lo !== null ? lo : hi);
+    }
+    return ` ${escapeHtml(label)}`;
+}
+
 function renderTargetsLoadedResult(result) {
     const { project, version, stages } = result;
     const stageOrder = (window.SENSORY_STAGES || []).slice().sort((a, b) => a.position - b.position);
 
     const stageRows = stageOrder
         .map((stage) => {
-            const stageData = stages[stage.id] || { emotions: [], notes: '' };
-            const emotionsHtml = stageData.emotions.length
-                ? stageData.emotions
+            const stageData = stages[stage.id] || { targets: [], notes: '' };
+            const stageTargets = stageData.targets || [];
+            const targetsHtml = stageTargets.length
+                ? stageTargets
                       .map(
                           (e) =>
                               `<span style="display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border-radius: 12px; font-size: 12px; background: ${
                                   e.role === 'primary' ? '#e8f0fe' : '#f3f3f3'
-                              };">${escapeHtml(e.label)}${e.role === 'primary' ? '' : ' <span style="color:#999;">(secondary)</span>'}</span>`
+                              };">${escapeHtml(e.label)}${formatTargetValueSuffix(e)}${e.role === 'primary' ? '' : ' <span style="color:#999;">(secondary)</span>'}</span>`
                       )
                       .join('')
                 : '<span style="color: #999;">&mdash;</span>';
@@ -289,7 +306,7 @@ function renderTargetsLoadedResult(result) {
                     <td style="font-weight: 600; padding: 8px; border-bottom: 1px solid #eee; white-space: nowrap;">${escapeHtml(
                         stage.label
                     )}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${emotionsHtml}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${targetsHtml}</td>
                     <td style="padding: 8px; border-bottom: 1px solid #eee;">${notesHtml}</td>
                 </tr>
             `;
@@ -324,8 +341,8 @@ function renderTargetsLoadedResult(result) {
                 <thead>
                     <tr>
                         <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Stage</th>
-                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Target emotions</th>
-                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Sensory notes</th>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Targets</th>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Stage notes</th>
                     </tr>
                 </thead>
                 <tbody>
