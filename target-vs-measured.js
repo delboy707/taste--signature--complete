@@ -508,8 +508,10 @@
     }
     const n = notes || {};
     const stages = STAGE_ORDER.concat(['unknown']).filter((s) => byStage.has(s) || (n[s] && s !== 'unknown')).map((s) => {
+      // Rows with a target first, then consumer-only, then Signature-only; kinds grouped inside each.
+      const group = (row) => (row.target ? 0 : row.consumer ? 1 : 2);
       const list = (byStage.get(s) || []).map((row, i) => ({ row, i }))
-        .sort((a, b) => (KIND_ORDER[a.row.kind] - KIND_ORDER[b.row.kind]) || (a.i - b.i))
+        .sort((a, b) => (group(a.row) - group(b.row)) || (KIND_ORDER[a.row.kind] - KIND_ORDER[b.row.kind]) || (a.i - b.i))
         .map((x) => x.row);
       return { stageId: s, label: STAGE_LABELS[s], notes: n[s] ? String(n[s]) : '', rows: list };
     });
@@ -1137,7 +1139,8 @@
   }
 
   function _consumerText(row, hasResults) {
-    if (!row.consumer) return hasResults ? 'Not asked' : 'No consumer data';
+    // get_version_results only emits codes someone answered.
+    if (!row.consumer) return hasResults ? 'No answers' : 'No consumer data';
     return CR.formatConsumer({ ...row.consumer });
   }
 
@@ -1184,7 +1187,7 @@
         <thead>${head}</thead><tbody>${body}</tbody></table>`;
   }
 
-  function _controlsHtml(model, rules) {
+  function _controlsHtml(model, rules, hideSignatureOnly) {
     const tOpts = model.versions.map((v) => `<option value="${esc(v.id)}"${v.id === model.targetVersionId ? ' selected' : ''}>${esc(_versionLabel(v))}</option>`).join('');
     const rOpts = ['<option value="">None</option>'].concat(model.versions.map((v) => `<option value="${esc(v.id)}"${v.id === model.resultsVersionId ? ' selected' : ''}>${esc(_versionLabel(v))}</option>`)).join('');
     const pct = Math.round(rules.emotionHighMinSelected * 100);
@@ -1193,6 +1196,7 @@
         <label>Consumers from <select data-tvm-action="results-version">${rOpts}</select></label>
         <label>Tolerance +/- <input type="number" min="0" max="${MAX_TOLERANCE}" step="0.5" value="${esc(rules.tolerance)}" data-tvm-action="tolerance" style="width:4.5em;"> (0-10 scale)</label>
         <label>Emotion target 7+ expects at least <input type="number" min="0" max="100" step="5" value="${esc(pct)}" data-tvm-action="emotion-pct" style="width:4.5em;">% selected</label>
+        <label><input type="checkbox" data-tvm-action="hide-signature-only"${hideSignatureOnly ? ' checked' : ''}> Hide rows with only a Signature score</label>
       </div>`;
   }
 
@@ -1262,16 +1266,24 @@
     }
     if (m.warning) html += `<p class="tvm-warning" style="color:#92400e;">${esc(m.warning)}</p>`;
     if (m.loadError) html += `<p class="tvm-error" role="alert" style="color:#b91c1c;">${esc(m.loadError)}</p>`;
-    html += _controlsHtml(m, rules);
+    html += _controlsHtml(m, rules, !!view.hideSignatureOnly);
     html += _rulesHtml(rules);
     html += _choiceNote(m);
     const hasResults = !!m.results;
     if (!cmp.stages.length) html += '<p>No targets, Signature scores or consumer results to compare yet.</p>';
+    let hiddenCount = 0;
     for (const s of cmp.stages) {
+      const editingCodes = view.editing && view.draft ? view.draft.entries : {};
+      const rows = view.hideSignatureOnly
+        ? s.rows.filter((r) => r.target || r.consumer || (r.code && editingCodes[r.code]))
+        : s.rows;
+      hiddenCount += s.rows.length - rows.length;
+      if (!rows.length && !s.notes) continue;
       html += `<h4 style="margin:12px 0 2px;">${esc(s.label)}</h4>`;
       if (s.notes) html += `<p class="tvm-brief-says" style="font-size:0.8rem;margin:0 0 4px;"><strong>Brief says:</strong> ${esc(s.notes)}</p>`;
-      if (s.rows.length) html += _stageTable(s, view, hasResults);
+      if (rows.length) html += _stageTable({ ...s, rows }, view, hasResults);
     }
+    if (hiddenCount) html += `<p class="tvm-hidden-note" style="font-size:0.8rem;">${esc(hiddenCount)} row(s) with only a Signature score hidden.</p>`;
     html += _amendFooter(m, view);
     return html;
   }
@@ -1351,6 +1363,7 @@
       body.innerHTML = buildTargetVsMeasuredHtml(state.model, {
         experience, rules: rules(), editing: state.editing, draft: state.draft, plan: state.plan,
         confirmed: state.confirmed, busy: state.busy, message: state.message,
+        hideSignatureOnly: state.prefs.hideSignatureOnly === true,
       });
     }
     function rememberTarget(versionId) {
@@ -1408,6 +1421,12 @@
         setDraftValue(state.draft, t.getAttribute('data-code'), t.value);
         state.confirmed = false;
         replan();
+        render();
+      } else if (action === 'hide-signature-only') {
+        const p = loadPrefs(storage);
+        p.hideSignatureOnly = !!t.checked;
+        state.prefs = { ...state.prefs, hideSignatureOnly: p.hideSignatureOnly };
+        savePrefs(storage, p);
         render();
       } else if (action === 'confirm-drops') {
         state.confirmed = !!t.checked;
