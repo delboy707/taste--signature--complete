@@ -444,3 +444,13 @@ test('html: loading, no locked versions, no responses, error states', () => {
     const failed = { versionNumber: 4, versionId: 'v4', error: 'This version was not found or is not in your organisation.' };
     assert.match(CR.buildConsumerResultsHtml({ state: 'ok', versions: [failed] }), /Version 4[\s\S]*not in your organisation/);
 });
+
+test('live config ships Consumer results ON against prod (0041 is live there); example stays OFF', () => {
+    const fsMod = require('node:fs');
+    const pathMod = require('node:path');
+    const live = fsMod.readFileSync(pathMod.join(__dirname, '..', 'qep-capture-config.js'), 'utf8');
+    assert.match(live, /ENABLE_CONSUMER_RESULTS: true,/);
+    assert.match(live, /SUPABASE_ENV: 'prod',/, 'the flag is only on because the config points at prod, where 0041 is applied');
+    const example = fsMod.readFileSync(pathMod.join(__dirname, '..', 'qep-capture-config.example.js'), 'utf8');
+    assert.match(example, /ENABLE_CONSUMER_RESULTS: false,/);
+});
