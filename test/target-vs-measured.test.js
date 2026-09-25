@@ -476,6 +476,18 @@ test('amend: what cannot be carried is listed before creating (no slider, other 
     assert.equal(plan.needsConfirm, true);
 });
 
+test('amend: an edited word-only or range target is no longer reported as a conversion', () => {
+    const plan = amendPlan((d) => {
+        TVM.setDraftValue(d, 'app_Color_Shade', 7);
+        TVM.setDraftValue(d, 'tex_Thickness-Oral', 7);
+    });
+    const w = plan.warnings.join('\n');
+    assert.ok(!/Color Shade \(high/.test(w), w);
+    assert.match(w, /Curiosity \(high -> 8\)/);
+    assert.ok(!/range 5-7/.test(w), w);
+    assert.equal(plan.changes.edited, 2);
+});
+
 test('amend: invalid values block; nothing left blocks; alias-only codes use the crosswalk key', () => {
     const bad = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 11));
     assert.match(bad.blocking, /0-10/);

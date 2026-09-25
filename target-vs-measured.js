@@ -911,8 +911,10 @@
       }
       carried.push({ code: e.code, label: e.label, kind: e.kind, stageId: e.stageId, value });
       if (b && b.role === 'secondary') secondary++;
-      if (b && b.origin === 'legacy' && b.spec && b.spec.type === 'legacy') legacyConverted.push(`${e.label} (${b.spec.intensity} -> ${value})`);
-      if (b && b.origin === 'range' && b.spec && b.spec.type === 'numeric' && parsed.value === _parseValue(b.value).value) {
+      // Conversions are only reported while the value is still the converted one (an edit replaces it).
+      const unedited = b && parsed.value === _parseValue(b.value).value;
+      if (unedited && b.origin === 'legacy' && b.spec && b.spec.type === 'legacy') legacyConverted.push(`${e.label} (${b.spec.intensity} -> ${value})`);
+      if (unedited && b.origin === 'range' && b.spec && b.spec.type === 'numeric') {
         rangeCollapsed.push(`${e.label}: range ${_specText(b.spec)} -> ${value}`);
       }
     }
