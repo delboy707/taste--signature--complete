@@ -78,7 +78,7 @@ class TutorialManager {
      * Check if user has completed tutorial
      */
     checkTutorialStatus() {
-        const userId = authManager?.getUserId();
+        const userId = window.authManager?.getUserId();
         if (!userId) return false;
 
         const storageKey = `tutorial_completed_${userId}`;
@@ -287,7 +287,7 @@ class TutorialManager {
         this.cleanup();
 
         // Mark as completed
-        const userId = authManager?.getUserId();
+        const userId = window.authManager?.getUserId();
         if (userId) {
             localStorage.setItem(`tutorial_completed_${userId}`, 'true');
             this.hasCompletedTutorial = true;
@@ -345,7 +345,7 @@ class TutorialManager {
      * Restart tutorial
      */
     restartTutorial() {
-        const userId = authManager?.getUserId();
+        const userId = window.authManager?.getUserId();
         if (userId) {
             localStorage.removeItem(`tutorial_completed_${userId}`);
         }
