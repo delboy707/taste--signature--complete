@@ -383,8 +383,8 @@
           <td class="cr-sig${r.signatureStatus === 'capture_only' ? ' cr-capture-only' : ''}">${esc(formatSignature(r))}</td>
           <td>${esc(formatConsumer(r))}</td>
         </tr>`).join('');
-    return `<table class="cr-table" style="width:100%;border-collapse:collapse;font-size:0.85rem;margin:4px 0 12px;">
-        <thead><tr><th style="text-align:left;">Attribute</th><th style="text-align:left;">Signature (this experience)</th><th style="text-align:left;">Capture consumers</th></tr></thead>
+    return `<table class="cr-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:0.85rem;margin:4px 0 12px;">
+        <thead><tr><th style="text-align:left;width:36%;">Attribute</th><th style="text-align:left;width:26%;">Signature (this experience)</th><th style="text-align:left;width:38%;">Capture consumers</th></tr></thead>
         <tbody>${body}</tbody></table>`;
   }
 
