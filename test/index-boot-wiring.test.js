@@ -11,12 +11,15 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const { read, flushMany } = require('./helpers/auth-sandbox');
 
+// The inline <script> right after app.js (index.html's auth/PWA boot script).
 function extractBootScript() {
     const html = read('index.html');
-    const start = html.indexOf('// Create auth manager instance');
-    assert.ok(start > 0, 'boot script marker found');
+    const anchor = html.indexOf('<script src="app.js"></script>');
+    assert.ok(anchor > 0, 'app.js script tag found');
+    const start = html.indexOf('<script>', anchor);
+    assert.ok(start > anchor, 'boot script found after app.js');
     const end = html.indexOf('</script>', start);
-    return html.slice(start, end);
+    return html.slice(start + '<script>'.length, end);
 }
 
 function bootIndex({ initialize, confirmAnswer = true, firebaseLoaded = true } = {}) {
@@ -74,8 +77,7 @@ function bootIndex({ initialize, confirmAnswer = true, firebaseLoaded = true } =
     };
     vm.createContext(ctx);
     vm.runInContext(extractBootScript(), ctx, { filename: 'index.html#boot' });
-    // `const authManager = new AuthManager()` in the script shadows nothing on
-    // window; the script itself reads window.authManager.
+    // The boot script reads window.authManager (auth.js's single instance).
     ctx.authManager = am;
     const fireDomReady = () => Promise.all((domListeners.DOMContentLoaded || []).map((fn) => fn()));
     return { ctx, el, calls, location, fireDomReady };

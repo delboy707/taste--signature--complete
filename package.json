@@ -15,7 +15,7 @@
     "firebase-tools": "^15.0.0"
   },
   "scripts": {
-    "test": "node --test test/diff.test.js test/signature-supabase-sync.test.js test/touched-fields.test.js test/quick-entry-touched.test.js test/backup-script.test.js test/csv-utils.test.js test/dom-utils.test.js test/render-utils.test.js test/api-claude.test.js test/ai-available.test.js test/claude-api.test.js test/chat-ui.test.js test/target-prefill.test.js test/targets-loaded.test.js test/targets-loaded-ui.test.js test/qep-capture-crosswalk.test.js test/target-prefill-app-integration.test.js test/target-markers-app.test.js test/supabase-schema-scan.test.js test/qep-capture-client.test.js test/clerk-ready-signal.test.js test/index-boot-wiring.test.js test/send-to-capture.test.js",
+    "test": "node --test test/diff.test.js test/signature-supabase-sync.test.js test/touched-fields.test.js test/quick-entry-touched.test.js test/backup-script.test.js test/csv-utils.test.js test/dom-utils.test.js test/render-utils.test.js test/api-claude.test.js test/ai-available.test.js test/claude-api.test.js test/chat-ui.test.js test/target-prefill.test.js test/targets-loaded.test.js test/targets-loaded-ui.test.js test/qep-capture-crosswalk.test.js test/target-prefill-app-integration.test.js test/target-markers-app.test.js test/supabase-schema-scan.test.js test/qep-capture-client.test.js test/clerk-ready-signal.test.js test/index-boot-wiring.test.js test/send-to-capture.test.js test/logout-clerk-signout.test.js test/single-auth-manager.test.js test/send-to-capture-link.test.js",
     "test:diff": "node test/diff.test.js",
     "test:supabase-sync": "node test/signature-supabase-sync.test.js",
     "test:touched-fields": "node test/touched-fields.test.js",
