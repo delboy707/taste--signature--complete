@@ -25,20 +25,16 @@ const QEP_CAPTURE_CONFIG = {
     // explicit decision to pause the rollout.
     ENABLE_SUPABASE_DUAL_WRITE: true,
 
-    // Stage 2A: on for this branch only (feat/stage-2a) - the picker/deep
-    // link/prefill work targets qep-capture RPC/columns that migrations
-    // 0036/0037 add, and those are NOT applied anywhere yet (see
-    // qep-capture-crosswalk.js, targets-loaded.js's fetchLockedProjects()
-    // rpcMissing handling). Do not merge this flag flip to main until
-    // 0036/0037 are applied in the environment this deploys against.
+    // Stage 2A: the picker/deep link/prefill work uses qep-capture RPC/columns
+    // from migrations 0036/0037, which are applied to production (and dev).
     ENABLE_TARGETS_LOADED: true,
 
     // Stage 2B "Send to Capture" (send-to-capture.js): history-row button
     // that turns an experience into a new TSS project version
     // (tss_shared.create_version_from_signature, qep-capture migration 0038)
-    // and a Capture study (public.create_study_from_version, 0032). Keep
-    // false until 0038 is applied in the environment this deploys against.
-    ENABLE_SEND_TO_CAPTURE: false,
+    // and a Capture study (public.create_study_from_version, 0032). On:
+    // 0038 was applied to production (and dev) on 2026-09-25.
+    ENABLE_SEND_TO_CAPTURE: true,
 
     // qep-capture's own app (not its Supabase project) - base URL for the
     // "Test in Capture" handoff link. Defaults to production; set to

@@ -530,11 +530,13 @@ test('app.js: history renders the button only with the flag on, and the click fi
     absent.app.sendExperienceToCapture(exp.id, btn); // no-op, no throw
 });
 
-test('config files ship the flag OFF', () => {
-    for (const f of ['qep-capture-config.js', 'qep-capture-config.example.js']) {
-        const src = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-        assert.match(src, /ENABLE_SEND_TO_CAPTURE: false,/, f);
-    }
+test('live config ships Send to Capture ON against prod (0038 is live there); example stays OFF', () => {
+    const live = fs.readFileSync(path.join(__dirname, '..', 'qep-capture-config.js'), 'utf8');
+    assert.match(live, /ENABLE_SEND_TO_CAPTURE: true,/);
+    assert.match(live, /SUPABASE_ENV: 'prod',/, 'the flag is only on because the config points at prod, where 0038 is applied');
+    assert.match(live, /CAPTURE_APP_URL: 'https:\/\/capture\.qeptss\.com'/);
+    const example = fs.readFileSync(path.join(__dirname, '..', 'qep-capture-config.example.js'), 'utf8');
+    assert.match(example, /ENABLE_SEND_TO_CAPTURE: false,/);
 });
 
 test('index.html loads send-to-capture.js after dom-utils.js and before app.js', () => {
