@@ -546,12 +546,122 @@ test('index.html loads send-to-capture.js after dom-utils.js and before app.js',
     assert.ok(at('send-to-capture.js') < at('app.js'));
 });
 
-test('successNotes: reused version, category fallback and out-of-category targets are called out', () => {
+test('successNotes: reused version and out-of-category targets are called out; no default-category note', () => {
     assert.equal(STC.successNotes({ version: {}, outOfCategoryCount: 0 }), '');
     const s = STC.successNotes({ version: { reused_existing_version: true, category_fallback: true }, outOfCategoryCount: 2 });
     assert.match(s, /existing version was reused/);
-    assert.match(s, /default category was used/);
+    assert.doesNotMatch(s, /default category/, 'Capture never defaults a category any more');
     assert.match(s, /2 target\(s\) fall outside/);
+});
+
+// ---------- category required (0038: no default category) ----------
+
+const CATEGORY_REQUIRED = 'category required: product type "beverage" has no confident Capture category - choose one (experience.tssCategoryId)';
+const CATEGORY_ROWS = [{ id: 'choc', name: 'Chocolate Bar' }, { id: 'soft', name: 'Soft Drink' }, { id: 'water', name: 'Still Water' }];
+
+function categoryRequiredRpc(calls) {
+    const ok = okRpcImpl(calls);
+    return (name, params) => {
+        if (name === 'create_version_from_signature' && !(params.payload && params.payload.tssCategoryId)) {
+            calls.push({ name, params });
+            return { data: null, error: { message: CATEGORY_REQUIRED } };
+        }
+        return ok(name, params);
+    };
+}
+
+test('mapSendToCaptureError: category required asks the user to choose a category', () => {
+    assert.match(STC.mapSendToCaptureError({ message: CATEGORY_REQUIRED }), /choose a Capture category/i);
+});
+
+test('sendExperienceToCapture: category required is a coded error and no study is created', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls) });
+    await assert.rejects(STC.sendExperienceToCapture(experience(), { getClient: () => client, config: FLAG_ON }),
+        (e) => e.code === 'CATEGORY_REQUIRED');
+    assert.deepEqual(calls.map(c => c.name), ['create_version_from_signature']);
+});
+
+test('sendExperienceToCapture: a chosen category is sent as tssCategoryId', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls) });
+    const out = await STC.sendExperienceToCapture(experience(), { getClient: () => client, config: FLAG_ON, categoryId: 'soft' });
+    assert.equal(calls[0].params.payload.tssCategoryId, 'soft');
+    assert.equal(out.study.id, STUDY_ID);
+});
+
+test('fetchCaptureCategories: reads public.categories (id, name) in position order', async () => {
+    const { client, violations } = makeStrictClient({ accessToken: async () => 't', tables: { categories: () => ({ data: CATEGORY_ROWS, error: null }) } });
+    const rows = await STC.fetchCaptureCategories(client);
+    assert.deepEqual(rows, CATEGORY_ROWS);
+    assert.deepEqual(violations, []);
+});
+
+test('click, category required: closes the blank tab, shows the picker, no error toast', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls),
+        tables: { categories: () => ({ data: CATEGORY_ROWS, error: null }) } });
+    const win = fakeWindow();
+    const notes = [];
+    const picks = [];
+    const ctl = STC.createSendToCaptureController({ config: FLAG_ON, isDemo: () => false, getClient: () => client,
+        openWindow: () => win, notify: (n) => notes.push(n), showCategoryPicker: (opts) => picks.push(opts) });
+    const button = fakeButton();
+    const out = await ctl.handleClick(experience(), button);
+    assert.equal(out.status, 'needs_category');
+    assert.equal(win.closedByUs, true, 'blank tab closed while the user chooses');
+    assert.equal(notes.filter(n => n.type === 'error').length, 0);
+    assert.equal(picks.length, 1);
+    assert.deepEqual(picks[0].categories, CATEGORY_ROWS);
+    assert.equal(button.disabled, false);
+    assert.equal(calls.filter(c => c.name === 'create_study_from_version').length, 0);
+});
+
+test('click, category picked: re-sends with tssCategoryId, opens a new tab at the study', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls),
+        tables: { categories: () => ({ data: CATEGORY_ROWS, error: null }) } });
+    const wins = [];
+    const notes = [];
+    let picker = null;
+    const ctl = STC.createSendToCaptureController({ config: FLAG_ON, isDemo: () => false, getClient: () => client,
+        openWindow: () => { const w = fakeWindow(); wins.push(w); return w; }, notify: (n) => notes.push(n),
+        showCategoryPicker: (opts) => { picker = opts; } });
+    await ctl.handleClick(experience(), fakeButton());
+    const out = await picker.onPick('soft');
+    assert.equal(out.status, 'ok');
+    assert.equal(wins.length, 2, 'a fresh tab is opened inside the pick click');
+    assert.equal(wins[1].location.href, `https://capture.example.test/studies/${STUDY_ID}`);
+    const sent = calls.filter(c => c.name === 'create_version_from_signature');
+    assert.equal(sent.length, 2);
+    assert.equal(sent[1].params.payload.tssCategoryId, 'soft');
+    assert.equal(notes[notes.length - 1].type, 'success');
+});
+
+test('click, category picker cancelled: nothing else is sent', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls),
+        tables: { categories: () => ({ data: CATEGORY_ROWS, error: null }) } });
+    let picker = null;
+    const ctl = STC.createSendToCaptureController({ config: FLAG_ON, isDemo: () => false, getClient: () => client,
+        openWindow: () => fakeWindow(), notify: () => {}, showCategoryPicker: (opts) => { picker = opts; } });
+    await ctl.handleClick(experience(), fakeButton());
+    picker.onCancel();
+    assert.equal(calls.length, 1);
+});
+
+test('click, category list cannot be loaded: clear error toast, no picker', async () => {
+    const calls = [];
+    const { client } = makeStrictClient({ accessToken: async () => 't', rpcImpl: categoryRequiredRpc(calls),
+        tables: { categories: () => ({ data: null, error: { message: 'permission denied for table categories' } }) } });
+    const notes = [];
+    const picks = [];
+    const ctl = STC.createSendToCaptureController({ config: FLAG_ON, isDemo: () => false, getClient: () => client,
+        openWindow: () => fakeWindow(), notify: (n) => notes.push(n), showCategoryPicker: (o) => picks.push(o) });
+    const out = await ctl.handleClick(experience(), fakeButton());
+    assert.equal(out.status, 'error');
+    assert.equal(picks.length, 0);
+    assert.match(notes[0].message, /categor/i);
 });
 
 test('env guard: a dev-pointed config on signature.qeptss.com keeps Send to Capture off', () => {
