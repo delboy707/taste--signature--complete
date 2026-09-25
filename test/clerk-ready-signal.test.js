@@ -376,7 +376,7 @@ test('logout (#7) after the gate: waits for the signal, Clerk.signOut to the por
     await init;
     const res = await s.am.logout();
     assert.equal(res.success, true);
-    assert.deepEqual(clerk.signOutCalls, [{ redirectUrl: PORTAL }]);
+    assert.deepEqual(JSON.parse(JSON.stringify(clerk.signOutCalls)), [{ redirectUrl: PORTAL }]); // cross-realm (vm) objects
     assert.equal(s.location.href, PORTAL);
     assert.ok(events.indexOf('clerk:signOut') < events.lastIndexOf('redirect:' + PORTAL));
 });
