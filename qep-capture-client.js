@@ -63,6 +63,45 @@ function _notSignedInError() {
     return new Error('Not signed in to QEP: no Clerk session, so qep-capture was not called. Please sign in again.');
 }
 
+// The Clerk-ready wait ran out (auth.js's gate is still loading ClerkJS /
+// activating the org). Not a signed-out verdict: "yet" marks it temporary,
+// which targets-loaded.js's isTransientQepCaptureError() retries.
+function _signInStillLoadingError() {
+    const err = new Error('Not signed in to QEP yet: sign-in is still loading. Try again in a moment.');
+    err.code = 'QEP_SIGN_IN_PENDING';
+    return err;
+}
+
+// Clerk says signed-in but Clerk.session.getToken() returned null or threw
+// (token not minted yet, or a network blip on Clerk's side). Waited out a
+// few times (bounded, ~2.5 s) before giving up; still never an anon
+// request. "yet" marks it temporary for isTransientQepCaptureError().
+const TOKEN_RETRY_DELAYS_MS = [250, 750, 1500];
+
+function _tokenNotReadyError(cause) {
+    const err = new Error('Not signed in to QEP yet: the Clerk session token was not ready. Try again in a moment.');
+    err.code = 'QEP_TOKEN_NOT_READY';
+    if (cause) err.cause = cause;
+    return err;
+}
+
+async function _getSessionTokenWithWait() {
+    for (let attempt = 0; ; attempt++) {
+        const session = window.Clerk && window.Clerk.session;
+        if (!session) throw _notSignedInError();
+        let token = null;
+        let failure = null;
+        try {
+            token = await session.getToken();
+        } catch (err) {
+            failure = err;
+        }
+        if (token) return token;
+        if (attempt >= TOKEN_RETRY_DELAYS_MS.length) throw _tokenNotReadyError(failure);
+        await new Promise(resolve => setTimeout(resolve, TOKEN_RETRY_DELAYS_MS[attempt]));
+    }
+}
+
 /**
  * Resolve a Clerk session token for qep-capture requests. Awaits auth.js's
  * Clerk-ready signal (authManager.whenClerkReady(), up to CLERK_WAIT_MS),
@@ -73,6 +112,9 @@ function _notSignedInError() {
  * NEVER returns null: supabase-js treats a null token as "use the anon
  * key", and anon has no USAGE on tss_shared ("permission denied for schema
  * tss_shared", 2026-09-24). Throws a clear not-signed-in error instead.
+ * A null/throwing getToken() while Clerk is signed in is waited out a few
+ * times first (_getSessionTokenWithWait) - on a first load the token can
+ * lag the signal.
  */
 async function _getClerkTokenOrThrow() {
     if (isQepDemoModeActive()) throw _demoModeError();
@@ -80,6 +122,7 @@ async function _getClerkTokenOrThrow() {
     if (authManager && typeof authManager.whenClerkReady === 'function') {
         const state = await authManager.whenClerkReady(CLERK_WAIT_MS);
         if (isQepDemoModeActive() || (state && state.status === 'demo')) throw _demoModeError();
+        if (state && state.status === 'error' && state.reason === 'timeout') throw _signInStillLoadingError();
         if (!state || state.status !== 'signed-in') throw _notSignedInError();
     } else {
         const deadline = Date.now() + CLERK_WAIT_MS;
@@ -89,9 +132,7 @@ async function _getClerkTokenOrThrow() {
         }
     }
     if (!(window.Clerk && window.Clerk.session)) throw _notSignedInError();
-    const token = await window.Clerk.session.getToken();
-    if (!token) throw _notSignedInError();
-    return token;
+    return _getSessionTokenWithWait();
 }
 
 function getQepCaptureClient() {

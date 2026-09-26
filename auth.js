@@ -62,6 +62,10 @@ class AuthManager {
         this.logoutClerkWaitMs = LOGOUT_CLERK_WAIT_MS;
         this.logoutClerkLoadMs = LOGOUT_CLERK_LOAD_MS;
         this.logoutClerkSignOutMs = LOGOUT_CLERK_SIGNOUT_MS;
+        // How long the deep-link hand-over waits for the signal before it
+        // hands over the 'timeout' state (the deep link then keeps waiting
+        // with a visible message - see targets-loaded-ui.js).
+        this.deepLinkClerkWaitMs = CLERK_READY_TIMEOUT_MS;
     }
 
     /**
@@ -188,17 +192,26 @@ class AuthManager {
                         initializeFirestore(user);
                     }
 
-                    // Consume any ?project=&version= deep link stashed before
-                    // the Clerk gate ran (see targets-loaded-ui.js) - only
-                    // once the Clerk-ready signal says the session (and org)
-                    // is usable. On a returning visit this callback fires
-                    // before the gate finishes. No-op if nothing was stashed
-                    // or Targets Loaded is disabled; left stashed otherwise.
-                    this.whenClerkReady().then(state => {
+                    // A ?project=&version= deep link stashed before the Clerk
+                    // gate ran (see targets-loaded-ui.js): show its view with
+                    // a "waiting for QEP sign-in" message now (UI only, no
+                    // qep-capture call), then hand it the Clerk-ready state
+                    // once the signal settles. On a returning visit this
+                    // callback fires before the gate finishes. Every state
+                    // but signed-out is handed over - including the waiter's
+                    // timeout and a gate error - so the deep link shows the
+                    // targets or a clear message, never silently nothing
+                    // (it used to be dropped here, leaving the Dashboard and
+                    // "refresh until it works", 2026-09-26). Signed-out: the
+                    // auth screen/portal takes over and it stays stashed.
+                    if (typeof window.showQepCaptureDeepLinkPending === 'function') {
+                        window.showQepCaptureDeepLinkPending();
+                    }
+                    this.whenClerkReady(this.deepLinkClerkWaitMs).then(state => {
                         if (this._loggingOut) return;
-                        if (state.status !== 'signed-in' && state.status !== 'demo') return;
+                        if (state.status === 'signed-out') return;
                         if (typeof window.handleQepCaptureDeepLink === 'function') {
-                            window.handleQepCaptureDeepLink();
+                            window.handleQepCaptureDeepLink(state);
                         }
                     });
                 } else {

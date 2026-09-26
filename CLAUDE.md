@@ -345,6 +345,25 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
+## Status 2026-09-26b2 (Targets Loaded first load)
+
+- "Open in Signature" (`/?project=&version=`) must load on the FIRST
+  load. auth.js shows the pending deep link as soon as the app is visible
+  (`showQepCaptureDeepLinkPending()`, UI only) and hands
+  `handleQepCaptureDeepLink(state)` every Clerk-ready state except
+  signed-out - never drop it on the 15 s waiter timeout (that is what
+  made it "need several refreshes"). The handler waits 45 s more with a
+  message after a timeout; a gate error shows Reload.
+- qep-capture reads return `{ error, transient: true }` for failures a
+  retry can fix (`isTransientQepCaptureError`, targets-loaded.js); the UI
+  retries only those (0.7 s, 2 s), then shows the error with a Retry
+  button. The stashed link is kept until it loads or fails for good.
+- qep-capture-client.js waits out a null/throwing `getToken()` while
+  Clerk is signed in (250/750/1500 ms); "Not signed in to QEP yet" means
+  temporary. Never an anon request.
+- service-worker.js: every navigation is network-first (a query-string
+  URL used to be served cache-first, i.e. stale after a deploy).
+
 ## Status 2026-09-26b (Stage 2D - Target vs measured + Amend, branch only, flag OFF)
 
 - `target-vs-measured.js`, history-row button on a linked experience;

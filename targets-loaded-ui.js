@@ -35,37 +35,26 @@ function isUuidLikeForDeepLink(value) {
     }
 })();
 
-/**
- * Consume the stashed deep link (if any): removes it from sessionStorage
- * and strips project/version from the address bar (history.replaceState)
- * so a refresh does not re-trigger it, regardless of whether the ids turn
- * out to be valid/found. Returns { projectId, versionId } (versionId may
- * be null) or null if there was nothing stashed, or what was stashed
- * didn't contain a syntactically valid project id. Never throws.
- */
-function consumeQepCaptureDeepLinkTarget() {
+function readQepCaptureDeepLinkStash() {
     if (typeof window === 'undefined' || !window.sessionStorage) return null;
-
-    let raw = null;
     try {
-        raw = window.sessionStorage.getItem(QEP_CAPTURE_DEEP_LINK_STORAGE_KEY);
-        if (raw) window.sessionStorage.removeItem(QEP_CAPTURE_DEEP_LINK_STORAGE_KEY);
+        return window.sessionStorage.getItem(QEP_CAPTURE_DEEP_LINK_STORAGE_KEY);
     } catch (err) {
         return null;
     }
-    if (!raw) return null;
+}
 
-    // Strip from the address bar unconditionally, even if what follows
-    // turns out to be malformed/not-found - a refresh must never re-fire it.
+function clearQepCaptureDeepLinkStash() {
     try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('project');
-        url.searchParams.delete('version');
-        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+        if (window.sessionStorage) window.sessionStorage.removeItem(QEP_CAPTURE_DEEP_LINK_STORAGE_KEY);
     } catch (err) {
-        // Non-fatal - the params just stay visible in the address bar.
+        // Nothing else to do - storage unavailable.
     }
+}
 
+// Parse a stashed deep link. Returns { projectId, versionId } or null when
+// what was stashed has no syntactically valid project id.
+function parseQepCaptureDeepLinkStash(raw) {
     let parsed;
     try {
         parsed = JSON.parse(raw);
@@ -84,20 +73,193 @@ function consumeQepCaptureDeepLinkTarget() {
 }
 
 /**
- * Called once auth completes (see auth.js's onAuthStateChanged -> showApp()
- * hook). If a deep link was stashed and Targets Loaded is enabled, switches
- * to that view and preselects/loads the referenced project/version. A
- * no-op otherwise. Never throws.
+ * Read the stashed deep link (if any) WITHOUT consuming it, and strip
+ * project/version from the address bar (history.replaceState) so the URL is
+ * clean whatever happens next. The stash itself stays until the brief has
+ * loaded (or failed for good) - see runQepCaptureDeepLink() - so a Retry, or
+ * a reload in this tab after a temporary failure, reopens it. A malformed
+ * stash is dropped. Returns { projectId, versionId } (versionId may be
+ * null) or null. Never throws.
  */
-async function handleQepCaptureDeepLink() {
-    const target = consumeQepCaptureDeepLinkTarget();
+function peekQepCaptureDeepLinkTarget() {
+    const raw = readQepCaptureDeepLinkStash();
+    if (!raw) return null;
+
+    try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('project') || url.searchParams.has('version')) {
+            url.searchParams.delete('project');
+            url.searchParams.delete('version');
+            window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+        }
+    } catch (err) {
+        // Non-fatal - the params just stay visible in the address bar.
+    }
+
+    const target = parseQepCaptureDeepLinkStash(raw);
+    if (!target) clearQepCaptureDeepLinkStash();
+    return target;
+}
+
+/**
+ * Consume the stashed deep link (if any): peekQepCaptureDeepLinkTarget()
+ * plus removing it from sessionStorage. Returns { projectId, versionId }
+ * or null. Never throws.
+ */
+function consumeQepCaptureDeepLinkTarget() {
+    const target = peekQepCaptureDeepLinkTarget();
+    clearQepCaptureDeepLinkStash();
+    return target;
+}
+
+function isTargetsLoadedEnabled() {
+    return !!(window.QEP_CAPTURE_CONFIG && window.QEP_CAPTURE_CONFIG.ENABLE_TARGETS_LOADED);
+}
+
+// ------------------------------------------------------------
+// First-load reliability (2026-09-26): "Open in Signature" used to need
+// several refreshes. The deep link now (1) shows the Targets Loaded view as
+// soon as the app is visible, (2) waits for the real prerequisite - the
+// Clerk-ready signal - with a visible "waiting for QEP sign-in" message,
+// never silently dropping the link when the signal is slow, (3) retries
+// transient qep-capture failures (targets-loaded.js marks them) with
+// backoff, and (4) ends in either the targets or a clear message with a
+// Retry (or Reload) button - never a silent Dashboard.
+// ------------------------------------------------------------
+
+// Delays before the 2nd and 3rd attempt of a transient failure.
+const TARGETS_LOAD_RETRY_DELAYS_MS = [700, 2000];
+// After auth.js's own 15 s Clerk-ready wait ran out, keep waiting this much
+// longer (the message says so) before offering Retry.
+const DEEP_LINK_EXTRA_CLERK_WAIT_MS = 45000;
+
+/**
+ * Call `fn` (an async qep-capture fetch returning { error, transient? } or
+ * a result) and retry it while it fails transiently, up to
+ * TARGETS_LOAD_RETRY_DELAYS_MS.length more times. `onRetry(attempt)` runs
+ * before each retry (UI feedback). Returns the last result.
+ */
+async function loadWithTransientRetry(fn, onRetry) {
+    let result = await fn();
+    for (let i = 0; i < TARGETS_LOAD_RETRY_DELAYS_MS.length; i++) {
+        if (!result || !result.error || !result.transient) return result;
+        if (typeof onRetry === 'function') onRetry(i + 1);
+        await new Promise((resolve) => setTimeout(resolve, TARGETS_LOAD_RETRY_DELAYS_MS[i]));
+        result = await fn();
+    }
+    return result;
+}
+
+function renderDeepLinkStatus(html) {
+    const container = document.getElementById('targets-loaded-content');
+    if (container) container.innerHTML = `<div class="card" style="max-width: 640px; margin-bottom: 20px;">${html}</div>`;
+}
+
+const DEEP_LINK_WAITING_HTML = '<p id="qep-capture-deep-link-status" style="color: #666;">Opening the brief from Brief &ndash; waiting for QEP sign-in&hellip;</p>';
+
+/**
+ * Called by auth.js as soon as the app is shown (Firebase session), before
+ * the Clerk-ready signal: if a valid deep link is stashed and Targets
+ * Loaded is on, switch to its view and say we are waiting for sign-in, so
+ * the user never sits on the Dashboard wondering. UI only - no qep-capture
+ * call, and the link is not consumed. Never throws.
+ */
+function showQepCaptureDeepLinkPending() {
+    try {
+        if (!isTargetsLoadedEnabled()) return;
+        const raw = readQepCaptureDeepLinkStash();
+        if (!raw || !parseQepCaptureDeepLinkStash(raw)) return;
+        navigateToTargetsLoadedView();
+        renderDeepLinkStatus(DEEP_LINK_WAITING_HTML);
+    } catch (err) {
+        console.warn('Targets Loaded deep link: could not show the pending state.', err);
+    }
+}
+
+/**
+ * Resolve the Clerk-ready state the deep link should act on. `clerkState`
+ * is what auth.js handed over (it may be a 'timeout' after its 15 s wait).
+ * On a timeout, keeps waiting (DEEP_LINK_EXTRA_CLERK_WAIT_MS) with a
+ * "still waiting" message. Without auth.js on the page (unit tests), the
+ * fetch layer's own Clerk wait applies and this resolves signed-in.
+ */
+async function waitForQepSignIn(clerkState) {
+    const authManager = window.authManager;
+    if (!authManager || typeof authManager.whenClerkReady !== 'function') {
+        return clerkState || { status: 'signed-in' };
+    }
+    let state = authManager.clerkReadyState || clerkState || null;
+    if (!state) {
+        renderDeepLinkStatus(DEEP_LINK_WAITING_HTML);
+        state = await authManager.whenClerkReady();
+    }
+    if (state && state.status === 'error' && state.reason === 'timeout') {
+        renderDeepLinkStatus('<p id="qep-capture-deep-link-status" style="color: #666;">Opening the brief from Brief &ndash; still waiting for QEP sign-in (this can take a little longer on a slow connection)&hellip;</p>');
+        state = await authManager.whenClerkReady(DEEP_LINK_EXTRA_CLERK_WAIT_MS);
+    }
+    return state || { status: 'error', reason: 'timeout', session: null };
+}
+
+function renderDeepLinkBlocked(state) {
+    if (state.reason === 'timeout') {
+        renderDeepLinkStatus(
+            '<p style="color: #b00;">QEP sign-in is taking too long, so the brief\'s targets could not be loaded yet.</p>' +
+            '<button id="qep-capture-retry-btn" class="btn btn-secondary">Retry</button>'
+        );
+        const retry = document.getElementById('qep-capture-retry-btn');
+        if (retry) retry.addEventListener('click', () => handleQepCaptureDeepLink());
+        return;
+    }
+    const detail = state.error && state.error.message ? ` (${escapeHtml(state.error.message)})` : '';
+    renderDeepLinkStatus(
+        `<p style="color: #b00;">Could not finish signing in to QEP${detail}, so the brief's targets could not be loaded. Reload the page to try again - the brief will reopen.</p>` +
+        '<button id="qep-capture-reload-btn" class="btn btn-secondary">Reload</button>'
+    );
+    const reload = document.getElementById('qep-capture-reload-btn');
+    if (reload) reload.addEventListener('click', () => window.location.reload());
+}
+
+let _deepLinkRun = null;
+
+/**
+ * Called by auth.js once the Clerk-ready signal settles (any status except
+ * signed-out), with that state; also by the Retry button. If a deep link is
+ * stashed and Targets Loaded is enabled: switches to that view, waits for
+ * QEP sign-in, then preselects/loads the referenced project/version. A
+ * second call while one is running joins it. A no-op when nothing is
+ * stashed. Never throws.
+ */
+function handleQepCaptureDeepLink(clerkState) {
+    if (_deepLinkRun) return _deepLinkRun;
+    _deepLinkRun = runQepCaptureDeepLink(clerkState)
+        .catch((err) => console.warn('Targets Loaded deep link failed:', err))
+        .finally(() => { _deepLinkRun = null; });
+    return _deepLinkRun;
+}
+
+async function runQepCaptureDeepLink(clerkState) {
+    const target = peekQepCaptureDeepLinkTarget();
     if (!target) return;
 
-    const enabled = !!(window.QEP_CAPTURE_CONFIG && window.QEP_CAPTURE_CONFIG.ENABLE_TARGETS_LOADED);
-    if (!enabled) return;
+    if (!isTargetsLoadedEnabled()) {
+        // Consumed even though disabled - a refresh must not re-fire it
+        // later if the flag is turned on mid-session.
+        clearQepCaptureDeepLinkStash();
+        return;
+    }
 
     navigateToTargetsLoadedView();
-    await renderTargetsLoadedDashboard(target);
+
+    const state = await waitForQepSignIn(clerkState);
+    if (state.status === 'signed-out') return; // auth screen / portal takes over; stays stashed for after sign-in
+    if (state.status === 'error') {
+        renderDeepLinkBlocked(state); // stays stashed: Retry / Reload reopens it
+        return;
+    }
+
+    const outcome = await renderTargetsLoadedDashboard(target);
+    // Keep the link only while a Retry could still load it.
+    if (outcome !== 'transient') clearQepCaptureDeepLinkStash();
 }
 
 function navigateToTargetsLoadedView() {
@@ -117,7 +279,9 @@ function navigateToTargetsLoadedView() {
 
 /**
  * `deepLinkTarget`, when given, is { projectId, versionId } (versionId
- * may be null - "use the latest locked version").
+ * may be null - "use the latest locked version"). Resolves to the
+ * outcome: 'loaded', 'transient' (failed, a Retry may work), 'failed' or
+ * 'picker' (list shown, nothing to load).
  */
 async function renderTargetsLoadedDashboard(deepLinkTarget) {
     const container = document.getElementById('targets-loaded-content');
@@ -153,7 +317,7 @@ async function renderTargetsLoadedDashboard(deepLinkTarget) {
     `;
 
     wireManualFallback();
-    await loadAndRenderPicker(deepLinkTarget || null);
+    return loadAndRenderPicker(deepLinkTarget || null);
 }
 
 function wireManualFallback() {
@@ -187,13 +351,25 @@ async function loadAndRenderPicker(deepLinkTarget) {
     statusEl.innerHTML = '<p style="color: #666;">Loading your locked briefs&hellip;</p>';
     wrapEl.style.display = 'none';
 
-    const result = await window.fetchLockedProjects();
+    const result = await loadWithTransientRetry(
+        () => window.fetchLockedProjects(),
+        () => { statusEl.innerHTML = '<p style="color: #666;">Loading your locked briefs&hellip; (connection problem, retrying)</p>'; }
+    );
 
     if (result.error) {
-        statusEl.innerHTML = `<p style="color: #b00;">${escapeHtml(result.error)}</p>`;
+        const retryHtml = result.transient ? ' <button id="qep-capture-retry-btn" class="btn btn-secondary">Retry</button>' : '';
+        statusEl.innerHTML = `<p style="color: #b00;">${escapeHtml(result.error)}</p>${retryHtml}`;
         fallbackEl.style.display = 'block';
         fallbackEl.open = true;
-        return;
+        if (result.transient) {
+            const retry = document.getElementById('qep-capture-retry-btn');
+            // A deep link is still stashed after a transient failure, so its
+            // Retry goes back through the deep-link path (which clears it once
+            // loaded); the plain picker just re-renders.
+            if (retry) retry.addEventListener('click', () => (deepLinkTarget ? handleQepCaptureDeepLink() : renderTargetsLoadedDashboard()));
+            return 'transient';
+        }
+        return 'failed';
     }
 
     const projects = result.projects || [];
@@ -201,7 +377,7 @@ async function loadAndRenderPicker(deepLinkTarget) {
     if (projects.length === 0) {
         statusEl.innerHTML = '<p style="color: #666;">No locked briefs yet - lock a brief in Brief first.</p>';
         fallbackEl.style.display = 'block';
-        return;
+        return deepLinkTarget ? 'failed' : 'picker';
     }
 
     statusEl.innerHTML = '';
@@ -227,26 +403,39 @@ async function loadAndRenderPicker(deepLinkTarget) {
         return loadPickedTarget(opt.value, opt.dataset.versionId);
     };
 
-    if (!deepLinkTarget) return;
+    if (!deepLinkTarget) return 'picker';
 
     const match = projects.find((p) => p.project_id === deepLinkTarget.projectId);
     if (!match) {
         renderTargetsResultOrError({ error: 'That brief was not found in your organisation.' });
-        return;
+        return 'failed';
     }
     if (deepLinkTarget.versionId && deepLinkTarget.versionId !== match.latest_locked_version_id) {
         renderTargetsResultOrError({ error: 'That brief version was not found in your organisation.' });
-        return;
+        return 'failed';
     }
 
     select.value = match.project_id;
-    await loadPickedTarget(match.project_id, match.latest_locked_version_id);
+    return loadPickedTarget(match.project_id, match.latest_locked_version_id, () => handleQepCaptureDeepLink());
 }
 
-async function loadPickedTarget(projectId, versionId) {
+/**
+ * Load and render one version's targets, retrying transient failures.
+ * `onRetry` is what the Retry button does if they persist (default: this
+ * same load again). Resolves to 'loaded', 'transient' or 'failed'.
+ */
+async function loadPickedTarget(projectId, versionId, onRetry) {
     renderTargetsLoadedLoading();
-    const result = await window.fetchQepCaptureTargetsByVersion(projectId, versionId);
-    renderTargetsResultOrError(result);
+    const result = await loadWithTransientRetry(
+        () => window.fetchQepCaptureTargetsByVersion(projectId, versionId),
+        () => {
+            const resultsEl = document.getElementById('targets-loaded-results');
+            if (resultsEl) resultsEl.innerHTML = '<p style="color: #666;">Loading&hellip; (connection problem, retrying)</p>';
+        }
+    );
+    renderTargetsResultOrError(result, onRetry || (() => loadPickedTarget(projectId, versionId)));
+    if (!result.error) return 'loaded';
+    return result.transient ? 'transient' : 'failed';
 }
 
 function renderTargetsLoadedLoading() {
@@ -254,11 +443,17 @@ function renderTargetsLoadedLoading() {
     if (resultsEl) resultsEl.innerHTML = '<p style="color: #666;">Loading&hellip;</p>';
 }
 
-function renderTargetsResultOrError(result) {
+function renderTargetsResultOrError(result, onRetry) {
     const resultsEl = document.getElementById('targets-loaded-results');
     if (!resultsEl) return;
     if (result.error) {
-        resultsEl.innerHTML = `<p style="color: #b00;">${escapeHtml(result.error)}</p>`;
+        const canRetry = !!(result.transient && typeof onRetry === 'function');
+        resultsEl.innerHTML = `<p style="color: #b00;">${escapeHtml(result.error)}</p>` +
+            (canRetry ? '<button id="qep-capture-retry-btn" class="btn btn-secondary">Retry</button>' : '');
+        if (canRetry) {
+            const retry = document.getElementById('qep-capture-retry-btn');
+            if (retry) retry.addEventListener('click', () => onRetry());
+        }
         return;
     }
     resultsEl.innerHTML = renderTargetsLoadedResult(result);
@@ -379,8 +574,8 @@ async function handleStartEvaluationFromTarget(result) {
 
     try {
         const [crosswalkResult, targetResult] = await Promise.all([
-            window.fetchSignatureAttributeCrosswalk(),
-            window.fetchQepCaptureTargetsByVersion(result.project.id, result.version.id),
+            loadWithTransientRetry(() => window.fetchSignatureAttributeCrosswalk()),
+            loadWithTransientRetry(() => window.fetchQepCaptureTargetsByVersion(result.project.id, result.version.id)),
         ]);
 
         if (crosswalkResult.error) {
@@ -428,5 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof window !== 'undefined') {
     window.renderTargetsLoadedDashboard = renderTargetsLoadedDashboard;
     window.handleQepCaptureDeepLink = handleQepCaptureDeepLink;
+    window.showQepCaptureDeepLinkPending = showQepCaptureDeepLinkPending;
     window.consumeQepCaptureDeepLinkTarget = consumeQepCaptureDeepLinkTarget;
 }
