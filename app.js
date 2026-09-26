@@ -72,6 +72,10 @@ function initNavigation() {
             // Update page title
             document.getElementById('current-view-title').textContent = viewTitles[viewName];
 
+            // Remember the last chart view for Export & Reports' "Chart Images"
+            // card (export-reporting.js; non-chart views are ignored there).
+            if (typeof recordChartView === 'function') recordChartView(viewName);
+
             // Refresh view-specific content
             if (viewName === 'overview') updateDashboard();
             if (viewName === 'quick-entry') renderQuickEntryView();

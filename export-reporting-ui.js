@@ -58,12 +58,15 @@ function renderExportOverview() {
                         <div class="stat-detail">Data for analysis</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" role="button" tabindex="0" style="cursor: pointer;"
+                     title="Export the charts of the chart view you opened last, one PNG each"
+                     onclick="exportLastChartViewCharts()"
+                     onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); exportLastChartViewCharts(); }">
                     <div class="stat-icon">📈</div>
                     <div class="stat-content">
                         <div class="stat-label">Chart Images</div>
                         <div class="stat-value">PNG Format</div>
-                        <div class="stat-detail">High-quality graphics</div>
+                        <div class="stat-detail">Click to export your last chart view</div>
                     </div>
                 </div>
             </div>
