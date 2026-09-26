@@ -37,7 +37,7 @@ function isUuidLike(value) {
  * List the caller's org's locked projects via
  * tss_shared.list_locked_projects() (qep-capture migration 0037). Returns
  * { projects: [{ project_id, name, latest_locked_version_id,
- * version_number, locked_at }] } on success, or { error, rpcMissing? } on
+ * version_number, locked_at }] } on success, or { error, rpcMissing?, transient? } on
  * failure. `rpcMissing: true` specifically means the RPC itself doesn't
  * exist yet server-side (migration 0037 not applied) - distinct from any
  * other error (network, RLS, etc.) - so the UI can show a clearer message
@@ -51,18 +51,18 @@ async function fetchLockedProjects() {
         return { error: err.message };
     }
 
-    let data, error;
+    let data, error, status;
     try {
-        ({ data, error } = await client.schema('tss_shared').rpc('list_locked_projects'));
+        ({ data, error, status } = await client.schema('tss_shared').rpc('list_locked_projects'));
     } catch (err) {
-        return { error: err.message || 'Could not load locked projects.' };
+        return _failure(err.message || 'Could not load locked projects.', err, 0);
     }
 
     if (error) {
         if (isRpcMissingError(error)) {
             return { error: 'The locked-projects list isn\'t available from qep-capture yet.', rpcMissing: true };
         }
-        return { error: `Could not load locked projects: ${error.message}` };
+        return _failure(`Could not load locked projects: ${error.message}`, error, status);
     }
 
     return { projects: data || [] };
@@ -76,6 +76,38 @@ function isRpcMissingError(error) {
     const code = error && error.code;
     const message = ((error && error.message) || '').toLowerCase();
     return code === 'PGRST202' || code === '42883' || message.includes('could not find the function') || message.includes('does not exist');
+}
+
+// HTTP statuses worth retrying: 0 = the request never got an answer
+// (network, CORS preflight, a thrown accessToken()), plus timeouts, rate
+// limiting and gateway/PostgREST-restarting errors.
+const TRANSIENT_HTTP_STATUSES = [0, 408, 425, 429, 500, 502, 503, 504, 520];
+
+/**
+ * True when a qep-capture failure is likely to succeed if simply tried
+ * again (network blip, PostgREST 503 while it reloads its schema cache, a
+ * Clerk token or sign-in that is not ready YET). False for verdicts that a
+ * retry cannot change: signed out, demo mode, a missing RPC, RLS/permission
+ * denials, not-found. `error` is a supabase-js error object (or a message
+ * string); `status` the response's HTTP status when known. The UI
+ * (targets-loaded-ui.js) retries only these, a bounded number of times.
+ */
+function isTransientQepCaptureError(error, status) {
+    const message = String((error && error.message) || (typeof error === 'string' ? error : '') || '');
+    const code = (error && error.code) || '';
+    if (/demo mode/i.test(message)) return false;
+    if (/not signed in to qep yet/i.test(message)) return true;
+    if (/not signed in/i.test(message)) return false;
+    if (isRpcMissingError(error || {})) return false;
+    if (code === 'PGRST002' || code === 'PGRST301') return true;
+    if (typeof status === 'number' && TRANSIENT_HTTP_STATUSES.includes(status)) return true;
+    return /failed to fetch|networkerror|network request failed|load failed|timed? ?out|schema cache/i.test(message);
+}
+
+function _failure(message, error, status) {
+    const result = { error: message };
+    if (isTransientQepCaptureError(error, status)) result.transient = true;
+    return result;
 }
 
 /**
@@ -101,10 +133,10 @@ async function _loadVersionTargets(client, project, version) {
     ]);
 
     if (targetsResult.error) {
-        return { error: `Could not load targets: ${targetsResult.error.message}` };
+        return _failure(`Could not load targets: ${targetsResult.error.message}`, targetsResult.error, targetsResult.status);
     }
     if (notesResult.error) {
-        return { error: `Could not load stage notes: ${notesResult.error.message}` };
+        return _failure(`Could not load stage notes: ${notesResult.error.message}`, notesResult.error, notesResult.status);
     }
 
     const variableKeys = [...new Set((targetsResult.data || []).map(r => r.variable_key).filter(Boolean))];
@@ -115,7 +147,7 @@ async function _loadVersionTargets(client, project, version) {
             .select('id, label, stage_key, kind, emotion_concept_id')
             .in('id', variableKeys);
         if (attrResult.error) {
-            return { error: `Could not load target attributes: ${attrResult.error.message}` };
+            return _failure(`Could not load target attributes: ${attrResult.error.message}`, attrResult.error, attrResult.status);
         }
         for (const a of attrResult.data || []) attributeById[a.id] = a;
     }
@@ -193,7 +225,7 @@ async function _loadVersionTargets(client, project, version) {
  * the "Start Full Evaluation from this target" reload, and deep links -
  * all of which already know the exact version id, e.g. from
  * list_locked_projects()'s latest_locked_version_id). Validates both ids
- * are UUIDs first. Returns { error } on any failure - never throws.
+ * are UUIDs first. Returns { error, transient? } on any failure - never throws.
  */
 async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
     if (!isUuidLike(projectId) || !isUuidLike(versionId)) {
@@ -207,20 +239,20 @@ async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
         return { error: err.message };
     }
 
-    const { data: project, error: projectError } = await client
+    const { data: project, error: projectError, status: projectStatus } = await client
         .schema('tss_shared')
         .from('projects')
         .select('id, name, category_id')
         .eq('id', projectId)
         .maybeSingle();
     if (projectError) {
-        return { error: `Could not load project: ${projectError.message}` };
+        return _failure(`Could not load project: ${projectError.message}`, projectError, projectStatus);
     }
     if (!project) {
         return { error: 'No project found with that id (or it is not visible to your organisation).' };
     }
 
-    const { data: version, error: versionError } = await client
+    const { data: version, error: versionError, status: versionStatus } = await client
         .schema('tss_shared')
         .from('project_versions')
         .select('id, version_number, status, locked_at')
@@ -228,7 +260,7 @@ async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
         .eq('project_id', projectId)
         .maybeSingle();
     if (versionError) {
-        return { error: `Could not load version: ${versionError.message}` };
+        return _failure(`Could not load version: ${versionError.message}`, versionError, versionStatus);
     }
     if (!version) {
         return { error: 'Version not found (or it does not belong to that project, or is not visible to your organisation).' };
@@ -244,7 +276,7 @@ async function fetchQepCaptureTargetsByVersion(projectId, versionId) {
  * may point at a draft version created by a later re-lock, not
  * necessarily the same version list_locked_projects() would show - by
  * design, this is the "whatever this project is on right now" view.
- * Returns { error } on any failure (not-found, no version yet, RLS
+ * Returns { error, transient? } on any failure (not-found, no version yet, RLS
  * denial, network) - never throws.
  */
 async function fetchQepCaptureTargets(projectId) {
@@ -262,7 +294,7 @@ async function fetchQepCaptureTargets(projectId) {
         return { error: err.message };
     }
 
-    const { data: project, error: projectError } = await client
+    const { data: project, error: projectError, status: projectStatus } = await client
         .schema('tss_shared')
         .from('projects')
         .select('id, name, category_id, current_version_id')
@@ -270,7 +302,7 @@ async function fetchQepCaptureTargets(projectId) {
         .maybeSingle();
 
     if (projectError) {
-        return { error: `Could not load project: ${projectError.message}` };
+        return _failure(`Could not load project: ${projectError.message}`, projectError, projectStatus);
     }
     if (!project) {
         return { error: 'No project found with that id (or it is not visible to your organisation).' };
@@ -279,7 +311,7 @@ async function fetchQepCaptureTargets(projectId) {
         return { error: 'This project has no locked version yet.' };
     }
 
-    const { data: version, error: versionError } = await client
+    const { data: version, error: versionError, status: versionStatus } = await client
         .schema('tss_shared')
         .from('project_versions')
         .select('id, version_number, status, locked_at')
@@ -287,7 +319,7 @@ async function fetchQepCaptureTargets(projectId) {
         .maybeSingle();
 
     if (versionError) {
-        return { error: `Could not load version: ${versionError.message}` };
+        return _failure(`Could not load version: ${versionError.message}`, versionError, versionStatus);
     }
     if (!version) {
         return { error: 'Current version not found.' };
@@ -303,6 +335,7 @@ if (typeof module !== 'undefined' && module.exports) {
         fetchLockedProjects,
         isUuidLike,
         isRpcMissingError,
+        isTransientQepCaptureError,
         QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID,
     };
 }
@@ -311,4 +344,5 @@ if (typeof window !== 'undefined') {
     window.fetchQepCaptureTargetsByVersion = fetchQepCaptureTargetsByVersion;
     window.fetchLockedProjects = fetchLockedProjects;
     window.isQepCaptureUuidLike = isUuidLike;
+    window.isTransientQepCaptureError = isTransientQepCaptureError;
 }

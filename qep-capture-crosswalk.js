@@ -10,6 +10,19 @@
 // Returns { rows } with canonical rows BEFORE alias rows, so a
 // variable_key collision resolves canonical-wins (mirrors qep-capture
 // migration 0030's rule) when target-prefill.js builds its lookup.
+// { error, transient? } - `transient` (targets-loaded.js's
+// isTransientQepCaptureError, loaded later on the page) marks failures a
+// retry can fix, e.g. a network blip; the "Start Full Evaluation" button
+// retries only those.
+function _crosswalkFailure(message, error, status) {
+    const result = { error: message };
+    const isTransient = typeof window !== 'undefined' && typeof window.isTransientQepCaptureError === 'function'
+        ? window.isTransientQepCaptureError
+        : null;
+    if (isTransient && isTransient(error, status)) result.transient = true;
+    return result;
+}
+
 async function fetchSignatureAttributeCrosswalk() {
     let client;
     try {
@@ -25,11 +38,11 @@ async function fetchSignatureAttributeCrosswalk() {
             client.schema('tss_shared').from('signature_key_alias').select('alias_stage, alias_key, variable_key, kind'),
         ]);
     } catch (err) {
-        return { error: err.message || 'Could not load the attribute crosswalk.' };
+        return _crosswalkFailure(err.message || 'Could not load the attribute crosswalk.', err, 0);
     }
 
     if (canonical.error) {
-        return { error: `Could not load the attribute crosswalk: ${canonical.error.message}` };
+        return _crosswalkFailure(`Could not load the attribute crosswalk: ${canonical.error.message}`, canonical.error, canonical.status);
     }
     // The alias table is a smaller, newer addition - tolerate it being
     // unreadable/missing without failing the whole prefill; canonical
