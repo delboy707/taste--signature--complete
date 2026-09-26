@@ -2094,11 +2094,14 @@ function updateHistory() {
     // "Send to Capture" button (send-to-capture.js) - renders nothing unless
     // ENABLE_SEND_TO_CAPTURE is on in qep-capture-config.js. "Consumer
     // results" (consumer-results.js) - only for a linked experience
-    // (tssProjectId) with ENABLE_CONSUMER_RESULTS on.
+    // (tssProjectId) with ENABLE_CONSUMER_RESULTS on. "Target vs measured"
+    // (target-vs-measured.js) - linked experience, ENABLE_TARGET_VS_MEASURED on.
     const sendToCapture = window.SendToCapture;
     const consumerResults = window.ConsumerResults;
+    const targetVsMeasured = window.TargetVsMeasured;
     const extraActionsHtml = (e) =>
         (consumerResults ? consumerResults.buildConsumerResultsButtonHtml(e) : '') +
+        (targetVsMeasured ? targetVsMeasured.buildTargetVsMeasuredButtonHtml(e) : '') +
         (sendToCapture ? sendToCapture.buildSendToCaptureButtonHtml(e) : '');
     container.innerHTML = RenderUtils.buildHistoryHtml(
         experiences.sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
@@ -2113,6 +2116,17 @@ function showConsumerResults(id) {
     const experience = experiences.find(e => e.id === id);
     if (!experience) return;
     window.ConsumerResults.openConsumerResultsPanel(experience);
+}
+
+// Called from the history row's "Target vs measured" button. The view is
+// read-only except Amend, which creates the NEXT project version through
+// create_version_from_targets (qep-capture 0043) and never creates or copies an experience
+// (link fields change only via SendToCapture.applyCaptureLink + saveData).
+function showTargetVsMeasured(id) {
+    if (!window.TargetVsMeasured) return;
+    const experience = experiences.find(e => e.id === id);
+    if (!experience) return;
+    window.TargetVsMeasured.openTargetVsMeasuredPanel(experience);
 }
 
 // Called from the history row's "Send to Capture" button. Ids are floats -

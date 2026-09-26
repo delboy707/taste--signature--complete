@@ -345,6 +345,25 @@ When pasting commands from chat, drop the bracket/URL wrapper.
 - LinkedIn DM beta campaign (~20 contacts; The Missing Layer / Honest
   Invitation / Provocation variants, ~60/25/15 split)
 
+## Status 2026-09-26b (Stage 2D - Target vs measured + Amend, branch only, flag OFF)
+
+- `target-vs-measured.js`, history-row button on a linked experience;
+  `ENABLE_TARGET_VS_MEASURED: false` in both configs. Needs qep-capture
+  0041 (live) and 0043 `tss_shared.create_version_from_targets` (drafted,
+  NOT applied anywhere) before the flag can go on.
+- Thresholds (Derek): scores (Signature and consumer means, 0-10) on target
+  within +/- 1.0 (`TARGET_VS_MEASURED_TOLERANCE`); consumer emotions stay
+  "% selected" and are on target within +/- 10 percentage points
+  (`TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP`) of target x 10 % (a range
+  gives a band; word-only 'high' expects 80%, on target at 70%+, 'low'
+  expects 20%, on target at 30% or less). Word-only score targets: 'high'
+  = 7+, 'low' = 3 or less.
+- Amend sends the base version's FULL target set (roles, ranges, words,
+  direction/importance/notes, codes with no Signature slider) and all
+  stage notes, with the user's edits, to 0043 in one call. Never
+  0038/`create_version_from_signature`; never a new Firestore experience.
+  Missing RPC -> "Amend is not available on this QEP database yet".
+
 ## Status 2026-09-26 (Stage 2C - Consumer results, on main)
 
 - History rows of a linked experience (`tssProjectId`) get a read-only
