@@ -1329,7 +1329,7 @@
           <td>${_gapHtml(row.conGap)}</td>${editing ? _amendCell(row, view) : ''}
         </tr>`;
     }).join('');
-    return `<table class="tvm-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:0.85rem;margin:4px 0 12px;">
+    return `<table class="tvm-table" style="width:100%;min-width:${editing ? 860 : 720}px;border-collapse:collapse;table-layout:fixed;font-size:0.85rem;margin:4px 0 12px;">
         <thead>${head}</thead><tbody>${body}</tbody></table>`;
   }
 
