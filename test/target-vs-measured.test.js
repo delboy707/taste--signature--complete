@@ -396,6 +396,46 @@ test('join: a crosswalk row for another stage is never used (no cross-stage move
     assert.equal(joy.row.signature.status, 'no_slider');
 });
 
+test('join: works against the 2A.5 markers crosswalk index shape (code -> [{stage,key,kind}], canonical first)', () => {
+    const TP = require('../target-prefill.js');
+    // The markers branch shape: EVERY mapping per code, in input order (canonical rows before alias rows).
+    const raw = TP.buildCrosswalkIndex(CROSSWALK);
+    const thick = raw.get('tex_Thickness-Oral');
+    assert.ok(Array.isArray(thick), 'target-prefill.buildCrosswalkIndex must return the markers (array) shape');
+    assert.deepEqual(thick, [
+        { stage: 'texture', key: 'thickness-mechanical', kind: 'sensory' },
+        { stage: 'texture', key: 'thickness-oral', kind: 'sensory' },
+    ]);
+    // buildIndexes (via ConsumerResults.buildSignatureIndex) picks the canonical entry per kind.
+    const idx = TVM.buildIndexes(CROSSWALK);
+    assert.deepEqual(idx.reverse.sensory.get('tex_Thickness-Oral'), { stage: 'texture', key: 'thickness-mechanical' });
+    assert.deepEqual(idx.reverse.trigger.get('overall_trig_moreishness'), { stage: 'overall', key: 'moreishness' });
+    // Reverse maps handed over in the raw array shape (per kind) give the identical comparison.
+    const arrayShaped = { forward: idx.forward, reverse: {} };
+    for (const kind of ['sensory', 'emotion', 'trigger']) {
+        const m = new Map();
+        for (const [code, entries] of raw) {
+            const list = entries.filter((e) => e.kind === kind);
+            if (list.length) m.set(code, list);
+        }
+        arrayShaped.reverse[kind] = m;
+    }
+    // Rate both the canonical and the alias slider: the canonical one must be read.
+    const exp = experience();
+    exp.stages.texture = { thicknessMechanical: 6, thicknessOral: 2, emotions: {} };
+    const a = comparison({ experience: exp });
+    const b = comparison({ experience: exp, indexes: arrayShaped });
+    assert.deepEqual(b.stages, a.stages);
+    for (const cmp of [a, b]) {
+        assert.equal(rowOf(cmp, 'tex_Thickness-Oral').row.signature.value, 6);
+        assert.equal(rowOf(cmp, 'tex_Thickness-Oral').row.sigGap.status, 'on_target'); // 6 in 5-7
+        assert.equal(rowOf(cmp, 'app_Color_Shade').row.signature.value, 6);
+        assert.equal(rowOf(cmp, 'ap_emo_curiosity').row.signature.value, 7);
+        assert.equal(rowOf(cmp, 'overall_trig_moreishness').row.signature.value, 9);
+        assert.equal(rowOf(cmp, 'ap_emo_joy').row.signature.status, 'no_slider'); // other-stage row never used
+    }
+});
+
 test('join: triggers sit in the Overall stage and use the numeric rule', () => {
     const cmp = comparison();
     const m = rowOf(cmp, 'overall_trig_moreishness');
