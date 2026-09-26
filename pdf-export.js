@@ -47,9 +47,10 @@ class PDFExporter {
             y += 7;
             doc.text(`Brand: ${experience.productInfo.brand}`, 20, y);
             y += 7;
-            doc.text(`Category: ${experience.productInfo.type}`, 20, y);
+            // type, else category (CSV imports before 2026-09-26), else "Not specified".
+            doc.text(`Category: ${window.DisplayFormat.categoryText(experience.productInfo)}`, 20, y);
             y += 7;
-            doc.text(`Need State: ${experience.needState}`, 20, y);
+            doc.text(`Need State: ${experience.needState || 'Not specified'}`, 20, y);
             y += 7;
             doc.text(`Test Date: ${new Date(experience.timestamp).toLocaleDateString()}`, 20, y);
             return y + 10;

@@ -179,7 +179,7 @@ function initRetestSelector() {
         // Auto-fill product info
         document.getElementById('item-name').value = originalExp.productInfo.name;
         document.getElementById('item-brand').value = originalExp.productInfo.brand;
-        document.getElementById('item-type').value = originalExp.productInfo.type;
+        document.getElementById('item-type').value = window.DisplayFormat.productCategory(originalExp.productInfo) || '';
         document.getElementById('item-variant').value = originalExp.productInfo.variant;
 
         // Show notification
@@ -2018,7 +2018,7 @@ function generateProfessionalInsights() {
     // Portfolio Overview
     insights.push({
         title: 'Portfolio Overview',
-        description: `You have analyzed ${experiences.length} product experience${experiences.length !== 1 ? 's' : ''} across ${new Set(experiences.map(e => e.productInfo.type)).size} categories.`
+        description: `You have analyzed ${experiences.length} product experience${experiences.length !== 1 ? 's' : ''} across ${new Set(experiences.map(e => window.DisplayFormat.productCategory(e.productInfo)).filter(Boolean)).size} categories.`
     });
 
     // Need State Analysis

@@ -638,7 +638,7 @@ Analyze competitive position:
         }
 
         return `**Product**: ${experience.productInfo.name} - ${experience.productInfo.brand}
-**Category**: ${experience.productInfo.type}
+**Category**: ${fmt.categoryText(experience.productInfo)}
 **Need State**: ${experience.needState}
 **Occasion**: ${experience.productInfo.occasion || 'Not specified'}
 

@@ -367,7 +367,7 @@ function generateProductReportContent(experience) {
             </div>
             <div class="info-item">
                 <span class="info-label">Category</span>
-                <span class="info-value">${escapeHtml(experience.productInfo.category)}</span>
+                <span class="info-value">${escapeHtml(window.DisplayFormat.categoryText(experience.productInfo))}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Evaluation Date</span>
@@ -486,7 +486,7 @@ function generateComparisonReportContent(products) {
             <div class="comparison-card">
                 <h4 style="margin: 0 0 10px 0; color: #C2871B;">${escapeHtml(product.productInfo.name)}</h4>
                 <p style="margin: 5px 0; color: #666;"><strong>Brand:</strong> ${escapeHtml(product.productInfo.brand)}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${escapeHtml(product.productInfo.category)}</p>
+                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${escapeHtml(window.DisplayFormat.categoryText(product.productInfo))}</p>
                 <p style="margin: 5px 0;"><strong>Overall Score:</strong> ${overall.toFixed(1)} / 10</p>
             </div>
         `;
@@ -686,7 +686,7 @@ function exportProductToExcel(productId) {
     let csv = 'Taste Signature - Product Export\n\n';
     csv += `Product Name,${escapeHtml(experience.productInfo.name)}\n`;
     csv += `Brand,${escapeHtml(experience.productInfo.brand)}\n`;
-    csv += `Category,${escapeHtml(experience.productInfo.category)}\n`;
+    csv += `Category,${escapeHtml(window.DisplayFormat.productCategory(experience.productInfo) || '')}\n`;
     csv += `Date,${new Date(experience.timestamp).toLocaleDateString()}\n\n`;
 
     csv += 'Sensory Attributes\n';
@@ -753,7 +753,7 @@ function exportAllProductsToExcel() {
         const overall = calculateOverallScore(exp);
         csv += `"${exp.productInfo.name}",`;
         csv += `"${exp.productInfo.brand}",`;
-        csv += `"${exp.productInfo.category}",`;
+        csv += `"${window.DisplayFormat.productCategory(exp.productInfo) || ''}",`;
         csv += `${new Date(exp.timestamp).toLocaleDateString()},`;
         csv += `${overall.toFixed(2)},`;
 

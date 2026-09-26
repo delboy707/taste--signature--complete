@@ -19,6 +19,10 @@
     const m = cataMod || (typeof window !== 'undefined' ? window.CataEmotions : null);
     return m ? m.buildCataHistoryHtml(e) : '';
   }
+  // Category: productInfo.type, else .category (CSV imports), else "Not specified".
+  const displayFormat = (typeof module !== 'undefined' && module.exports)
+    ? require('./display-format.js')
+    : window.DisplayFormat;
   // A null satisfaction (untouched slider, or a CATA stage) is "Not rated", not "/10".
   function satisfactionText(e) {
     const v = e.stages.aftertaste.emotions.satisfaction;
@@ -160,7 +164,7 @@
                     <div>
                         <span class="history-item-title">${esc(e.productInfo.name)}</span>
                         <span class="history-item-brand">${esc(e.productInfo.brand)}</span>
-                        <span class="history-item-type">${esc(e.productInfo.type)}</span>
+                        <span class="history-item-type">${esc(displayFormat.categoryText(e.productInfo))}</span>
                     </div>
                     <div>
                         <span class="history-item-date">${esc(new Date(e.timestamp).toLocaleDateString())}</span>
