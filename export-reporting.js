@@ -367,7 +367,7 @@ function generateProductReportContent(experience) {
             </div>
             <div class="info-item">
                 <span class="info-label">Category</span>
-                <span class="info-value">${escapeHtml(experience.productInfo.category)}</span>
+                <span class="info-value">${escapeHtml(window.DisplayFormat.categoryText(experience.productInfo))}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Evaluation Date</span>
@@ -486,7 +486,7 @@ function generateComparisonReportContent(products) {
             <div class="comparison-card">
                 <h4 style="margin: 0 0 10px 0; color: #C2871B;">${escapeHtml(product.productInfo.name)}</h4>
                 <p style="margin: 5px 0; color: #666;"><strong>Brand:</strong> ${escapeHtml(product.productInfo.brand)}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${escapeHtml(product.productInfo.category)}</p>
+                <p style="margin: 5px 0; color: #666;"><strong>Category:</strong> ${escapeHtml(window.DisplayFormat.categoryText(product.productInfo))}</p>
                 <p style="margin: 5px 0;"><strong>Overall Score:</strong> ${overall.toFixed(1)} / 10</p>
             </div>
         `;
@@ -686,7 +686,7 @@ function exportProductToExcel(productId) {
     let csv = 'Taste Signature - Product Export\n\n';
     csv += `Product Name,${escapeHtml(experience.productInfo.name)}\n`;
     csv += `Brand,${escapeHtml(experience.productInfo.brand)}\n`;
-    csv += `Category,${escapeHtml(experience.productInfo.category)}\n`;
+    csv += `Category,${escapeHtml(window.DisplayFormat.productCategory(experience.productInfo) || '')}\n`;
     csv += `Date,${new Date(experience.timestamp).toLocaleDateString()}\n\n`;
 
     csv += 'Sensory Attributes\n';
@@ -753,7 +753,7 @@ function exportAllProductsToExcel() {
         const overall = calculateOverallScore(exp);
         csv += `"${exp.productInfo.name}",`;
         csv += `"${exp.productInfo.brand}",`;
-        csv += `"${exp.productInfo.category}",`;
+        csv += `"${window.DisplayFormat.productCategory(exp.productInfo) || ''}",`;
         csv += `${new Date(exp.timestamp).toLocaleDateString()},`;
         csv += `${overall.toFixed(2)},`;
 
@@ -870,6 +870,100 @@ function exportShapeOfTasteChart(productId) {
         charts.shape.update('none');
     }
     return exportChartAsImage('shape-chart', `shape_of_taste_${productId}.png`);
+}
+
+// ===== CHART IMAGES (PNG): every drawn chart on a chart view =====
+// Each chart view has a "Chart Images (PNG)" button (index.html) that calls
+// exportViewCharts('<view>'). The "Chart Images" card in Export & Reports
+// calls exportLastChartViewCharts(), which exports the chart view the user
+// opened most recently (app.js initNavigation calls recordChartView).
+
+const CHART_IMAGE_VIEWS = ['shape-of-taste', 'emotional-map', 'need-states', 'comparison', 'portfolio'];
+let lastChartImageView = null;
+
+/** Remember the last chart view opened (other views are ignored). */
+function recordChartView(viewName) {
+    if (CHART_IMAGE_VIEWS.includes(viewName)) lastChartImageView = viewName;
+}
+
+/** The live Chart.js instance drawn on a canvas, or null. */
+function findLiveChart(canvas) {
+    if (typeof Chart !== 'undefined' && Chart && typeof Chart.getChart === 'function') {
+        const chart = Chart.getChart(canvas);
+        if (chart) return chart;
+    }
+    // Fallback: the app's own chart registry (app.js `charts`).
+    if (typeof charts !== 'undefined' && charts) {
+        const found = Object.values(charts).find(c => c && c.canvas === canvas);
+        if (found) return found;
+    }
+    return null;
+}
+
+function chartHasData(chart) {
+    const datasets = (chart && chart.data && chart.data.datasets) || [];
+    return datasets.some(d => d && Array.isArray(d.data) && d.data.length > 0);
+}
+
+/**
+ * Hidden inside its view: the canvas or a card between it and the view is
+ * display:none / hidden (e.g. #shape-chart for a qualitative-only product).
+ * The view's own visibility is not checked, so the Export & Reports card can
+ * export a view that is not on screen.
+ */
+function isCanvasHiddenInView(canvas, viewEl) {
+    for (let node = canvas; node && node !== viewEl; node = node.parentElement) {
+        if (node.hidden || (node.style && node.style.display === 'none')) return true;
+    }
+    return false;
+}
+
+/** Local date as yyyy-mm-dd, for file names. */
+function chartImageDate(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/**
+ * Export every drawn chart on a view as its own PNG:
+ * <view>_<canvas-id>_<yyyy-mm-dd>.png. Hidden canvases, canvases with no
+ * live chart and charts with no data are skipped. Returns the file names.
+ */
+function exportViewCharts(viewName, now = new Date()) {
+    const viewEl = document.getElementById(`view-${viewName}`);
+    const canvases = viewEl && viewEl.querySelectorAll ? Array.from(viewEl.querySelectorAll('canvas')) : [];
+    const date = chartImageDate(now);
+    const exported = [];
+
+    canvases.forEach(canvas => {
+        if (!canvas.id || isCanvasHiddenInView(canvas, viewEl)) return;
+        const chart = findLiveChart(canvas);
+        if (!chart || !chartHasData(chart)) return;
+        // Jump any running animation to its final frame so the PNG is the whole chart.
+        if (typeof chart.update === 'function') chart.update('none');
+        const filename = `${viewName}_${canvas.id}_${date}.png`;
+        if (exportChartAsImage(canvas.id, filename)) exported.push(filename);
+    });
+
+    if (typeof showExportNotification === 'function') {
+        if (exported.length === 0) {
+            showExportNotification('No charts drawn on this view yet - choose a product or data first, then try again', 'info');
+        } else {
+            showExportNotification(`Exported ${exported.length} chart image${exported.length === 1 ? '' : 's'} (PNG)`, 'success');
+        }
+    }
+    return exported;
+}
+
+/** Export & Reports "Chart Images" card: the most recently opened chart view. */
+function exportLastChartViewCharts(now = new Date()) {
+    if (!lastChartImageView) {
+        if (typeof showExportNotification === 'function') {
+            showExportNotification('Open a chart view (Shape of Taste, Emotional Mapping, Need States, Comparison or Portfolio) and use its Chart Images button', 'info');
+        }
+        return [];
+    }
+    return exportViewCharts(lastChartImageView, now);
 }
 
 // ===== HELPER FUNCTIONS =====

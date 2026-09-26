@@ -99,7 +99,7 @@ function loadScript(file, extra = {}) {
         console, escapeHtml, experiences: [],
         document: { documentElement: {} },
         getComputedStyle: () => ({ getPropertyValue: () => '' }),
-        window: { CataEmotions },
+        window: { CataEmotions, DisplayFormat: require('../display-format.js') },
         ...extra,
     };
     vm.createContext(ctx);

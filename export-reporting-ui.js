@@ -58,12 +58,15 @@ function renderExportOverview() {
                         <div class="stat-detail">Data for analysis</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" role="button" tabindex="0" style="cursor: pointer;"
+                     title="Export the charts of the chart view you opened last, one PNG each"
+                     onclick="exportLastChartViewCharts()"
+                     onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); exportLastChartViewCharts(); }">
                     <div class="stat-icon">📈</div>
                     <div class="stat-content">
                         <div class="stat-label">Chart Images</div>
                         <div class="stat-value">PNG Format</div>
-                        <div class="stat-detail">High-quality graphics</div>
+                        <div class="stat-detail">Click to export your last chart view</div>
                     </div>
                 </div>
             </div>
@@ -130,7 +133,7 @@ function renderProductReportsSection() {
                     <div class="product-export-item">
                         <div class="product-export-info">
                             <strong>${escapeHtml(exp.productInfo.name)}</strong>
-                            <span class="product-meta">${escapeHtml(exp.productInfo.brand)} • ${escapeHtml(exp.productInfo.category)}</span>
+                            <span class="product-meta">${escapeHtml(exp.productInfo.brand)} • ${escapeHtml(window.DisplayFormat.categoryText(exp.productInfo))}</span>
                         </div>
                         <div class="product-export-actions">
                             <button class="btn-small btn-primary" onclick="generateProductPDFReport(${jsArgAttr(exp.id)})">
@@ -538,7 +541,7 @@ function buildPortfolioSummaryHtml(experiences) {
         </div>
         <div class="stat-card">
             <div class="stat-label">Categories</div>
-            <div class="stat-value">${new Set(experiences.map(e => e.productInfo.category)).size}</div>
+            <div class="stat-value">${new Set(experiences.map(e => window.DisplayFormat.productCategory(e.productInfo)).filter(Boolean)).size}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Avg Overall Score</div>
@@ -562,7 +565,7 @@ function buildPortfolioSummaryHtml(experiences) {
                 <tr>
                     <td><strong>${escapeHtml(exp.productInfo.name)}</strong></td>
                     <td>${escapeHtml(exp.productInfo.brand)}</td>
-                    <td>${escapeHtml(exp.productInfo.category)}</td>
+                    <td>${escapeHtml(window.DisplayFormat.categoryText(exp.productInfo))}</td>
                     <td style="font-weight: 600; color: #C2871B;">${calculateOverallScore(exp).toFixed(1)}</td>
                     <td>${new Date(exp.timestamp).toLocaleDateString()}</td>
                 </tr>

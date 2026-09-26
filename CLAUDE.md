@@ -364,6 +364,25 @@ When pasting commands from chat, drop the bracket/URL wrapper.
   0038/`create_version_from_signature`; never a new Firestore experience.
   Missing RPC -> "Amend is not available on this QEP database yet".
 
+## Status 2026-09-26c (open items: ratings, CSV category, chart PNGs)
+
+- **Ratings and category go through `display-format.js`**
+  (`window.DisplayFormat`, loaded after dom-utils.js). A null/missing
+  rating is "Not rated" (never "null/10"/"undefined/10"), a rated 0 is
+  "0/10"; averages use rated values only. The AI prompts (`claude-api.js`,
+  `sensory-inference.js`) and the app.js insight strings use it; the AI
+  product prompt reads the current field first, then the legacy one.
+- **Category is `productInfo.type`.** CSV imports (generic and QEP 266)
+  used to write only `productInfo.category` ("Category: undefined" in the
+  jsPDF report); they now write both. Readers use
+  `DisplayFormat.productCategory()` (type, then category) or
+  `categoryText()` ("Not specified"), so old imported records display
+  correctly without any data change.
+- **Chart Images (PNG):** each chart view has a "Chart Images (PNG)" button
+  (`exportViewCharts(view)` in export-reporting.js: one PNG per drawn
+  chart, `<view>_<canvas-id>_<yyyy-mm-dd>.png`); the Export & Reports card
+  exports the last chart view opened (`recordChartView` in the nav handler).
+
 ## Status 2026-09-26 (Stage 2C - Consumer results, on main)
 
 - History rows of a linked experience (`tssProjectId`) get a read-only

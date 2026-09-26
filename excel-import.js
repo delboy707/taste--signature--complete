@@ -402,7 +402,7 @@ class ExcelImporter {
         const flatData = experiences.map(exp => ({
             'Product': exp.productInfo?.name || '',
             'Brand': exp.productInfo?.brand || '',
-            'Type': exp.productInfo?.type || '',
+            'Type': window.DisplayFormat.productCategory(exp.productInfo) || '',
             'Timestamp': exp.timestamp || '',
             'Visual Appeal': exp.stages?.appearance?.visualAppeal || '',
             'Aroma Intensity': exp.stages?.aroma?.intensity || '',
