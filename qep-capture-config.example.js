@@ -50,9 +50,10 @@ const QEP_CAPTURE_CONFIG = {
     ENABLE_CONSUMER_RESULTS: false,
 
     // Stage 2D "Target vs measured" + "Amend" (target-vs-measured.js): needs
-    // 0038 and 0041 on the project SUPABASE_URL points at. Keep false until
-    // reviewed. TARGET_VS_MEASURED_TOLERANCE (optional, 0-5) overrides the
-    // default +/- 1.0 gap tolerance on the 0-10 scale.
+    // 0041 and 0043 on the project SUPABASE_URL points at. Keep false until
+    // reviewed. Optional: TARGET_VS_MEASURED_TOLERANCE (0-5, default +/- 1.0
+    // on 0-10 scores) and TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP (0-100,
+    // default +/- 10 percentage points on emotion % selected).
     ENABLE_TARGET_VS_MEASURED: false,
 
     // qep-capture's own app (not its Supabase project) - base URL for the

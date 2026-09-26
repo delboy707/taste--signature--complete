@@ -46,10 +46,12 @@ const QEP_CAPTURE_CONFIG = {
     // Stage 2D "Target vs measured" + "Amend" (target-vs-measured.js):
     // history-row view on a linked experience comparing the Brief target,
     // Signature's own score and the Capture consumer mean per stage, and
-    // creating the NEXT project version from amended targets via the
-    // existing tss_shared.create_version_from_signature (0038). OFF until
-    // Derek has reviewed it. TARGET_VS_MEASURED_TOLERANCE (optional, 0-5)
-    // overrides the default +/- 1.0 gap tolerance on the 0-10 scale.
+    // creating the NEXT project version from amended targets via
+    // tss_shared.create_version_from_targets (qep-capture 0043, not applied
+    // anywhere yet). OFF until 0043 is live and Derek has reviewed it.
+    // Optional: TARGET_VS_MEASURED_TOLERANCE (0-5, default +/- 1.0 on 0-10
+    // scores) and TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP (0-100, default
+    // +/- 10 percentage points on emotion % selected).
     ENABLE_TARGET_VS_MEASURED: false,
 
     // qep-capture's own app (not its Supabase project) - base URL for the

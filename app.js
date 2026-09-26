@@ -2120,7 +2120,7 @@ function showConsumerResults(id) {
 
 // Called from the history row's "Target vs measured" button. The view is
 // read-only except Amend, which creates the NEXT project version through
-// create_version_from_signature and never creates or copies an experience
+// create_version_from_targets (qep-capture 0043) and never creates or copies an experience
 // (link fields change only via SendToCapture.applyCaptureLink + saveData).
 function showTargetVsMeasured(id) {
     if (!window.TargetVsMeasured) return;
