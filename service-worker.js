@@ -92,10 +92,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first strategy for HTML and JavaScript files
-  const isHtmlOrJs = event.request.url.includes('.html') ||
-                     event.request.url.includes('.js') ||
-                     event.request.url === new URL('/', location).href;
+  // Network-first strategy for HTML and JavaScript files - and for EVERY
+  // page navigation. The "Open in Signature" deep link
+  // (/?project=..&version=..) has no ".html"/".js" in it and is not exactly
+  // "/", so it used to fall through to cache-first below and a repeat visit
+  // got the index.html cached by an older deploy (2026-09-26). Matched on
+  // the pathname, so a query string can neither hide nor fake a match.
+  const requestPath = new URL(event.request.url).pathname;
+  const isHtmlOrJs = event.request.mode === 'navigate' ||
+                     requestPath === '/' ||
+                     requestPath.endsWith('.html') ||
+                     requestPath.endsWith('.js') ||
+                     requestPath.endsWith('.json');
 
   if (isHtmlOrJs) {
     event.respondWith(
