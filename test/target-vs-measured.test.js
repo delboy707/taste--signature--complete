@@ -65,8 +65,8 @@ function experience(overrides = {}) {
 function v1Targets() {
     return [
         { variable_key: 'app_Color_Shade', role: 'primary', intensity: 'high', range_min: null, range_max: null },
-        { variable_key: 'fom_Sweetness', role: 'primary', intensity: null, range_min: 3, range_max: 3 },
-        { variable_key: 'tex_Thickness-Oral', role: 'secondary', intensity: null, range_min: 5, range_max: 7 },
+        { variable_key: 'fom_Sweetness', role: 'primary', intensity: null, range_min: 3, range_max: 3, direction: 'lower', importance: 'must', notes: 'less sugar than v0' },
+        { variable_key: 'tex_Thickness-Oral', role: 'secondary', intensity: null, range_min: 5, range_max: 7, direction: null, importance: 'nice', notes: null },
         { variable_key: 'ap_emo_curiosity', role: 'primary', intensity: 'high', range_min: null, range_max: null },
         { variable_key: 'ap_emo_excitement', role: 'secondary', intensity: null, range_min: 8, range_max: 8 },
         { variable_key: 'af_emo_satisfaction', role: 'primary', intensity: null, range_min: 8, range_max: 8 },
@@ -223,25 +223,87 @@ test('targetSpec: range_min/range_max win; word-only rows are legacy; nothing ->
     assert.deepEqual(TVM.targetSpec({ range_min: null, range_max: null, intensity: null }), { type: 'none' });
 });
 
-test('emotion CATA rule: high target expects >= X% selected; low target expects <= Y%; mid not compared', () => {
+test('score threshold: the default tolerance is +-1.0 and its edges are inclusive (Signature and consumer means)', () => {
     const rules = TVM.resolveRules({});
-    assert.equal(rules.emotionHighMinSelected, 0.5);
+    assert.equal(rules.tolerance, 1);
+    const t = { type: 'numeric', min: 6, max: 6 };
+    assert.equal(TVM.classifyValue(5, t, rules).status, 'on_target');
+    assert.equal(TVM.classifyValue(7, t, rules).status, 'on_target');
+    assert.deepEqual(TVM.classifyValue(4.9, t, rules), { status: 'under', delta: -1.1 });
+    assert.deepEqual(TVM.classifyValue(7.1, t, rules), { status: 'over', delta: 1.1 });
+    assert.equal(TVM.classifyValue(3.8 + 1.2, t, rules).status, 'on_target', 'float noise at the edge');
+});
+
+test('emotion threshold: a numeric target t expects t x 10 % selected, on target within +-10pp (both sides)', () => {
+    const rules = TVM.resolveRules({});
+    assert.equal(rules.emotionTolerancePp, 10);
     const hi = { type: 'numeric', min: 8, max: 8 };
-    assert.equal(TVM.classifyCata(0.5, 6, hi, rules).status, 'on_target');
-    assert.equal(TVM.classifyCata(0.49, 6, hi, rules).status, 'under');
-    assert.equal(TVM.classifyCata(0.9, 6, hi, rules).status, 'on_target', 'a high target is never "over" on CATA');
-    const lo = { type: 'numeric', min: 2, max: 2 };
-    assert.equal(TVM.classifyCata(0.2, 6, lo, rules).status, 'on_target');
-    assert.equal(TVM.classifyCata(0.25, 6, lo, rules).status, 'over');
-    assert.equal(TVM.classifyCata(0.4, 6, { type: 'numeric', min: 5, max: 5 }, rules).status, 'not_compared');
-    assert.equal(TVM.classifyCata(0.6, 6, { type: 'legacy', intensity: 'high' }, rules).status, 'on_target');
+    assert.deepEqual(TVM.expectedSelected(hi), { min: 80, max: 80, oneSided: null });
+    assert.equal(TVM.classifyCata(0.8, 6, hi, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.7, 10, hi, rules).status, 'on_target', 'lower edge inclusive');
+    assert.equal(TVM.classifyCata(0.9, 10, hi, rules).status, 'on_target', 'upper edge inclusive');
+    const under = TVM.classifyCata(0.69, 100, hi, rules);
+    assert.equal(under.status, 'under');
+    assert.equal(under.deltaPp, -11);
+    assert.match(under.detail, /69% selected, expected 80% \+\/- 10pp/);
+    const over = TVM.classifyCata(0.91, 100, hi, rules);
+    assert.equal(over.status, 'over');
+    assert.equal(over.deltaPp, 11);
+    // mid-scale targets are compared now (the old "4-6 not compared" rule is gone)
+    const mid = { type: 'numeric', min: 5, max: 5 };
+    assert.equal(TVM.classifyCata(0.4, 10, mid, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.6, 10, mid, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.39, 100, mid, rules).status, 'under');
+    assert.equal(TVM.classifyCata(0.61, 100, mid, rules).status, 'over');
+    // 0 expects 0%: at most 10% selected
+    assert.equal(TVM.classifyCata(0.1, 10, { type: 'numeric', min: 0, max: 0 }, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.11, 100, { type: 'numeric', min: 0, max: 0 }, rules).status, 'over');
+    // a range target expects a band: 5-7 -> 50-70 %, +-10pp
+    const range = { type: 'numeric', min: 5, max: 7 };
+    assert.deepEqual(TVM.expectedSelected(range), { min: 50, max: 70, oneSided: null });
+    assert.equal(TVM.classifyCata(0.4, 10, range, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.8, 10, range, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.39, 100, range, rules).status, 'under');
+    assert.equal(TVM.classifyCata(0.81, 100, range, rules).status, 'over');
+    // no data / no numeric target
     assert.equal(TVM.classifyCata(0.6, 0, hi, rules).status, 'no_data');
-    // configurable
-    const r30 = TVM.resolveRules({}, { emotionHighMinSelectedPct: 30 });
-    assert.equal(TVM.classifyCata(0.35, 6, hi, r30).status, 'on_target');
+    assert.equal(TVM.classifyCata(null, 6, hi, rules).status, 'no_data');
+    assert.equal(TVM.classifyCata(0.6, 6, { type: 'none' }, rules).status, 'no_numeric_target');
+    assert.equal(TVM.classifyCata(0.6, 6, null, rules).status, 'no_target');
     // a CATA proportion is never turned into a 0-10 value
-    const res = TVM.classifyCata(0.667, 6, hi, rules);
-    assert.equal(res.delta, undefined);
+    assert.equal(TVM.classifyCata(0.667, 6, hi, rules).delta, undefined);
+});
+
+test('emotion threshold: word-only targets expect the marker value x 10 (high 80%, low 20%), one-sided +-10pp', () => {
+    const rules = TVM.resolveRules({});
+    const high = { type: 'legacy', intensity: 'high' };
+    const low = { type: 'legacy', intensity: 'low' };
+    assert.deepEqual(TVM.expectedSelected(high), { min: 80, max: 80, oneSided: 'at_least' });
+    assert.deepEqual(TVM.expectedSelected(low), { min: 20, max: 20, oneSided: 'at_most' });
+    assert.equal(TVM.classifyCata(0.7, 10, high, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(1, 10, high, rules).status, 'on_target', 'high is never "over"');
+    assert.equal(TVM.classifyCata(0.69, 100, high, rules).status, 'under');
+    assert.equal(TVM.classifyCata(0.3, 10, low, rules).status, 'on_target');
+    assert.equal(TVM.classifyCata(0, 10, low, rules).status, 'on_target', 'low is never "under"');
+    assert.equal(TVM.classifyCata(0.31, 100, low, rules).status, 'over');
+    assert.equal(TVM.expectedSelected({ type: 'legacy', intensity: 'medium' }), null);
+    assert.equal(TVM.classifyCata(0.5, 10, { type: 'legacy', intensity: 'medium' }, rules).status, 'no_numeric_target');
+});
+
+test('emotion threshold: +-pp is configurable (config and view); invalid values fall back to 10', () => {
+    const hi = { type: 'numeric', min: 8, max: 8 };
+    const r5 = TVM.resolveRules({}, { emotionTolerancePp: 5 });
+    assert.equal(r5.emotionTolerancePp, 5);
+    assert.equal(TVM.classifyCata(0.75, 4, hi, r5).status, 'on_target');
+    assert.equal(TVM.classifyCata(0.74, 100, hi, r5).status, 'under');
+    assert.equal(TVM.resolveRules({ TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP: 15 }).emotionTolerancePp, 15);
+    assert.equal(TVM.resolveRules({ TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP: 15 }, { emotionTolerancePp: 20 }).emotionTolerancePp, 20);
+    assert.equal(TVM.resolveRules({ TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP: 'x' }).emotionTolerancePp, 10);
+    assert.equal(TVM.resolveRules({}, { emotionTolerancePp: -1 }).emotionTolerancePp, 10);
+    assert.equal(TVM.resolveRules({}, { emotionTolerancePp: 101 }).emotionTolerancePp, 10);
+    // the old >=50% / <=20% rule is gone
+    assert.equal(TVM.DEFAULT_RULES.emotionHighMinSelected, undefined);
+    assert.equal(TVM.DEFAULT_RULES.emotionLowMaxSelected, undefined);
 });
 
 test('rules: config tolerance and view overrides are validated; bad values fall back to defaults', () => {
@@ -251,15 +313,14 @@ test('rules: config tolerance and view overrides are validated; bad values fall 
     assert.equal(TVM.resolveRules({}, { tolerance: 2 }).tolerance, 2);
     assert.equal(TVM.resolveRules({}, { tolerance: -1 }).tolerance, 1);
     assert.equal(TVM.resolveRules({}, { tolerance: 99 }).tolerance, 1);
-    assert.equal(TVM.resolveRules({}, { emotionHighMinSelectedPct: 150 }).emotionHighMinSelected, 0.5);
 });
 
 test('prefs: persisted per browser; a throwing or empty storage never breaks the view', () => {
     const mem = new Map();
     const storage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
     assert.deepEqual(TVM.loadPrefs(storage), {});
-    TVM.savePrefs(storage, { tolerance: 1.5, emotionHighMinSelectedPct: 40 });
-    assert.deepEqual(TVM.loadPrefs(storage), { tolerance: 1.5, emotionHighMinSelectedPct: 40 });
+    TVM.savePrefs(storage, { tolerance: 1.5, emotionTolerancePp: 5 });
+    assert.deepEqual(TVM.loadPrefs(storage), { tolerance: 1.5, emotionTolerancePp: 5 });
     const broken = { getItem() { throw new Error('SecurityError'); }, setItem() { throw new Error('QuotaExceeded'); } };
     assert.deepEqual(TVM.loadPrefs(broken), {});
     assert.doesNotThrow(() => TVM.savePrefs(broken, { tolerance: 2 }));
@@ -291,16 +352,20 @@ test('join: targets + Signature + consumers per stage, in Journey-of-Taste order
 
 test('join: emotions use the CATA rule for consumers and the 0-10 rule for Signature', () => {
     const cmp = comparison();
-    const cu = rowOf(cmp, 'ap_emo_curiosity').row;    // legacy high
+    const cu = rowOf(cmp, 'ap_emo_curiosity').row;    // word-only high: expects 80%, at least 70%
     assert.equal(cu.signature.value, 7);
     assert.equal(cu.sigGap.status, 'on_target');
-    assert.equal(cu.conGap.status, 'on_target');      // 66.7% >= 50%
-    const ex = rowOf(cmp, 'ap_emo_excitement').row;   // target 8
+    assert.equal(cu.conGap.status, 'under');          // 66.7% < 70%
+    assert.match(cu.conGap.detail, /67% selected, expected at least 70% \(high = 80%/);
+    const ex = rowOf(cmp, 'ap_emo_excitement').row;   // target 8: expects 80% +-10pp
     assert.equal(ex.signature.status, 'not_rated');
-    assert.equal(ex.conGap.status, 'under');          // 16.7% < 50%
+    assert.equal(ex.conGap.status, 'under');          // 16.7% < 70%
     const sa = rowOf(cmp, 'af_emo_satisfaction').row; // target 8, sig 8, 0% selected
     assert.equal(sa.sigGap.status, 'on_target');
     assert.equal(sa.conGap.status, 'under');
+    // a target of 5 is compared (50% +-10pp), not skipped
+    const five = comparison({ targets: TVM.shapeTargetRows([{ variable_key: 'ap_emo_curiosity', role: 'primary', range_min: 6, range_max: 6 }], ATTRS) });
+    assert.equal(rowOf(five, 'ap_emo_curiosity').row.conGap.status, 'on_target'); // 66.7% vs 60% +-10pp
 });
 
 test('join: target-only, consumer-only and Signature-only rows are all listed', () => {
@@ -397,55 +462,123 @@ test('version choice: consumers = latest locked version with responses, else wit
     assert.deepEqual(TVM.chooseResultsVersion(locked, byId, ''), { id: null, reason: 'selected_none' });
 });
 
-// ---------- Amend: draft + payload ----------
+// ---------- Amend: draft + payload (create_version_from_targets, qep-capture 0043) ----------
+
+// version_stage_notes rows of V1, raw qep_stage keys.
+function v1Notes() {
+    return [{ stage_key: 'ap', notes: 'glossy; deep brown' }, { stage_key: 'af', notes: 'clean finish' }];
+}
+
+// The exact p_targets element for a tss_shared.targets row (contract shape).
+function element(row) {
+    return {
+        variable_key: row.variable_key,
+        role: row.role,
+        range_min: row.range_min === undefined ? null : row.range_min,
+        range_max: row.range_max === undefined ? null : row.range_max,
+        intensity: row.intensity || null,
+        direction: row.direction === undefined ? null : row.direction,
+        importance: row.importance === undefined ? null : row.importance,
+        notes: row.notes === undefined ? null : row.notes,
+    };
+}
 
 function amendPlan(mutate, opts = {}) {
     const targets = opts.targets || shapedTargets();
-    const draft = TVM.createDraft(targets);
+    const draft = TVM.createDraft(targets, opts.notes || v1Notes());
     if (mutate) mutate(draft);
     return TVM.buildAmendPlan({
         draft,
         experience: opts.experience || experience(),
         projectId: PROJECT_ID,
         baseVersion: { id: V1, versionNumber: 1 },
-        notes: opts.notes || {},
-        indexes: index(),
     });
 }
 
-test('draft: numeric targets carried as their value, ranges collapsed, legacy words converted', () => {
-    const d = TVM.createDraft(shapedTargets());
-    assert.equal(d.entries['fom_Sweetness'].value, 3);
-    assert.equal(d.entries['fom_Sweetness'].origin, 'carried');
-    assert.equal(d.entries['tex_Thickness-Oral'].value, 6);
-    assert.equal(d.entries['tex_Thickness-Oral'].origin, 'range');
-    assert.equal(d.entries['app_Color_Shade'].value, 8, 'high -> TARGET_INTENSITY_SCALE.high, same as the markers');
-    assert.equal(d.entries['app_Color_Shade'].origin, 'legacy');
+test('amend payload: exactly the five 0043 parameters, attributed to this experience', () => {
+    const plan = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 5));
+    assert.equal(plan.blocking, null);
+    const p = plan.payload;
+    assert.deepEqual(Object.keys(p).sort(), ['p_base_version_id', 'p_project_id', 'p_source_experience_id', 'p_stage_notes', 'p_targets']);
+    assert.equal(p.p_project_id, PROJECT_ID);
+    assert.equal(p.p_base_version_id, V1);
+    assert.equal(p.p_source_experience_id, '1777019020364.0994', 'float id as text, never truncated');
 });
 
-test('amend payload: the FULL carried-over set + edits + additions; removed targets absent', () => {
+test('amend payload: an unedited plan carries the base version EXACTLY (roles, ranges, words, direction/importance/notes, codes with no slider, stage notes)', () => {
+    const plan = amendPlan(null);
+    assert.deepEqual(plan.payload.p_targets, v1Targets().map(element));
+    assert.deepEqual(plan.payload.p_stage_notes, v1Notes());
+    const byCode = Object.fromEntries(plan.payload.p_targets.map((t) => [t.variable_key, t]));
+    assert.equal(byCode['tex_Thickness-Oral'].role, 'secondary');
+    assert.equal(byCode['tex_Thickness-Oral'].range_min, 5);
+    assert.equal(byCode['tex_Thickness-Oral'].range_max, 7);
+    assert.equal(byCode['app_Color_Shade'].intensity, 'high');
+    assert.equal(byCode['app_Color_Shade'].range_min, null);
+    assert.equal(byCode['fom_Sweetness'].direction, 'lower');
+    assert.equal(byCode['fom_Sweetness'].importance, 'must');
+    assert.equal(byCode['fom_Sweetness'].notes, 'less sugar than v0');
+    assert.ok(byCode['mr_Bitterness'], 'a code with no Signature slider is carried');
+    assert.ok(byCode['ap_emo_joy'], 'a code whose crosswalk row is for another stage is carried');
+    assert.deepEqual(plan.changes, { edited: 0, added: 0, removed: 0, notes: 0 });
+    assert.equal(plan.changeCount, 0);
+    // nothing is dropped or converted any more, so there is nothing to confirm
+    assert.equal(plan.dropped, undefined);
+    assert.equal(plan.needsConfirm, undefined);
+});
+
+test('amend payload: edits applied (point -> min = max, range -> min/max), additions appended, removals absent', () => {
     const plan = amendPlan((d) => {
-        TVM.setDraftValue(d, 'fom_Sweetness', 5);          // edit
-        TVM.setDraftValue(d, 'overall_trig_moreishness', 7); // edit
-        TVM.removeDraftTarget(d, 'ap_emo_excitement');     // remove
-        TVM.addDraftTarget(d, { code: 'app_Visual_Appeal', kind: 'sensory', stageId: 'appearance', label: 'Visual Appeal' }, 8); // add
+        TVM.setDraftValue(d, 'fom_Sweetness', 5);                  // point
+        TVM.setDraftRange(d, 'tex_Thickness-Oral', 'min', 4);      // range
+        TVM.setDraftRange(d, 'tex_Thickness-Oral', 'max', '6.5');
+        TVM.setDraftValue(d, 'af_emo_satisfaction', 0);            // emotion 0 is a real target now
+        TVM.removeDraftTarget(d, 'ap_emo_excitement');
+        TVM.addDraftTarget(d, { code: 'app_Visual_Appeal', kind: 'sensory', stageId: 'appearance', label: 'Visual Appeal' }, 8);
     });
     assert.equal(plan.blocking, null);
-    assert.deepEqual(plan.changes, { edited: 2, added: 1, removed: 1 });
-    const p = plan.payload;
-    assert.equal(p.id, EXP_ID, 'the version is attributed to this experience');
-    assert.equal(p.tssProjectId, PROJECT_ID);
-    assert.equal(p.sourceVersionId, V1);
-    assert.deepEqual(p.productInfo, { name: 'Dark Nut Bar', brand: 'Acme', type: 'confectionery' });
-    assert.deepEqual(p.stages, {
-        appearance: { colorShade: 8, visualAppeal: 8, emotions: { curiosity: 8 } },
-        frontMouth: { sweetness: 5 },
-        texture: { thicknessMechanical: 6 },
-        aftertaste: { emotions: { satisfaction: 8 } },
+    assert.deepEqual(plan.changes, { edited: 3, added: 1, removed: 1, notes: 0 });
+    const t = plan.payload.p_targets;
+    const byCode = Object.fromEntries(t.map((x) => [x.variable_key, x]));
+    assert.deepEqual(byCode.fom_Sweetness, { variable_key: 'fom_Sweetness', role: 'primary', range_min: 5, range_max: 5, intensity: null, direction: 'lower', importance: 'must', notes: 'less sugar than v0' });
+    assert.deepEqual(byCode['tex_Thickness-Oral'], { variable_key: 'tex_Thickness-Oral', role: 'secondary', range_min: 4, range_max: 6.5, intensity: null, direction: null, importance: 'nice', notes: null });
+    assert.equal(byCode.af_emo_satisfaction.range_min, 0);
+    assert.equal(byCode.af_emo_satisfaction.range_max, 0);
+    assert.equal(byCode.ap_emo_excitement, undefined);
+    assert.deepEqual(t[t.length - 1], { variable_key: 'app_Visual_Appeal', role: 'primary', range_min: 8, range_max: 8, intensity: null, direction: null, importance: null, notes: null });
+    assert.equal(t.length, 9);
+    // untouched rows are carried unchanged
+    assert.deepEqual(byCode.mr_Bitterness, element(v1Targets().find((r) => r.variable_key === 'mr_Bitterness')));
+});
+
+test('amend payload: word-only targets keep their word; a number replaces it; the word can be switched', () => {
+    const kept = amendPlan(null).payload.p_targets.find((x) => x.variable_key === 'ap_emo_curiosity');
+    assert.deepEqual([kept.intensity, kept.range_min, kept.range_max], ['high', null, null]);
+    const plan = amendPlan((d) => {
+        TVM.setDraftValue(d, 'app_Color_Shade', 7);
+        TVM.setDraftIntensity(d, 'ap_emo_curiosity', 'low');
     });
-    assert.deepEqual(p.emotionalTriggers, { moreishness: 7 });
-    assert.equal(plan.carried.length, 7);
-    assert.ok(!JSON.stringify(p).includes('excitement'));
+    const byCode = Object.fromEntries(plan.payload.p_targets.map((x) => [x.variable_key, x]));
+    assert.deepEqual([byCode.app_Color_Shade.intensity, byCode.app_Color_Shade.range_min, byCode.app_Color_Shade.range_max], [null, 7, 7]);
+    assert.deepEqual([byCode.ap_emo_curiosity.intensity, byCode.ap_emo_curiosity.range_min], ['low', null]);
+    assert.equal(plan.changes.edited, 2);
+    // clearing the number on a word-only target restores the word
+    const back = amendPlan((d) => { TVM.setDraftValue(d, 'app_Color_Shade', 7); TVM.setDraftValue(d, 'app_Color_Shade', ''); });
+    assert.equal(back.changeCount, 0);
+    assert.equal(back.payload.p_targets.find((x) => x.variable_key === 'app_Color_Shade').intensity, 'high');
+});
+
+test('amend payload: stage notes can be edited, added and cleared (blank = absent)', () => {
+    const plan = amendPlan((d) => {
+        TVM.setDraftNotes(d, 'ap', 'glossy, darker brown');
+        TVM.setDraftNotes(d, 'af', '   ');
+        TVM.setDraftNotes(d, 'fm', 'sweet first');
+    });
+    assert.deepEqual(plan.payload.p_stage_notes, [{ stage_key: 'ap', notes: 'glossy, darker brown' }, { stage_key: 'fm', notes: 'sweet first' }]);
+    assert.equal(plan.changes.notes, 3);
+    assert.equal(plan.changeCount, 3);
+    assert.equal(TVM.stageKeyOf('frontMouth'), 'fm');
+    assert.equal(TVM.stageKeyOf('overall'), 'overall');
 });
 
 test('amend payload: never carries the experience\'s own slider values, never mutates the experience', () => {
@@ -453,69 +586,50 @@ test('amend payload: never carries the experience\'s own slider values, never mu
     const before = JSON.stringify(exp);
     const plan = amendPlan(null, { experience: exp });
     assert.equal(JSON.stringify(exp), before);
-    // Signature rated visualAppeal 9 and moreishness 9 - neither is a target value
-    assert.equal(plan.payload.stages.appearance.visualAppeal, undefined);
-    assert.equal(plan.payload.emotionalTriggers.moreishness, 8);
-    assert.equal(plan.payload.stages.aftertaste.unknownThing, undefined);
-    assert.equal(Object.keys(plan.payload).sort().join(','), 'emotionalTriggers,id,productInfo,sourceVersionId,stages,tssProjectId');
+    const codes = plan.payload.p_targets.map((t) => t.variable_key);
+    assert.ok(!codes.includes('app_Visual_Appeal'), 'Signature rated visualAppeal 9 but it is not a target');
+    assert.equal(plan.payload.p_targets.find((t) => t.variable_key === 'overall_trig_moreishness').range_min, 8, 'target 8, not the slider 9');
+    assert.ok(!JSON.stringify(plan.payload).includes('unknownThing'));
 });
 
-test('amend: what cannot be carried is listed before creating (no slider, other stage, emotion 0, notes, roles, words, ranges)', () => {
-    const plan = amendPlan((d) => {
-        TVM.setDraftValue(d, 'af_emo_satisfaction', 0);
-    }, { notes: { appearance: 'glossy; deep brown' } });
-    const dropped = Object.fromEntries(plan.dropped.map((x) => [x.code, x.reason]));
-    assert.match(dropped.mr_Bitterness, /no Signature slider/i);
-    assert.match(dropped.ap_emo_joy, /another stage|no Signature slider/i);
-    assert.match(dropped.af_emo_satisfaction, /emotion target of 0/i);
-    const w = plan.warnings.join('\n');
-    assert.match(w, /Brief says/i);
-    assert.match(w, /secondary/i);
-    assert.match(w, /high/i);
-    assert.match(w, /5-7/);
-    assert.equal(plan.needsConfirm, true);
-});
-
-test('amend: an edited word-only or range target is no longer reported as a conversion', () => {
-    const plan = amendPlan((d) => {
-        TVM.setDraftValue(d, 'app_Color_Shade', 7);
-        TVM.setDraftValue(d, 'tex_Thickness-Oral', 7);
-    });
-    const w = plan.warnings.join('\n');
-    assert.ok(!/Color Shade \(high/.test(w), w);
-    assert.match(w, /Curiosity \(high -> 8\)/);
-    assert.ok(!/range 5-7/.test(w), w);
-    assert.equal(plan.changes.edited, 2);
-});
-
-test('amend: invalid values block; nothing left blocks; alias-only codes use the crosswalk key', () => {
-    const bad = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 11));
-    assert.match(bad.blocking, /0-10/);
-    const nan = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 'abc'));
-    assert.match(nan.blocking, /0-10/);
+test('amend: invalid values block; min > max blocks; an empty number blocks; nothing left blocks', () => {
+    assert.match(amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 11)).blocking, /0-10/);
+    assert.match(amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 'abc')).blocking, /0-10/);
+    assert.match(amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', '')).blocking, /Sweetness/);
+    assert.match(amendPlan((d) => TVM.setDraftRange(d, 'tex_Thickness-Oral', 'min', 8)).blocking, /min.*max|range/i);
     const none = amendPlan((d) => { for (const c of Object.keys(d.entries)) TVM.removeDraftTarget(d, c); });
     assert.match(none.blocking, /at least one target/i);
-    // decimals are kept to one decimal place
+    assert.equal(none.payload, null);
     const dec = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', '6.25'));
-    assert.equal(dec.payload.stages.frontMouth.sweetness, 6.3);
+    assert.equal(dec.payload.p_targets.find((t) => t.variable_key === 'fom_Sweetness').range_min, 6.25);
 });
 
 test('amend: re-adding a removed target restores it; editing back to the base value is not a change', () => {
     const plan = amendPlan((d) => {
         TVM.removeDraftTarget(d, 'fom_Sweetness');
-        TVM.addDraftTarget(d, { code: 'fom_Sweetness' }, 3);
+        TVM.addDraftTarget(d, { code: 'fom_Sweetness' });
         TVM.setDraftValue(d, 'overall_trig_moreishness', 9);
         TVM.setDraftValue(d, 'overall_trig_moreishness', 8);
+        TVM.setDraftNotes(d, 'ap', 'x');
+        TVM.setDraftNotes(d, 'ap', 'glossy; deep brown');
     });
-    assert.deepEqual(plan.changes, { edited: 0, added: 0, removed: 0 });
-    assert.equal(plan.payload.stages.frontMouth.sweetness, 3);
+    assert.deepEqual(plan.changes, { edited: 0, added: 0, removed: 0, notes: 0 });
+    assert.deepEqual(plan.payload.p_targets, v1Targets().map(element));
 });
 
 // ---------- RPC sequences (strict mock) ----------
 
 test('strict mock registers every RPC the view uses in the right schema', () => {
     assert.equal(SCHEMA_OF_RPC.get_version_results, 'public');
-    assert.equal(SCHEMA_OF_RPC.create_version_from_signature, 'tss_shared');
+    assert.equal(SCHEMA_OF_RPC.create_version_from_targets, 'tss_shared');
+});
+
+test('the old 0038-based Amend path and its "can\'t carry" confirmation are gone', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'target-vs-measured.js'), 'utf8');
+    assert.ok(!/rpc\('create_version_from_signature'/.test(src));
+    assert.ok(!/I understand the points above/.test(src));
+    assert.ok(!/confirm-drops/.test(src));
+    assert.match(src, /rpc\('create_version_from_targets'/);
 });
 
 function mockClient({ versions = VERSIONS, resultsById = null, rpcCalls = [], createResult = null, createError = null, versionsError = null } = {}) {
@@ -524,15 +638,15 @@ function mockClient({ versions = VERSIONS, resultsById = null, rpcCalls = [], cr
         tables: {
             project_versions: (f) => (versionsError ? { data: null, error: versionsError } : { data: f.project_id === PROJECT_ID ? versions : [], error: null }),
             targets: (f) => ({ data: f.version_id === V1 ? v1Targets() : [], error: null }),
-            version_stage_notes: (f) => ({ data: f.version_id === V1 ? [{ stage_key: 'ap', notes: 'glossy' }] : [], error: null }),
+            version_stage_notes: (f) => ({ data: f.version_id === V1 ? v1Notes() : [], error: null }),
             qep_attribute: (f) => ({ data: (f.id.in || []).map((id) => ATTRS[id]).filter(Boolean), error: null }),
         },
         rpcImpl: (name, params) => {
             rpcCalls.push({ name, params });
             if (name === 'get_version_results') return { data: byId[params.p_version_id] || null, error: byId[params.p_version_id] ? null : { message: 'version not found or not in your organisation' } };
-            if (name === 'create_version_from_signature') {
+            if (name === 'create_version_from_targets') {
                 if (createError) return { data: null, error: createError };
-                return { data: createResult || { project_id: PROJECT_ID, version_id: V4, version_number: 4, targets_count: 7, reused_existing_version: false, profile_link: 'already_linked', unmapped_keys: [], skipped_zero_emotions: 0 }, error: null };
+                return { data: createResult || { project_id: PROJECT_ID, version_id: V4, version_number: 4, base_version_id: V1, reused_existing_version: false, targets_count: 9, stage_notes_count: 2 }, error: null };
             }
             return { data: null, error: { message: `unexpected rpc ${name}` } };
         },
@@ -553,8 +667,15 @@ test('load: versions (tss_shared) -> crosswalk -> get_version_results per locked
     assert.equal(m.targetVersionId, V1);
     assert.equal(m.targetChoice, 'source_version');
     assert.equal(m.resultsVersionId, V1);
-    assert.equal(m.notes.appearance, 'glossy');
+    assert.equal(m.notes.appearance, 'glossy; deep brown');
+    assert.deepEqual(m.stageNotes, v1Notes(), 'raw stage notes kept for Amend');
     assert.equal(m.targets.length, 9);
+    const tq = mock.queries.find((q) => q.table === 'targets');
+    for (const col of ['variable_key', 'role', 'intensity', 'range_min', 'range_max', 'direction', 'importance', 'notes']) {
+        assert.ok(tq.select.includes(col), `targets select has ${col}`);
+    }
+    const sw = m.targets.find((t) => t.code === 'fom_Sweetness');
+    assert.deepEqual([sw.direction, sw.importance, sw.notes], ['lower', 'must', 'less sugar than v0']);
     const tables = mock.queries.map((q) => `${q.schema}.${q.table}`);
     assert.ok(tables.includes('tss_shared.project_versions'));
     assert.ok(tables.includes('tss_shared.targets'));
@@ -575,13 +696,13 @@ test('load: another org\'s project is not visible -> refused with a clear messag
     assert.equal(rpcCalls.length, 0);
 });
 
-test('load: no locked versions; crosswalk failure (warning, Amend disabled); unlinked; network error', async () => {
+test('load: no locked versions; crosswalk failure (warning, Amend still available); unlinked; network error', async () => {
     const none = await TVM.loadTargetVsMeasured(experience(), deps(mockClient({ versions: [{ id: V4, version_number: 4, status: 'draft' }] })));
     assert.equal(none.state, 'no_locked_versions');
     const noXw = await TVM.loadTargetVsMeasured(experience(), deps(mockClient(), { fetchCrosswalk: async () => ({ error: 'boom' }) }));
     assert.equal(noXw.state, 'ok');
     assert.match(noXw.warning, /crosswalk/i);
-    assert.equal(noXw.amendAvailable, false);
+    assert.equal(noXw.amendAvailable, true, 'the 0043 payload carries master codes, so Amend does not need the crosswalk');
     const unlinked = await TVM.loadTargetVsMeasured(experience({ tssProjectId: null }), deps(mockClient()));
     assert.equal(unlinked.state, 'not_linked');
     const net = await TVM.loadTargetVsMeasured(experience(), deps(mockClient({ versionsError: { message: 'Failed to fetch' } })));
@@ -615,7 +736,7 @@ test('demo mode fails fast: no client, no query, no RPC (load and amend)', async
     assert.equal(touched, false);
 });
 
-test('amend RPC: exactly one create_version_from_signature (tss_shared), no study, no new experience', async () => {
+test('amend RPC: exactly one create_version_from_targets (tss_shared), no study, no new experience', async () => {
     const rpcCalls = [];
     const mock = mockClient({ rpcCalls });
     const exp = experience();
@@ -626,8 +747,10 @@ test('amend RPC: exactly one create_version_from_signature (tss_shared), no stud
     assert.equal(r.status, 'ok');
     assert.equal(r.version.version_number, 4);
     assert.equal(r.reused, false);
-    assert.deepEqual(rpcCalls.map((c) => c.name), ['create_version_from_signature']);
-    assert.deepEqual(rpcCalls[0].params, { payload: plan.payload });
+    assert.deepEqual(rpcCalls.map((c) => c.name), ['create_version_from_targets']);
+    assert.deepEqual(rpcCalls[0].params, plan.payload);
+    assert.equal(rpcCalls[0].params.p_targets.length, 9);
+    assert.deepEqual(rpcCalls[0].params.p_stage_notes, v1Notes());
     assert.deepEqual(mock.violations, []);
     // Firestore side: the linked experience keeps its link (applyCaptureLink
     // never overwrites), nothing is saved, nothing is added.
@@ -640,12 +763,12 @@ test('amend RPC: exactly one create_version_from_signature (tss_shared), no stud
 });
 
 test('amend RPC: reused version is reported as "no change"; a mismatching project is refused', async () => {
-    const reused = mockClient({ createResult: { project_id: PROJECT_ID, version_id: V4, version_number: 4, targets_count: 7, reused_existing_version: true } });
+    const reused = mockClient({ createResult: { project_id: PROJECT_ID, version_id: V4, version_number: 4, base_version_id: V1, targets_count: 9, stage_notes_count: 2, reused_existing_version: true } });
     const plan = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 5));
     const r = await TVM.runAmend(experience(), plan, deps(reused));
     assert.equal(r.status, 'ok');
     assert.equal(r.reused, true);
-    assert.match(TVM.amendSuccessMessage(r), /already has exactly these targets/);
+    assert.match(TVM.amendSuccessMessage(r), /already has exactly these targets and notes/);
     const wrong = mockClient({ createResult: { project_id: OTHER_PROJECT_ID, version_id: V4, version_number: 1 } });
     const w = await TVM.runAmend(experience(), plan, deps(wrong));
     assert.equal(w.status, 'error');
@@ -665,7 +788,7 @@ test('amend RPC: blocking plan and a payload for another project never reach the
 
 test('amend RPC: an unlinked-profile result goes through applyCaptureLink rules and saves at most once', async () => {
     // A linked experience never changes; the rules are SendToCapture's.
-    const mock = mockClient({ createResult: { project_id: PROJECT_ID, version_id: V4, version_number: 4, targets_count: 7, profile_link: 'set' } });
+    const mock = mockClient({ createResult: { project_id: PROJECT_ID, version_id: V4, version_number: 4, base_version_id: V1, targets_count: 9, stage_notes_count: 2 } });
     const exp = experience({ sourceVersionId: null });
     const saves = [];
     const plan = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 5), { experience: exp });
@@ -675,10 +798,30 @@ test('amend RPC: an unlinked-profile result goes through applyCaptureLink rules 
     assert.equal(saves.length, 0);
 });
 
+test('amend RPC: missing 0043 function -> "Amend is not available on this QEP database yet", nothing created or saved', async () => {
+    for (const createError of [
+        { code: 'PGRST202', message: 'Could not find the function tss_shared.create_version_from_targets(p_base_version_id, p_project_id, p_source_experience_id, p_stage_notes, p_targets) in the schema cache' },
+        { code: 'PGRST202', message: 'x' },
+        { message: 'Could not find the function tss_shared.create_version_from_targets' },
+    ]) {
+        const rpcCalls = [];
+        const saves = [];
+        const exp = experience();
+        const before = JSON.stringify(exp);
+        const plan = amendPlan((d) => TVM.setDraftValue(d, 'fom_Sweetness', 5), { experience: exp });
+        const r = await TVM.runAmend(exp, plan, deps(mockClient({ rpcCalls, createError }), { save: (e) => saves.push(e) }));
+        assert.equal(r.status, 'error');
+        assert.match(r.message, /^Amend is not available on this QEP database yet/);
+        assert.deepEqual(rpcCalls.map((c) => c.name), ['create_version_from_targets'], 'one attempt, no fallback to another RPC');
+        assert.equal(saves.length, 0);
+        assert.equal(JSON.stringify(exp), before);
+    }
+});
+
 test('amend errors map to clear messages', () => {
-    assert.match(TVM.mapAmendError({ message: 'experience.tssProjectId 1 is not a project in your organisation' }), /not in your organisation/);
-    assert.match(TVM.mapAmendError({ message: 'profile was deleted' }), /deleted/);
-    assert.match(TVM.mapAmendError({ message: 'no measured values to send to Capture' }), /at least one/i);
+    assert.match(TVM.mapAmendError({ message: 'not a project in your organisation' }), /not in your organisation/);
+    assert.match(TVM.mapAmendError({ message: 'base version is not a locked version of this project' }), /locked version/);
+    assert.match(TVM.mapAmendError({ message: 'range_min must be <= range_max' }), /0 to 10|range/i);
     assert.match(TVM.mapAmendError({ message: 'Failed to fetch' }), /Could not reach QEP/);
     assert.match(TVM.mapAmendError({ code: 'QEP_DEMO_MODE', message: 'x' }), /demo mode/i);
     assert.match(TVM.mapAmendError({ message: 'weird' }), /weird/);
@@ -718,21 +861,35 @@ test('html: escapes labels and notes; statuses are text, not colour only', async
     assert.match(html, /Appearance[\s\S]*Front of Mouth[\s\S]*Mid\/Rear Mouth[\s\S]*Texture[\s\S]*Aftertaste[\s\S]*Overall/);
     assert.match(html, /Tolerance/);
     assert.match(html, /data-tvm-action="toggle-amend"/);
+    // the expected % of an emotion target is shown, so the comparison is transparent
+    assert.match(html, /8 \(expects 80% selected\)/);
+    assert.match(html, /high \(expects 80% selected, at least 70%\)/);
+    assert.match(html, /data-tvm-action="emotion-pp"/);
+    assert.match(html, /\+\/- 10 percentage points/);
+    assert.ok(!/at least 50%/.test(html) && !/not compared/.test(html), 'the old emotion rule text is gone');
 });
 
 test('html: amend mode shows inputs, the plan warnings and a Create next version button', async () => {
     const mock = mockClient();
     const m = await TVM.loadTargetVsMeasured(experience(), deps(mock));
-    const draft = TVM.createDraft(m.targets);
+    const draft = TVM.createDraft(m.targets, m.stageNotes);
     TVM.setDraftValue(draft, 'fom_Sweetness', 5);
-    const plan = TVM.buildAmendPlan({ draft, experience: experience(), projectId: PROJECT_ID, baseVersion: { id: V1, versionNumber: 1 }, notes: m.notes, indexes: m.indexes });
+    const plan = TVM.buildAmendPlan({ draft, experience: experience(), projectId: PROJECT_ID, baseVersion: { id: V1, versionNumber: 1 } });
     const html = TVM.buildTargetVsMeasuredHtml(m, { experience: experience(), rules: TVM.resolveRules({}), editing: true, draft, plan });
     assert.match(html, /data-tvm-action="set-value"/);
+    assert.match(html, /data-tvm-action="set-min"/);
+    assert.match(html, /data-tvm-action="set-max"/);
+    assert.match(html, /data-tvm-action="set-intensity"/);
+    assert.match(html, /data-tvm-action="set-notes" data-stage="ap"/);
     assert.match(html, /data-tvm-action="remove"/);
     assert.match(html, /data-tvm-action="add"/);
     assert.match(html, /Create next version/);
-    assert.match(html, /will not be in the new version/i);
-    assert.match(html, /data-tvm-action="confirm-drops"/);
+    assert.match(html, /1 edited, 0 added, 0 removed/);
+    assert.match(html, /9 target\(s\) and 2 stage note/);
+    assert.ok(!/will not be in the new version/i.test(html));
+    assert.ok(!/confirm-drops/.test(html));
+    // the Create button is enabled (no tick needed)
+    assert.ok(!/data-tvm-action="create-version" disabled/.test(html));
 });
 
 test('rows: targets first, then consumer-only, then Signature-only; kinds grouped inside each', () => {
