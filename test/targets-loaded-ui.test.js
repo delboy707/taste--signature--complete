@@ -194,7 +194,7 @@ test('picker: selecting a project loads its targets via fetchQepCaptureTargetsBy
         return {
             project: { id: 'p-1', name: 'Zesty Cola', categoryName: 'Beverages' },
             version: { id: 'v-1', versionNumber: 3, status: 'locked', lockedAt: '2026-01-01T00:00:00Z' },
-            stages: { appearance: { emotions: [], notes: '' }, aroma: { emotions: [], notes: '' }, frontMouth: { emotions: [], notes: '' }, midRearMouth: { emotions: [], notes: '' }, texture: { emotions: [], notes: '' }, aftertaste: { emotions: [], notes: '' }, overall: { emotions: [], notes: '' } },
+            stages: { appearance: { targets: [], notes: '' }, aroma: { targets: [], notes: '' }, frontMouth: { targets: [], notes: '' }, midRearMouth: { targets: [], notes: '' }, texture: { targets: [], notes: '' }, aftertaste: { targets: [], notes: '' }, overall: { targets: [], notes: '' } },
         };
     };
 
@@ -217,7 +217,7 @@ test('picker: escapes a hostile project name both in the option list and the loa
     window.fetchQepCaptureTargetsByVersion = async () => ({
         project: { id: 'p-1', name: hostileName, categoryName: 'Snacks' },
         version: { id: 'v-1', versionNumber: 1, status: 'locked', lockedAt: null },
-        stages: { appearance: { emotions: [], notes: '' }, aroma: { emotions: [], notes: '' }, frontMouth: { emotions: [], notes: '' }, midRearMouth: { emotions: [], notes: '' }, texture: { emotions: [], notes: '' }, aftertaste: { emotions: [], notes: '' }, overall: { emotions: [], notes: '' } },
+        stages: { appearance: { targets: [], notes: '' }, aroma: { targets: [], notes: '' }, frontMouth: { targets: [], notes: '' }, midRearMouth: { targets: [], notes: '' }, texture: { targets: [], notes: '' }, aftertaste: { targets: [], notes: '' }, overall: { targets: [], notes: '' } },
     });
 
     await api.renderTargetsLoadedDashboard();
@@ -229,6 +229,35 @@ test('picker: escapes a hostile project name both in the option list and the loa
     await select.onchange();
     assert.ok(!byId['targets-loaded-results'].innerHTML.includes('<img src=x'));
     assert.ok(byId['targets-loaded-results'].innerHTML.includes('&lt;img'));
+});
+
+test('picker: the loaded result lists coded sensory + emotion targets with their value, and legacy targets without one', async () => {
+    const { window, byId, api } = loadTargetsLoadedUI();
+    window.fetchLockedProjects = async () => ({
+        projects: [{ project_id: 'p-1', name: 'Zesty Cola', latest_locked_version_id: 'v-1', version_number: 3, locked_at: null }],
+    });
+    const stages = {};
+    for (const id of ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overall']) stages[id] = { targets: [], notes: '' };
+    stages.texture.targets.push({ label: 'Creaminess', role: 'primary', variableKey: 'tex_Creaminess', kind: 'sensory', intensity: null, rangeMin: 7, rangeMax: 7 });
+    stages.frontMouth.targets.push({ label: 'Sweetness', role: 'secondary', variableKey: 'fm_Sweetness', kind: 'sensory', intensity: null, rangeMin: 6, rangeMax: 8 });
+    stages.appearance.targets.push({ label: 'Excitement', role: 'primary', variableKey: 'ap_emo_excitement', kind: 'emotion', intensity: 'high', rangeMin: null, rangeMax: null });
+    window.fetchQepCaptureTargetsByVersion = async () => ({
+        project: { id: 'p-1', name: 'Zesty Cola', categoryName: 'Beverages' },
+        version: { id: 'v-1', versionNumber: 3, status: 'locked', lockedAt: null },
+        stages,
+        unplacedTargets: [],
+    });
+
+    await api.renderTargetsLoadedDashboard();
+    const select = byId['qep-capture-project-select'];
+    select.value = 'p-1';
+    await select.onchange();
+
+    const html = byId['targets-loaded-results'].innerHTML;
+    assert.match(html, />Targets</);
+    assert.match(html, /Creaminess 7/);
+    assert.match(html, /Sweetness 6-8/);
+    assert.match(html, /Excitement(?! \d)/);
 });
 
 // ------------------------------------------------------------
@@ -249,7 +278,7 @@ test('deep link: a valid project id with no version consumes the stash, honours 
         return {
             project: { id: projectId, name: 'Latest Target', categoryName: 'Beverages' },
             version: { id: versionId, versionNumber: 5, status: 'locked', lockedAt: null },
-            stages: { appearance: { emotions: [], notes: '' }, aroma: { emotions: [], notes: '' }, frontMouth: { emotions: [], notes: '' }, midRearMouth: { emotions: [], notes: '' }, texture: { emotions: [], notes: '' }, aftertaste: { emotions: [], notes: '' }, overall: { emotions: [], notes: '' } },
+            stages: { appearance: { targets: [], notes: '' }, aroma: { targets: [], notes: '' }, frontMouth: { targets: [], notes: '' }, midRearMouth: { targets: [], notes: '' }, texture: { targets: [], notes: '' }, aftertaste: { targets: [], notes: '' }, overall: { targets: [], notes: '' } },
         };
     };
 

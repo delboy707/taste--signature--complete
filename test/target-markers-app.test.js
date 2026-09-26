@@ -3,8 +3,9 @@
 // "with(scope){...}" pattern as test/helpers/load-app.js and
 // test/target-prefill-app-integration.test.js, against a small fake DOM
 // that records inserted/removed nodes. Prefills are built by the REAL
-// target-prefill.js with an INJECTED Brief sensory crosswalk (the real
-// constant stays empty). No browser, Firestore, or Supabase.
+// target-prefill.js from coded targets (Stage 2A.5: variable_key = master
+// code, range_min = range_max = target) plus a legacy emotion target.
+// No browser, Firestore, or Supabase.
 // Run: node test/target-markers-app.test.js
 
 const test = require('node:test');
@@ -185,10 +186,14 @@ const HOSTILE = '<img src=x onerror=alert(1)>';
 
 function fixturePrefill({ name = 'Zesty Cola', versionNumber = 3 } = {}) {
     const stages = {};
-    for (const id of TargetPrefill.SIGNATURE_STAGE_IDS) stages[id] = { emotions: [], notes: '' };
-    stages.appearance.emotions.push({ label: 'Excitement', role: 'primary', variableKey: 'vk_app_excitement', intensity: 'high' });
-    stages.texture.emotions.push({ label: 'Satisfied', role: 'secondary', variableKey: 'vk_tex_satisfied', intensity: 'high' });
-    stages.aroma.emotions.push({ label: 'Calm', role: 'primary', variableKey: 'vk_not_in_crosswalk', intensity: 'high' });
+    for (const id of TargetPrefill.SIGNATURE_STAGE_IDS) stages[id] = { targets: [], notes: '' };
+    // Legacy Brief emotion target: intensity 'high', no range -> today's "Target 8".
+    stages.appearance.targets.push({ label: 'Excitement', role: 'primary', variableKey: 'vk_app_excitement', kind: 'emotion', intensity: 'high', rangeMin: null, rangeMax: null });
+    // Coded targets (range_min = range_max = target).
+    stages.texture.targets.push({ label: 'Satisfied', role: 'secondary', variableKey: 'vk_tex_satisfied', kind: 'emotion', intensity: null, rangeMin: 8, rangeMax: 8 });
+    stages.appearance.targets.push({ label: 'Surface shine', role: 'primary', variableKey: 'app_Surface_Shine', kind: 'sensory', intensity: null, rangeMin: 8, rangeMax: 8 });
+    // A coded target with no Signature slider: listed, never marked.
+    stages.aroma.targets.push({ label: 'Calm', role: 'primary', variableKey: 'vk_not_in_crosswalk', kind: 'emotion', intensity: null, rangeMin: 6, rangeMax: 6 });
     stages.appearance.notes = 'Glossy sheen; Bright / vivid colour';
     stages.overall.notes = `Line one\nLine two ${HOSTILE}`;
 
@@ -197,11 +202,9 @@ function fixturePrefill({ name = 'Zesty Cola', versionNumber = 3 } = {}) {
         { signature_stage: 'texture', signature_key: 'satisfied', variable_key: 'vk_tex_satisfied', kind: 'emotion' },
         { signature_stage: 'appearance', signature_key: 'surface-shine', variable_key: 'app_Surface_Shine', kind: 'sensory' },
     ];
-    const sensoryCrosswalk = { 'ap|glossy sheen': 'app_Surface_Shine' };
     return TargetPrefill.buildTargetPrefill(
         { project: { name }, version: { versionNumber }, stages },
-        crosswalkRows,
-        { sensoryCrosswalk }
+        crosswalkRows
     );
 }
 
@@ -242,13 +245,49 @@ test('markers exist for mapped emotion AND mapped sensory targets only, with tex
     assert.match(byFor['tex-satisfied'].node.innerHTML, /left:calc\(40% \+ 2px\)/);
 });
 
+test('coded targets draw at their own value: "Target 7" at 70%, a range reads "Target 6-8" at its midpoint; no slider value changes', () => {
+    const { app, dom } = loadApp();
+    const prefill = TargetPrefill.buildTargetPrefill(
+        { project: { name: 'Zesty Cola' }, version: { versionNumber: 3 }, stages: {
+            appearance: { targets: [{ label: 'Surface shine', role: 'primary', variableKey: 'app_Surface_Shine', kind: 'sensory', intensity: null, rangeMin: 7, rangeMax: 7 }], notes: '' },
+            aroma: { targets: [{ label: 'Calm', role: 'primary', variableKey: 'ar_emo_calm', kind: 'emotion', intensity: null, rangeMin: 6, rangeMax: 8 }], notes: '' },
+        } },
+        [
+            { signature_stage: 'appearance', signature_key: 'surface-shine', variable_key: 'app_Surface_Shine', kind: 'sensory' },
+            { signature_stage: 'aroma', signature_key: 'calm', variable_key: 'ar_emo_calm', kind: 'emotion' },
+        ]
+    );
+    app.applyTargetPrefillToForm(prefill, LINK);
+
+    const byFor = Object.fromEntries(dom.live('target-marker-track').map((t) => [t.node.getAttribute('data-target-for'), t.node]));
+    assert.deepEqual(Object.keys(byFor).sort(), ['appearance-surface-shine', 'aroma-calm']);
+    assert.match(byFor['appearance-surface-shine'].innerHTML, /left:calc\(70% \+ -4px\)/);
+    assert.match(byFor['appearance-surface-shine'].innerHTML, />Target 7<\/span>/);
+    assert.equal(byFor['appearance-surface-shine'].getAttribute('data-target-kind'), 'sensory');
+    assert.match(byFor['aroma-calm'].innerHTML, /left:calc\(70% \+ -4px\)/);
+    assert.match(byFor['aroma-calm'].innerHTML, />Target 6-8<\/span>/);
+
+    for (const [id] of SLIDERS) {
+        assert.equal(dom.byId.get(id).value, '0', `${id} value must be untouched`);
+        assert.equal(dom.byId.get(`${id}-val`).textContent, '0', `${id}-val must be untouched`);
+    }
+    assert.equal(app.getTouched().size, 0);
+
+    app.handleFormSubmit({ preventDefault() {} });
+    const [exp] = app.getExperiences();
+    assert.equal(exp.stages.appearance.surfaceShine, null);
+    assert.equal(exp.stages.aroma.emotions.calm, null);
+});
+
 test('brief text is rendered per stage with notes ("Brief says: ..."), none for empty stages, hostile text escaped', () => {
     const { app, dom, stages } = loadApp();
     app.applyTargetPrefillToForm(fixturePrefill(), LINK);
 
     const blocks = dom.live('target-brief-says');
     const byStage = Object.fromEntries(blocks.map((b) => [b.node.getAttribute('data-target-stage'), b]));
-    assert.deepEqual(Object.keys(byStage).sort(), ['appearance', 'overall']);
+    assert.deepEqual(Object.keys(byStage).sort(), ['appearance', 'aroma', 'overall']);
+    // A coded target with no Signature slider is listed in its stage, not dropped.
+    assert.equal(byStage.aroma.node.innerHTML, '<strong>Brief says:</strong> Not measurable in this form: Calm (6)');
 
     const app2 = byStage.appearance;
     assert.equal(app2.node.innerHTML, '<strong>Brief says:</strong> Glossy sheen; Bright / vivid colour');
@@ -270,7 +309,7 @@ test('the banner is exactly the one-line string, set as text (never HTML), place
 
     const banners = dom.inserted.filter((i) => i.node.id === 'target-prefill-banner' && !i.node.removed);
     assert.equal(banners.length, 1);
-    assert.equal(banners[0].node.textContent, `Targets from ${HOSTILE} v2 shown as markers.`);
+    assert.equal(banners[0].node.textContent, `Targets from ${HOSTILE} v2 shown as markers. 1 target not measurable in this form (listed in its stage).`);
     assert.equal(banners[0].node.innerHTML, '');
     assert.equal(banners[0].position, 'before');
     assert.equal(banners[0].anchor, form);
@@ -293,7 +332,7 @@ test('re-applying a prefill replaces (never duplicates) markers, brief text and 
     app.applyTargetPrefillToForm(fixturePrefill(), LINK);
     app.applyTargetPrefillToForm(fixturePrefill(), LINK);
     assert.equal(dom.live('target-marker-track').length, 3);
-    assert.equal(dom.live('target-brief-says').length, 2);
+    assert.equal(dom.live('target-brief-says').length, 3);
     assert.equal(dom.inserted.filter((i) => i.node.id === 'target-prefill-banner' && !i.node.removed).length, 1);
 });
 

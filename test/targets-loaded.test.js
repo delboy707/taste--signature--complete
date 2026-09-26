@@ -139,12 +139,15 @@ function versionTargetTables({ projectRow, versionRow, targetRows = [], noteRows
     };
 }
 
-test('fetchQepCaptureTargetsByVersion shapes emotion targets (with variableKey + intensity) and stage notes by Signature stage id', async () => {
+test('fetchQepCaptureTargetsByVersion shapes targets (variableKey, kind, intensity, range) and stage notes by Signature stage id', async () => {
     const projectRow = { id: VALID_PROJECT_ID, name: 'Zesty Cola', category_id: 'cat-1' };
     const versionRow = { id: VALID_VERSION_ID, version_number: 4, status: 'locked', locked_at: '2026-01-01T00:00:00Z' };
     const targetRows = [
-        { variable_key: 'ap_emo_excitement', role: 'primary', intensity: 'high', qep_attribute: { label: 'Excitement', stage_key: 'ap', emotion_concept_id: 'excitement' } },
-        { variable_key: 'ar_emo_calm', role: 'secondary', intensity: 'high', qep_attribute: { label: 'Calm', stage_key: 'ar', emotion_concept_id: 'calm' } },
+        // Legacy Brief emotion target: intensity 'high', no range.
+        { variable_key: 'ap_emo_excitement', role: 'primary', intensity: 'high', range_min: null, range_max: null, qep_attribute: { label: 'Excitement', stage_key: 'ap', kind: 'emotion', emotion_concept_id: 'excitement' } },
+        { variable_key: 'ar_emo_calm', role: 'secondary', intensity: 'high', range_min: null, range_max: null, qep_attribute: { label: 'Calm', stage_key: 'ar', kind: 'emotion', emotion_concept_id: 'calm' } },
+        // Stage 2A.5 coded sensory target: range_min = range_max = target.
+        { variable_key: 'tex_Creaminess', role: 'primary', intensity: null, range_min: 7, range_max: 7, qep_attribute: { label: 'Creaminess', stage_key: 'tx', kind: 'sensory', emotion_concept_id: null } },
     ];
     const noteRows = [{ stage_key: 'tx', notes: 'Rich mouthcoating; smooth melt' }];
 
@@ -157,13 +160,65 @@ test('fetchQepCaptureTargetsByVersion shapes emotion targets (with variableKey +
     assert.equal(result.project.name, 'Zesty Cola');
     assert.equal(result.project.categoryName, 'Beverages');
     assert.equal(result.version.versionNumber, 4);
-    assert.equal(result.stages.appearance.emotions.length, 1);
-    assert.deepEqual(result.stages.appearance.emotions[0], { label: 'Excitement', role: 'primary', variableKey: 'ap_emo_excitement', intensity: 'high' });
-    assert.equal(result.stages.aroma.emotions[0].variableKey, 'ar_emo_calm');
+    assert.equal(result.stages.appearance.targets.length, 1);
+    assert.deepEqual(result.stages.appearance.targets[0], {
+        label: 'Excitement', role: 'primary', variableKey: 'ap_emo_excitement', kind: 'emotion', intensity: 'high', rangeMin: null, rangeMax: null,
+    });
+    assert.equal(result.stages.aroma.targets[0].variableKey, 'ar_emo_calm');
+    assert.deepEqual(result.stages.texture.targets[0], {
+        label: 'Creaminess', role: 'primary', variableKey: 'tex_Creaminess', kind: 'sensory', intensity: null, rangeMin: 7, rangeMax: 7,
+    });
     assert.equal(result.stages.texture.notes, 'Rich mouthcoating; smooth melt');
     // Every one of the 7 stages is always present, even with no data.
     assert.deepEqual(Object.keys(result.stages).sort(), ['aftertaste', 'appearance', 'aroma', 'frontMouth', 'midRearMouth', 'overall', 'texture'].sort());
-    assert.deepEqual(result.stages.overall, { emotions: [], notes: '' });
+    assert.deepEqual(result.stages.overall, { targets: [], notes: '' });
+    assert.deepEqual(result.unplacedTargets, []);
+});
+
+test('the loader reads range_min/range_max from tss_shared.targets and kind from public.qep_attribute', async () => {
+    const projectRow = { id: VALID_PROJECT_ID, name: 'Zesty Cola', category_id: 'cat-1' };
+    const versionRow = { id: VALID_VERSION_ID, version_number: 4, status: 'locked', locked_at: null };
+    const targetRows = [{ variable_key: 'tex_Creaminess', role: 'primary', intensity: null, range_min: 7, range_max: 7, qep_attribute: { label: 'Creaminess', stage_key: 'tx', kind: 'sensory' } }];
+    const { fetchQepCaptureTargetsByVersion } = freshTargetsLoaded(() =>
+        makeClient({ tables: versionTargetTables({ projectRow, versionRow, targetRows }) })
+    );
+    await fetchQepCaptureTargetsByVersion(VALID_PROJECT_ID, VALID_VERSION_ID);
+    const targetsQuery = LAST_QUERIES.find((q) => q.table === 'targets');
+    const attrQuery = LAST_QUERIES.find((q) => q.table === 'qep_attribute');
+    for (const col of ['variable_key', 'role', 'intensity', 'range_min', 'range_max']) {
+        assert.match(targetsQuery.select, new RegExp(`\\b${col}\\b`), `targets select must include ${col}`);
+    }
+    assert.match(attrQuery.select, /\bkind\b/);
+});
+
+test('numeric range values arriving as strings are parsed; blanks become null', async () => {
+    const projectRow = { id: VALID_PROJECT_ID, name: 'Zesty Cola', category_id: 'cat-1' };
+    const versionRow = { id: VALID_VERSION_ID, version_number: 4, status: 'locked', locked_at: null };
+    const targetRows = [{ variable_key: 'tex_Creaminess', role: 'primary', intensity: null, range_min: '6.5', range_max: '', qep_attribute: { label: 'Creaminess', stage_key: 'tx', kind: 'sensory' } }];
+    const { fetchQepCaptureTargetsByVersion } = freshTargetsLoaded(() =>
+        makeClient({ tables: versionTargetTables({ projectRow, versionRow, targetRows }) })
+    );
+    const result = await fetchQepCaptureTargetsByVersion(VALID_PROJECT_ID, VALID_VERSION_ID);
+    assert.equal(result.stages.texture.targets[0].rangeMin, 6.5);
+    assert.equal(result.stages.texture.targets[0].rangeMax, null);
+});
+
+test('a target whose code has no readable qep_attribute row, or an unknown stage, is kept in unplacedTargets (never dropped)', async () => {
+    const projectRow = { id: VALID_PROJECT_ID, name: 'Zesty Cola', category_id: 'cat-1' };
+    const versionRow = { id: VALID_VERSION_ID, version_number: 4, status: 'locked', locked_at: null };
+    const targetRows = [
+        { variable_key: 'mystery_code', role: 'primary', intensity: null, range_min: 5, range_max: 5 },
+        { variable_key: 'zz_odd_stage', role: 'secondary', intensity: null, range_min: 3, range_max: 3, qep_attribute: { label: 'Odd', stage_key: 'zz', kind: 'sensory' } },
+    ];
+    const { fetchQepCaptureTargetsByVersion } = freshTargetsLoaded(() =>
+        makeClient({ tables: versionTargetTables({ projectRow, versionRow, targetRows }) })
+    );
+    const result = await fetchQepCaptureTargetsByVersion(VALID_PROJECT_ID, VALID_VERSION_ID);
+    assert.deepEqual(result.unplacedTargets.map((t) => t.variableKey), ['mystery_code', 'zz_odd_stage']);
+    assert.equal(result.unplacedTargets[0].rangeMin, 5);
+    assert.equal(result.unplacedTargets[1].label, 'Odd');
+    for (const t of result.unplacedTargets) assert.ok(t.reason);
+    for (const stage of Object.values(result.stages)) assert.equal(stage.targets.length, 0);
 });
 
 test('fetchQepCaptureTargetsByVersion: project not visible to caller (RLS) -> clear not-found error, no throw', async () => {

@@ -1,18 +1,23 @@
 // Pure unit tests for target-prefill.js - no DOM, no Supabase, no
 // Firestore. Run: node test/target-prefill.test.js
+//
+// Stage 2A.5 (shared dictionary): markers come straight from the locked
+// version's coded tss_shared.targets rows (variable_key = master code,
+// range_min = range_max = 0-10 target), reverse-mapped through the
+// Signature attribute crosswalk. Stage notes are brief text only.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
-    buildTargetPrefill, buildEmotionCrosswalkIndex, buildSensoryCrosswalkIndex, splitSensoryLabels,
+    buildTargetPrefill, buildCrosswalkIndex, targetMarkerPosition,
     markerLeftCss, buildTargetMarkerHtml, buildBriefSaysHtml,
-    TARGET_INTENSITY_SCALE, SENSORY_TARGET_VALUE, SIGNATURE_STAGE_IDS, STAGE_ID_TO_FORM_STAGE_NUMBER,
+    TARGET_INTENSITY_SCALE, SIGNATURE_STAGE_IDS, STAGE_ID_TO_FORM_STAGE_NUMBER,
+    NOT_MEASURABLE_PREFIX,
 } = require('../target-prefill.js');
-const { BRIEF_SENSORY_TO_QEP_ATTRIBUTE } = require('../brief-sensory-crosswalk.js');
 
 function emptyStages() {
     const stages = {};
-    for (const id of SIGNATURE_STAGE_IDS) stages[id] = { emotions: [], notes: '' };
+    for (const id of SIGNATURE_STAGE_IDS) stages[id] = { targets: [], notes: '' };
     return stages;
 }
 
@@ -20,14 +25,18 @@ function crosswalkRow(stage, key, variableKey, kind = 'emotion') {
     return { signature_stage: stage, signature_key: key, variable_key: variableKey, kind };
 }
 
-const NO_SENSORY = { sensoryCrosswalk: {} };
+// A coded Stage 2A.5 target: range_min = range_max = target.
+function coded(label, variableKey, kind, value, extra = {}) {
+    return { label, role: 'primary', variableKey, kind, intensity: null, rangeMin: value, rangeMax: value, ...extra };
+}
 
-test('intensity scale is a single named constant with high/medium/low', () => {
+// A legacy Brief emotion target (pre-2A.5): intensity 'high', no range.
+function legacyEmotion(label, variableKey, extra = {}) {
+    return { label, role: 'primary', variableKey, kind: 'emotion', intensity: 'high', rangeMin: null, rangeMax: null, ...extra };
+}
+
+test('intensity scale is a single named constant with high/medium/low (legacy targets only)', () => {
     assert.deepEqual(TARGET_INTENSITY_SCALE, { low: 2, medium: 5, high: 8 });
-});
-
-test('sensory markers use the "high" scale value (Brief sensory picks carry no intensity)', () => {
-    assert.equal(SENSORY_TARGET_VALUE, TARGET_INTENSITY_SCALE.high);
 });
 
 test('all 7 Signature stages are covered, each with a Full Evaluation form section', () => {
@@ -37,13 +46,8 @@ test('all 7 Signature stages are covered, each with a Full Evaluation form secti
     assert.deepEqual(SIGNATURE_STAGE_IDS.map((id) => STAGE_ID_TO_FORM_STAGE_NUMBER[id]), [2, 3, 4, 5, 6, 7, 8]);
 });
 
-test('the real Brief sensory crosswalk ships EMPTY (owner fills it after review)', () => {
-    assert.deepEqual(BRIEF_SENSORY_TO_QEP_ATTRIBUTE, {});
-    assert.ok(Object.isFrozen(BRIEF_SENSORY_TO_QEP_ATTRIBUTE));
-});
-
 test('the returned shape has markers/briefText/banner/unmapped and NO formValues', () => {
-    const result = buildTargetPrefill({ stages: emptyStages() }, [], NO_SENSORY);
+    const result = buildTargetPrefill({ stages: emptyStages() }, []);
     assert.ok(Array.isArray(result.markers));
     assert.deepEqual(result.briefText, {});
     assert.equal(typeof result.banner, 'string');
@@ -52,178 +56,266 @@ test('the returned shape has markers/briefText/banner/unmapped and NO formValues
     assert.equal(result.stages, undefined);
 });
 
-test('each of the 7 stages turns a mapped emotion target into a marker with the right slider id and value', () => {
+// ------------------------------------------------------------
+// Coded targets -> markers
+// ------------------------------------------------------------
+
+test('coded SENSORY target -> marker at the target value on the mapped slider', () => {
+    const stages = emptyStages();
+    stages.texture.targets.push(coded('Creaminess', 'tex_Creaminess', 'sensory', 7));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('texture', 'creaminess', 'tex_Creaminess', 'sensory')]);
+    assert.deepEqual(result.unmapped, []);
+    assert.deepEqual(result.markers, [{
+        stageId: 'texture', sliderKey: 'creaminess', elementId: 'tex-creaminess',
+        value: 7, valueLabel: '7', kind: 'sensory', label: 'Creaminess', variableKey: 'tex_Creaminess',
+    }]);
+});
+
+test('coded EMOTION target -> marker at the target value (not the intensity scale)', () => {
+    const stages = emptyStages();
+    stages.appearance.targets.push(coded('Curiosity', 'ap_emo_curiosity', 'emotion', 6));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'curiosity', 'ap_emo_curiosity', 'emotion')]);
+    assert.equal(result.markers.length, 1);
+    assert.equal(result.markers[0].elementId, 'appearance-curiosity');
+    assert.equal(result.markers[0].value, 6);
+    assert.equal(result.markers[0].valueLabel, '6');
+    assert.equal(result.markers[0].kind, 'emotion');
+});
+
+test('each of the 7 stages puts a coded target on the right form slider id', () => {
     const stagePrefixes = {
         appearance: 'appearance', aroma: 'aroma', frontMouth: 'front', midRearMouth: 'mid',
         texture: 'tex', aftertaste: 'after', overall: 'overall',
     };
     for (const stageId of SIGNATURE_STAGE_IDS) {
         const stages = emptyStages();
-        stages[stageId].emotions.push({ label: 'Excitement', role: 'primary', variableKey: 'vk_1', intensity: 'high' });
-        const crosswalk = [crosswalkRow(stageId, 'excitement', 'vk_1')];
-
-        const result = buildTargetPrefill({ stages }, crosswalk, NO_SENSORY);
-
+        stages[stageId].targets.push(coded('Excitement', 'vk_1', 'emotion', 5));
+        const result = buildTargetPrefill({ stages }, [crosswalkRow(stageId, 'excitement', 'vk_1')]);
         assert.equal(result.unmapped.length, 0);
-        assert.deepEqual(result.markers, [{
-            stageId, sliderKey: 'excitement', elementId: `${stagePrefixes[stageId]}-excitement`,
-            value: 8, kind: 'emotion', label: 'Excitement',
-        }]);
+        assert.equal(result.markers.length, 1);
+        assert.equal(result.markers[0].elementId, `${stagePrefixes[stageId]}-excitement`);
+        assert.equal(result.markers[0].value, 5);
     }
 });
 
-test('intensity low/medium/high resolve through the named scale constant (marker position)', () => {
-    for (const [intensity, expected] of Object.entries(TARGET_INTENSITY_SCALE)) {
-        const stages = emptyStages();
-        stages.appearance.emotions.push({ label: 'Calm', role: 'primary', variableKey: 'vk_calm', intensity });
-        const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'calm', 'vk_calm')], NO_SENSORY);
-        assert.equal(result.markers[0].value, expected);
-    }
-});
-
-test('an unrecognised intensity value falls back to "high", never crashes', () => {
+test('a target value of 0 is a real target (marker at 0), never treated as missing', () => {
     const stages = emptyStages();
-    stages.appearance.emotions.push({ label: 'Calm', role: 'primary', variableKey: 'vk_calm', intensity: 'extreme' });
-    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'calm', 'vk_calm')], NO_SENSORY);
-    assert.equal(result.markers[0].value, TARGET_INTENSITY_SCALE.high);
+    stages.aroma.targets.push(coded('Burnt', 'aroma_Burnt', 'sensory', 0));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('aroma', 'burnt', 'aroma_Burnt', 'sensory')]);
+    assert.equal(result.markers[0].value, 0);
+    assert.equal(result.markers[0].valueLabel, '0');
 });
 
-test('an emotion target with no variableKey gets no marker and is reported unmapped', () => {
+test('numeric strings from PostgREST (numeric columns) are accepted', () => {
     const stages = emptyStages();
-    stages.aroma.emotions.push({ label: 'Mystery Emotion', role: 'primary', variableKey: null, intensity: 'high' });
-    const result = buildTargetPrefill({ stages }, [], NO_SENSORY);
-    assert.equal(result.markers.length, 0);
-    assert.equal(result.unmapped.length, 1);
-    assert.equal(result.unmapped[0].stageId, 'aroma');
-    assert.equal(result.unmapped[0].kind, 'emotion');
-    assert.match(result.unmapped[0].reason, /no attribute id/i);
+    stages.aroma.targets.push(coded('Vanilla', 'aroma_Vanilla', 'sensory', '7.5'));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('aroma', 'vanilla', 'aroma_Vanilla', 'sensory')]);
+    assert.equal(result.markers[0].value, 7.5);
+    assert.equal(result.markers[0].valueLabel, '7.5');
 });
 
-test('an emotion variableKey with no crosswalk row gets no marker and is reported unmapped', () => {
+test('multi-key crosswalk: one code -> every same-stage Signature slider key (canonical first, then alias)', () => {
     const stages = emptyStages();
-    stages.aroma.emotions.push({ label: 'Obscure', role: 'primary', variableKey: 'vk_unknown', intensity: 'high' });
-    const result = buildTargetPrefill({ stages }, [], NO_SENSORY);
-    assert.equal(result.markers.length, 0);
-    assert.equal(result.unmapped.length, 1);
-    assert.match(result.unmapped[0].reason, /crosswalk/i);
+    stages.aftertaste.targets.push(coded('Craving / want more', 'af_emo_craving_want_more', 'emotion', 8));
+    const rows = [
+        crosswalkRow('aftertaste', 'craving', 'af_emo_craving_want_more', 'emotion'),          // canonical
+        crosswalkRow('aftertaste', 'cravingWantMore', 'af_emo_craving_want_more', 'emotion'),  // alias
+    ];
+    const result = buildTargetPrefill({ stages }, rows);
+    assert.deepEqual(result.markers.map((m) => m.elementId), ['after-craving', 'after-cravingWantMore']);
+    assert.ok(result.markers.every((m) => m.value === 8 && m.variableKey === 'af_emo_craving_want_more'));
+    assert.deepEqual(result.unmapped, []);
 });
 
-test('a crosswalk row pointing at a DIFFERENT stage never produces a marker (no cross-stage moves)', () => {
+test('an ALIAS-only code (no canonical row) still gets its marker', () => {
     const stages = emptyStages();
-    stages.aroma.emotions.push({ label: 'Nostalgia', role: 'primary', variableKey: 'vk_nostalgia', intensity: 'high' });
-    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'nostalgia', 'vk_nostalgia')], NO_SENSORY);
-    assert.equal(result.markers.length, 0);
-    assert.equal(result.unmapped.length, 1);
-    assert.equal(result.unmapped[0].stageId, 'aroma');
-    assert.match(result.unmapped[0].reason, /"appearance" stage, not "aroma"/);
+    stages.appearance.targets.push(coded('Surface shine', 'app_Surface_Shine', 'sensory', 4));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'shine', 'app_Surface_Shine', 'sensory')]);
+    assert.equal(result.markers.length, 1);
+    assert.equal(result.markers[0].elementId, 'appearance-shine');
 });
 
-test('canonical crosswalk rows win over alias rows for the same variable_key (order-dependent, canonical first)', () => {
-    const index = buildEmotionCrosswalkIndex([
+test('an alias key whose form slider canonically belongs to ANOTHER code is never marked (real case: overall "satisfaction")', () => {
+    // qep-capture 0029 aliases ('overall','satisfaction','sensory') -> oa_Satisfaction,
+    // but overall-satisfaction in the form is the canonical EMOTION slider for
+    // overall_emo_satisfaction (0025). The sensory target goes only on its own
+    // canonical slider overall-overall-satisfaction.
+    const rows = [
+        crosswalkRow('overall', 'overall-satisfaction', 'oa_Satisfaction', 'sensory'),      // canonical
+        crosswalkRow('overall', 'satisfaction', 'overall_emo_satisfaction', 'emotion'),     // canonical
+        crosswalkRow('overall', 'satisfaction', 'oa_Satisfaction', 'sensory'),              // alias
+    ];
+    const stages = emptyStages();
+    stages.overall.targets.push(coded('Satisfaction', 'oa_Satisfaction', 'sensory', 7));
+    const result = buildTargetPrefill({ stages }, rows);
+    assert.deepEqual(result.markers.map((m) => m.elementId), ['overall-overall-satisfaction']);
+
+    // Only the colliding alias row (no canonical row of its own): listed, not marked.
+    const only = buildTargetPrefill({ stages }, [rows[1], rows[2]]);
+    assert.equal(only.markers.length, 0);
+    assert.equal(only.unmapped.length, 1);
+    assert.match(only.unmapped[0].reason, /belongs to another attribute/);
+
+    // The emotion target still gets its own slider.
+    const emo = emptyStages();
+    emo.overall.targets.push(coded('Satisfaction', 'overall_emo_satisfaction', 'emotion', 9));
+    assert.deepEqual(buildTargetPrefill({ stages: emo }, rows).markers.map((m) => m.elementId), ['overall-satisfaction']);
+});
+
+test('buildCrosswalkIndex keeps every row per code in input order (canonical rows are passed first)', () => {
+    const index = buildCrosswalkIndex([
         crosswalkRow('appearance', 'canonicalKey', 'vk_shared'),
         crosswalkRow('appearance', 'aliasKey', 'vk_shared'),
+        crosswalkRow('appearance', 'canonicalKey', 'vk_shared'), // exact duplicate row ignored
     ]);
-    assert.equal(index.get('vk_shared').key, 'canonicalKey');
+    assert.deepEqual(index.get('vk_shared').map((r) => r.key), ['canonicalKey', 'aliasKey']);
 });
 
-test('the emotion index ignores sensory/trigger rows; the sensory index ignores emotion/trigger rows', () => {
-    const rows = [
-        crosswalkRow('appearance', 'color-shade', 'vk_sensory', 'sensory'),
-        crosswalkRow('overall', 'crunch', 'vk_trigger', 'trigger'),
-        crosswalkRow('appearance', 'calm', 'vk_emotion', 'emotion'),
-    ];
-    assert.deepEqual([...buildEmotionCrosswalkIndex(rows).keys()], ['vk_emotion']);
-    assert.deepEqual([...buildSensoryCrosswalkIndex(rows).keys()], ['vk_sensory']);
-});
-
-test('splitSensoryLabels splits on ";", trims, and drops empties', () => {
-    assert.deepEqual(splitSensoryLabels(' Rich mouthcoating ;; Smooth melt;  '), ['Rich mouthcoating', 'Smooth melt']);
-    assert.deepEqual(splitSensoryLabels(''), []);
-    assert.deepEqual(splitSensoryLabels(null), []);
-});
-
-test('SENSORY labels in an injected crosswalk become markers via the same crosswalk rows; others do not', () => {
+test('a crosswalk row of a different KIND than the target is not used', () => {
     const stages = emptyStages();
-    stages.appearance.notes = 'Glossy sheen; Bright / vivid colour';
-    stages.texture.notes = 'Smooth melt';
-    const sensoryCrosswalk = {
-        'ap|glossy sheen': 'app_Surface_Shine',   // mapped + in crosswalk rows -> marker
-        'tx|smooth melt': 'tex_Not_In_Rows',      // mapped but no crosswalk row -> unmapped
-    };
-    const rows = [crosswalkRow('appearance', 'surface-shine', 'app_Surface_Shine', 'sensory')];
+    stages.appearance.targets.push(coded('Calm', 'vk_x', 'sensory', 5));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'calm', 'vk_x', 'emotion')]);
+    assert.equal(result.markers.length, 0);
+    assert.equal(result.unmapped.length, 1);
+});
 
-    const result = buildTargetPrefill({ stages }, rows, { sensoryCrosswalk });
+test('RANGE target (min != max): marker sits at the midpoint and its label shows the range', () => {
+    const stages = emptyStages();
+    stages.frontMouth.targets.push(coded('Sweetness', 'fm_Sweetness', 'sensory', null, { rangeMin: 6, rangeMax: 8 }));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('frontMouth', 'sweetness', 'fm_Sweetness', 'sensory')]);
+    assert.equal(result.markers[0].value, 7);
+    assert.equal(result.markers[0].valueLabel, '6-8');
+});
 
+test('targetMarkerPosition: point, range, reversed range, one-sided range, legacy intensity', () => {
+    assert.deepEqual(targetMarkerPosition({ rangeMin: 7, rangeMax: 7 }), { value: 7, valueLabel: '7' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: 3, rangeMax: 6 }), { value: 4.5, valueLabel: '3-6' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: 8, rangeMax: 6 }), { value: 7, valueLabel: '6-8' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: 4, rangeMax: null }), { value: 4, valueLabel: '4' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: null, rangeMax: 9 }), { value: 9, valueLabel: '9' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: null, rangeMax: null, intensity: 'high' }), { value: 8, valueLabel: '8' });
+    assert.deepEqual(targetMarkerPosition({ intensity: 'low' }), { value: 2, valueLabel: '2' });
+    assert.deepEqual(targetMarkerPosition({ intensity: 'extreme' }), { value: 8, valueLabel: '8' });
+    assert.deepEqual(targetMarkerPosition({ rangeMin: '', rangeMax: 'abc', intensity: 'high' }), { value: 8, valueLabel: '8' });
+});
+
+test('LEGACY emotion target (intensity high, null range) keeps today\'s marker: "Target 8" at the high end', () => {
+    const stages = emptyStages();
+    stages.appearance.targets.push(legacyEmotion('Excitement', 'ap_emo_excitement'));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'excitement', 'ap_emo_excitement')]);
     assert.deepEqual(result.markers, [{
-        stageId: 'appearance', sliderKey: 'surface-shine', elementId: 'appearance-surface-shine',
-        value: SENSORY_TARGET_VALUE, kind: 'sensory', label: 'Glossy sheen',
+        stageId: 'appearance', sliderKey: 'excitement', elementId: 'appearance-excitement',
+        value: TARGET_INTENSITY_SCALE.high, valueLabel: '8', kind: 'emotion', label: 'Excitement', variableKey: 'ap_emo_excitement',
     }]);
-    const unmappedLabels = result.unmapped.map((u) => `${u.kind}:${u.label}`).sort();
-    assert.deepEqual(unmappedLabels, ['sensory:Bright / vivid colour', 'sensory:Smooth melt']);
-    // The whole notes text is still shown as brief text - nothing dropped or duplicated.
-    assert.equal(result.briefText.appearance, 'Glossy sheen; Bright / vivid colour');
-    assert.equal(result.briefText.texture, 'Smooth melt');
 });
 
-test('sensory crosswalk keys are matched case-insensitively on the label and scoped by Brief stage key', () => {
+test('legacy targets with no kind field (pre-2A.5 loader shape) still map through emotion/sensory rows', () => {
     const stages = emptyStages();
-    stages.appearance.notes = '  GLOSSY Sheen ';
-    stages.aroma.notes = 'Glossy sheen'; // same label, wrong stage key -> no marker
-    const result = buildTargetPrefill(
-        { stages },
-        [crosswalkRow('appearance', 'surface-shine', 'app_Surface_Shine', 'sensory')],
-        { sensoryCrosswalk: { 'ap|glossy sheen': 'app_Surface_Shine' } }
-    );
-    assert.equal(result.markers.length, 1);
-    assert.equal(result.markers[0].stageId, 'appearance');
+    stages.appearance.targets.push({ label: 'Calm', role: 'primary', variableKey: 'vk_calm', intensity: 'low' });
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'calm', 'vk_calm')]);
+    assert.equal(result.markers[0].value, 2);
+    assert.equal(result.markers[0].kind, 'emotion');
 });
 
-test('a sensory crosswalk entry pointing at an EMOTION row, or at another stage, never produces a marker', () => {
+// ------------------------------------------------------------
+// Not measurable in this form - listed, never dropped
+// ------------------------------------------------------------
+
+test('UNMAPPED code: no marker, listed in unmapped AND in the stage brief text AND counted in the banner', () => {
     const stages = emptyStages();
-    stages.appearance.notes = 'Label A; Label B';
-    const result = buildTargetPrefill(
-        { stages },
-        [
-            crosswalkRow('appearance', 'calm', 'vk_emotion', 'emotion'),
-            crosswalkRow('aroma', 'aroma-intensity', 'vk_other_stage', 'sensory'),
-        ],
-        { sensoryCrosswalk: { 'ap|label a': 'vk_emotion', 'ap|label b': 'vk_other_stage' } }
-    );
+    stages.aroma.targets.push(coded('Smoky', 'aroma_Smoky', 'sensory', 6));
+    stages.aroma.notes = 'Warm, toasty';
+    const result = buildTargetPrefill({ project: { name: 'Zesty Cola' }, version: { versionNumber: 3 }, stages }, []);
     assert.equal(result.markers.length, 0);
-    assert.equal(result.unmapped.length, 2);
+    assert.equal(result.unmapped.length, 1);
+    assert.equal(result.unmapped[0].variableKey, 'aroma_Smoky');
+    assert.equal(result.unmapped[0].stageId, 'aroma');
+    assert.match(result.unmapped[0].reason, /crosswalk/i);
+    assert.equal(result.briefText.aroma, `Warm, toasty\n${NOT_MEASURABLE_PREFIX} Smoky (6)`);
+    assert.equal(result.banner, 'Targets from Zesty Cola v3 shown as markers. 1 target not measurable in this form (listed in its stage).');
+    assert.ok(!result.banner.includes('\n'));
 });
 
-test('with the real (empty) Brief sensory crosswalk, no sensory label ever becomes a marker', () => {
+test('unmapped codes in a stage with NO notes still get a brief-text line; several are joined', () => {
     const stages = emptyStages();
-    stages.appearance.notes = 'Glossy sheen';
-    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'surface-shine', 'app_Surface_Shine', 'sensory')]);
+    stages.overall.targets.push(coded('Satisfaction', 'overall_x', 'sensory', 7));
+    stages.overall.targets.push(legacyEmotion('Joy', 'overall_emo_joy'));
+    const result = buildTargetPrefill({ stages }, []);
+    assert.equal(result.briefText.overall, `${NOT_MEASURABLE_PREFIX} Satisfaction (7), Joy`);
+    assert.match(result.banner, /2 targets not measurable in this form \(listed in their stages\)\.$/);
+});
+
+test('a code whose crosswalk rows are all on ANOTHER stage never produces a marker (no cross-stage moves), and is listed', () => {
+    const stages = emptyStages();
+    stages.aroma.targets.push(coded('Nostalgia', 'vk_nostalgia', 'emotion', 7));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'nostalgia', 'vk_nostalgia')]);
     assert.equal(result.markers.length, 0);
-    assert.equal(result.briefText.appearance, 'Glossy sheen');
+    assert.equal(result.unmapped.length, 1);
+    assert.match(result.unmapped[0].reason, /"appearance" stage, not "aroma"/);
+    assert.match(result.briefText.aroma, /Nostalgia \(7\)/);
 });
 
-test('one marker per slider: a duplicate mapping to the same slider keeps the first', () => {
+test('a TRIGGER code is listed as not measurable (trigger sliders are not marked)', () => {
     const stages = emptyStages();
-    stages.appearance.notes = 'Glossy sheen; Shiny look';
-    const result = buildTargetPrefill(
-        { stages },
-        [crosswalkRow('appearance', 'surface-shine', 'app_Surface_Shine', 'sensory')],
-        { sensoryCrosswalk: { 'ap|glossy sheen': 'app_Surface_Shine', 'ap|shiny look': 'app_Surface_Shine' } }
-    );
-    assert.equal(result.markers.length, 1);
-    assert.equal(result.markers[0].label, 'Glossy sheen');
+    stages.overall.targets.push(coded('Moreishness', 'overall_trig_moreishness', 'trigger', 9));
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('overall', 'moreishness', 'overall_trig_moreishness', 'trigger')]);
+    assert.equal(result.markers.length, 0);
+    assert.equal(result.unmapped.length, 1);
+    assert.match(result.briefText.overall, /Moreishness \(9\)/);
 });
 
-test('briefText has an entry only for stages with (non-blank) notes', () => {
+test('a target with no variableKey is listed, never dropped', () => {
     const stages = emptyStages();
+    stages.aroma.targets.push({ label: 'Mystery', role: 'primary', variableKey: null, intensity: 'high' });
+    const result = buildTargetPrefill({ stages }, []);
+    assert.equal(result.markers.length, 0);
+    assert.match(result.unmapped[0].reason, /no attribute id/i);
+    assert.match(result.briefText.aroma, /Mystery/);
+});
+
+test('targets the loader could not place on a stage (unplacedTargets) are named in the banner', () => {
+    const result = buildTargetPrefill({
+        project: { name: 'Zesty Cola' }, version: { versionNumber: 3 }, stages: emptyStages(),
+        unplacedTargets: [{ variableKey: 'mystery_code', rangeMin: 5, rangeMax: 5, reason: 'Unknown attribute code.' }],
+    }, []);
+    assert.equal(result.unmapped.length, 1);
+    assert.equal(result.unmapped[0].stageId, null);
+    assert.equal(result.banner, 'Targets from Zesty Cola v3 shown as markers. Not measurable in this form: mystery_code (5).');
+});
+
+// ------------------------------------------------------------
+// Stage notes, one-marker-per-slider, banner
+// ------------------------------------------------------------
+
+test('stage NOTES become brief text only: never parsed into markers, even if they name a slider', () => {
+    const stages = emptyStages();
+    stages.appearance.notes = 'Glossy sheen; Surface shine';
     stages.texture.notes = 'Rich mouthcoating; Smooth melt';
     stages.aroma.notes = '   ';
-    const result = buildTargetPrefill({ stages }, [], NO_SENSORY);
-    assert.deepEqual(result.briefText, { texture: 'Rich mouthcoating; Smooth melt' });
+    const result = buildTargetPrefill({ stages }, [crosswalkRow('appearance', 'surface-shine', 'app_Surface_Shine', 'sensory')]);
+    assert.equal(result.markers.length, 0);
+    assert.deepEqual(result.unmapped, []);
+    assert.deepEqual(result.briefText, { appearance: 'Glossy sheen; Surface shine', texture: 'Rich mouthcoating; Smooth melt' });
 });
 
-test('banner is exactly the one-line string, and the marker title names the brief and version', () => {
+test('one marker per slider: two codes landing on the same slider keep the first', () => {
+    const stages = emptyStages();
+    stages.appearance.targets.push(coded('First', 'vk_a', 'sensory', 3));
+    stages.appearance.targets.push(coded('Second', 'vk_b', 'sensory', 9));
+    const result = buildTargetPrefill({ stages }, [
+        crosswalkRow('appearance', 'shine', 'vk_a', 'sensory'),
+        crosswalkRow('appearance', 'shine', 'vk_b', 'sensory'),
+    ]);
+    assert.equal(result.markers.length, 1);
+    assert.equal(result.markers[0].label, 'First');
+});
+
+test('banner is exactly the one-line string when everything is measurable; marker title names the brief and version', () => {
+    const stages = emptyStages();
+    stages.aroma.targets.push(coded('Vanilla', 'aroma_Vanilla', 'sensory', 7));
     const result = buildTargetPrefill(
-        { project: { name: 'Zesty Cola' }, version: { versionNumber: 3 }, stages: emptyStages() }, [], NO_SENSORY
+        { project: { name: 'Zesty Cola' }, version: { versionNumber: 3 }, stages },
+        [crosswalkRow('aroma', 'vanilla', 'aroma_Vanilla', 'sensory')]
     );
     assert.equal(result.banner, 'Targets from Zesty Cola v3 shown as markers.');
     assert.equal(result.markerTitle, 'Target from Zesty Cola v3');
@@ -232,11 +324,11 @@ test('banner is exactly the one-line string, and the marker title names the brie
 test('hostile label/notes/name text is passed through untouched by the pure mapping (escaping is the HTML builders\' job)', () => {
     const stages = emptyStages();
     const hostile = '<img src=x onerror=alert(1)>';
-    stages.appearance.emotions.push({ label: hostile, role: 'primary', variableKey: 'vk_x', intensity: 'high' });
+    stages.appearance.targets.push(coded(hostile, 'vk_x', 'emotion', 5));
     stages.appearance.notes = hostile;
     const result = buildTargetPrefill(
         { project: { name: hostile }, version: { versionNumber: 1 }, stages },
-        [crosswalkRow('appearance', 'safeKey', 'vk_x')], NO_SENSORY
+        [crosswalkRow('appearance', 'safeKey', 'vk_x')]
     );
     assert.equal(result.markers[0].sliderKey, 'safeKey');
     assert.equal(result.briefText.appearance, hostile);
@@ -249,6 +341,14 @@ test('an empty/missing target result produces empty output, never throws', () =>
     assert.equal(result.unmapped.length, 0);
     assert.deepEqual(result.briefText, {});
     assert.equal(result.banner, 'Targets from the brief shown as markers.');
+    assert.doesNotThrow(() => buildTargetPrefill(null, null));
+});
+
+test('the old Brief sensory-label API is gone from the module', () => {
+    const api = require('../target-prefill.js');
+    for (const gone of ['splitSensoryLabels', 'buildSensoryCrosswalkIndex', 'buildEmotionCrosswalkIndex', 'SENSORY_TARGET_VALUE', 'STAGE_ID_TO_BRIEF_STAGE_KEY']) {
+        assert.equal(api[gone], undefined, `${gone} should be removed`);
+    }
 });
 
 // ------------------------------------------------------------
@@ -260,19 +360,24 @@ test('markerLeftCss centres on the thumb position for the value, honouring min/m
     assert.equal(markerLeftCss(5, '0', '10'), 'calc(50% + 0px)');
     assert.equal(markerLeftCss(8, '0', '10'), 'calc(80% + -6px)');
     assert.equal(markerLeftCss(10, '0', '10'), 'calc(100% + -10px)');
-    // Non-default range: 8 on a 0..20 slider sits at 40%.
     assert.equal(markerLeftCss(8, '0', '20'), 'calc(40% + 2px)');
-    // Missing attributes default to 0..10; out-of-range values are clamped.
     assert.equal(markerLeftCss(8, null, null), 'calc(80% + -6px)');
     assert.equal(markerLeftCss(15, '0', '10'), 'calc(100% + -10px)');
 });
 
 test('buildTargetMarkerHtml renders a tick + "Target N" label with an escaped title', () => {
-    const html = buildTargetMarkerHtml({ value: 8 }, 'Target from <b>"x"</b> v1', '0', '10');
+    const html = buildTargetMarkerHtml({ value: 8, valueLabel: '8' }, 'Target from <b>"x"</b> v1', '0', '10');
     assert.match(html, /class="target-marker-tick" style="left:calc\(80% \+ -6px\)"/);
     assert.match(html, /class="target-marker-label"[^>]*>Target 8<\/span>/);
     assert.match(html, /title="Target from &lt;b&gt;&quot;x&quot;&lt;\/b&gt; v1"/);
     assert.doesNotMatch(html, /<b>/);
+});
+
+test('buildTargetMarkerHtml: a range marker sits at the midpoint and reads "Target 6-8"; no valueLabel falls back to value', () => {
+    const range = buildTargetMarkerHtml({ value: 7, valueLabel: '6-8' }, 't', '0', '10');
+    assert.match(range, /left:calc\(70% \+ -4px\)/);
+    assert.match(range, />Target 6-8<\/span>/);
+    assert.match(buildTargetMarkerHtml({ value: 8 }, 't', '0', '10'), />Target 8<\/span>/);
 });
 
 test('buildBriefSaysHtml escapes hostile text', () => {

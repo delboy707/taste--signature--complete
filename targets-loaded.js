@@ -1,7 +1,9 @@
 // ===== TARGETS LOADED (QEP-CAPTURE) =====
 // Read-only: given a qep-capture project/version, loads its locked
-// version's emotion targets and stage notes and shapes them against
-// Signature's own SENSORY_STAGES ids. No writes anywhere in this file.
+// version's targets (master-coded rows: variable_key + kind, and for Stage
+// 2A.5 coded rows range_min = range_max = the 0-10 target; legacy Brief
+// emotion rows carry intensity 'high' and no range) and stage notes, and
+// shapes them against Signature's own SENSORY_STAGES ids. No writes anywhere in this file.
 // Does not touch Batch Import, the existing export pipeline, or any
 // scoring code - this is a standalone view (plus the pure prefill mapping
 // in target-prefill.js, which consumes this file's output).
@@ -18,6 +20,12 @@ const QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID = {
     aftertaste: 'af',
     overall: 'overall',
 };
+
+function toFiniteNumberOrNull(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -87,7 +95,7 @@ async function _loadVersionTargets(client, project, version) {
         client
             .schema('tss_shared')
             .from('targets')
-            .select('variable_key, role, intensity')
+            .select('variable_key, role, intensity, range_min, range_max')
             .eq('version_id', version.id),
         client.schema('tss_shared').from('version_stage_notes').select('stage_key, notes').eq('version_id', version.id),
     ]);
@@ -104,7 +112,7 @@ async function _loadVersionTargets(client, project, version) {
     if (variableKeys.length > 0) {
         const attrResult = await client
             .from('qep_attribute')
-            .select('id, label, stage_key, emotion_concept_id')
+            .select('id, label, stage_key, kind, emotion_concept_id')
             .in('id', variableKeys);
         if (attrResult.error) {
             return { error: `Could not load target attributes: ${attrResult.error.message}` };
@@ -115,21 +123,43 @@ async function _loadVersionTargets(client, project, version) {
 
     const stages = {};
     for (const signatureId of Object.keys(QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID)) {
-        stages[signatureId] = { emotions: [], notes: '' };
+        stages[signatureId] = { targets: [], notes: '' };
     }
+    // Targets that cannot be put on a Signature stage (no readable
+    // qep_attribute row, or a stage key Signature does not have). Kept, not
+    // dropped: target-prefill.js lists them as "not measurable".
+    const unplacedTargets = [];
 
     for (const row of targetRows) {
         const attr = row.qep_attribute;
-        if (!attr || !attr.stage_key) continue;
-        const signatureId = Object.keys(QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID).find(
-            (id) => QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID[id] === attr.stage_key
-        );
-        if (!signatureId) continue;
-        stages[signatureId].emotions.push({
+        const rangeMin = toFiniteNumberOrNull(row.range_min);
+        const rangeMax = toFiniteNumberOrNull(row.range_max);
+        const signatureId = attr && attr.stage_key
+            ? Object.keys(QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID).find(
+                (id) => QEP_CAPTURE_STAGE_KEY_BY_SIGNATURE_ID[id] === attr.stage_key
+            )
+            : null;
+        if (!signatureId) {
+            unplacedTargets.push({
+                variableKey: row.variable_key,
+                label: attr ? attr.label : null,
+                kind: attr ? attr.kind || null : null,
+                role: row.role,
+                intensity: row.intensity,
+                rangeMin,
+                rangeMax,
+                reason: attr ? `Unknown stage "${attr.stage_key}".` : 'Attribute code not found in qep_attribute.',
+            });
+            continue;
+        }
+        stages[signatureId].targets.push({
             label: attr.label,
             role: row.role,
             variableKey: row.variable_key,
+            kind: attr.kind || null,
             intensity: row.intensity,
+            rangeMin,
+            rangeMax,
         });
     }
 
@@ -154,6 +184,7 @@ async function _loadVersionTargets(client, project, version) {
             lockedAt: version.locked_at,
         },
         stages,
+        unplacedTargets,
     };
 }
 
