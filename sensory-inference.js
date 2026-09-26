@@ -351,8 +351,13 @@ class SensoryInference {
             prompt += `**Consumer Feedback:** ${productData.feedback || productData.comments || productData.consumerFeedback}\n`;
         }
 
-        if (productData.rating || productData.overallRating) {
-            prompt += `**Overall Rating:** ${productData.rating || productData.overallRating}/10\n`;
+        // A rated 0 is "0/10" (`||` used to drop it); nothing rated omits the line.
+        const fmt = (typeof window !== 'undefined' && window.DisplayFormat) || require('./display-format.js');
+        const overallRating = [productData.rating, productData.overallRating]
+            .map(fmt.toRating)
+            .find(v => v !== null);
+        if (overallRating !== undefined) {
+            prompt += `**Overall Rating:** ${fmt.formatRating(overallRating)}\n`;
         }
 
         if (productData.flavorProfile || productData.tasteProfile) {
