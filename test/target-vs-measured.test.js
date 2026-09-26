@@ -158,10 +158,11 @@ test('flag off hides everything: no button, no panel, no load', async () => {
     assert.equal(called, false);
 });
 
-test('both config files ship ENABLE_TARGET_VS_MEASURED: false', () => {
+test('both config files ship ENABLE_TARGET_VS_MEASURED: true (Stage 2D on)', () => {
     for (const f of ['qep-capture-config.js', 'qep-capture-config.example.js']) {
         const src = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-        assert.match(src, /ENABLE_TARGET_VS_MEASURED: false,/, f);
+        assert.match(src, /ENABLE_TARGET_VS_MEASURED: true,/, f);
+        assert.doesNotMatch(src, /ENABLE_TARGET_VS_MEASURED: false/, f);
     }
 });
 
