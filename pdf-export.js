@@ -59,29 +59,17 @@ class PDFExporter {
         yPos = this.addSection(doc, yPos, 'Sensory Profile', (sectionY) => {
             let y = sectionY;
 
-            // Create sensory attributes table
-            // Build texture summary for PDF
-            let textureKeyAttrs = 'N/A';
-            if (experience.stages.texture) {
-                const tex = experience.stages.texture;
-                const texEntries = Object.entries(tex).filter(([k, v]) => k !== 'emotions' && k !== 'overallIntensity' && typeof v === 'number');
-                if (texEntries.length > 0) {
-                    textureKeyAttrs = texEntries
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 3)
-                        .map(([k, v]) => `${k}: ${v}/10`)
-                        .join(', ');
-                }
-            }
-
+            // One row per sensory stage, read from the current stage fields
+            // (attrIdToKey keys): the top 3 rated attributes, and the stage
+            // intensity the Shape of Taste chart plots. Null = "Not rated".
+            const stages = experience.stages || {};
             const sensoryData = [
                 ['Stage', 'Key Attributes', 'Intensity'],
-                ['Appearance', `Visual Appeal: ${experience.stages.appearance.visualAppeal}/10`, `${experience.stages.appearance.overallIntensity}/10`],
-                ['Aroma', `Intensity: ${experience.stages.aroma.intensity}/10, Complexity: ${experience.stages.aroma.complexity}/10`, `${experience.stages.aroma.overallIntensity}/10`],
-                ['First Taste', `Sweet: ${experience.stages.frontMouth.sweetness}/10, Sour: ${experience.stages.frontMouth.sourness}/10`, `${experience.stages.frontMouth.overallIntensity}/10`],
-                ['Mid-Palate', `Rich: ${experience.stages.midRearMouth.richness}/10, Creamy: ${experience.stages.midRearMouth.creaminess}/10`, `${experience.stages.midRearMouth.overallIntensity}/10`],
-                ['Texture', textureKeyAttrs, `${(experience.stages.texture && experience.stages.texture.overallIntensity) || 'N/A'}/10`],
-                ['Aftertaste', `Duration: ${experience.stages.aftertaste.duration}/10, Pleasant: ${experience.stages.aftertaste.pleasantness}/10`, `${experience.stages.aftertaste.overallIntensity}/10`]
+                ...PDFExporter.SENSORY_STAGE_ROWS.map(([stageKey, label]) => [
+                    label,
+                    this.formatKeyAttributes(stages[stageKey], 3),
+                    this.formatRating(this.stageIntensity(stageKey, stages[stageKey]))
+                ])
             ];
 
             doc.autoTable({
@@ -144,12 +132,15 @@ class PDFExporter {
         yPos = this.addSection(doc, yPos, 'Emotional Triggers', (sectionY) => {
             let y = sectionY;
 
+            // An untouched trigger is null: "Not rated", never "null/10".
+            const triggers = experience.emotionalTriggers || {};
             const triggerData = [
                 ['Trigger', 'Rating', 'Impact'],
-                ['Moreishness', `${experience.emotionalTriggers.moreishness}/10`, this.getRatingLevel(experience.emotionalTriggers.moreishness)],
-                ['Refreshment', `${experience.emotionalTriggers.refreshment}/10`, this.getRatingLevel(experience.emotionalTriggers.refreshment)],
-                ['The Melt', `${experience.emotionalTriggers.melt}/10`, this.getRatingLevel(experience.emotionalTriggers.melt)],
-                ['Texture/Crunch', `${experience.emotionalTriggers.crunch}/10`, this.getRatingLevel(experience.emotionalTriggers.crunch)]
+                ...PDFExporter.TRIGGER_ROWS.map(([key, label]) => [
+                    label,
+                    this.formatRating(triggers[key]),
+                    this.isRated(triggers[key]) ? this.getRatingLevel(triggers[key]) : '-'
+                ])
             ];
 
             doc.autoTable({
@@ -240,7 +231,7 @@ class PDFExporter {
                     exp.productInfo.name.substring(0, 30),
                     exp.productInfo.brand.substring(0, 20),
                     exp.needState,
-                    `${exp.stages?.aftertaste?.emotions?.satisfaction || 'N/A'}/10`
+                    this.formatRating(exp.stages?.aftertaste?.emotions?.satisfaction)
                 ])
             ];
 
@@ -267,7 +258,7 @@ class PDFExporter {
 
             topProducts.forEach((exp, idx) => {
                 doc.setFontSize(10);
-                doc.text(`${idx + 1}. ${exp.productInfo.name} - ${exp.stages?.aftertaste?.emotions?.satisfaction || 'N/A'}/10`, 20, y);
+                doc.text(`${idx + 1}. ${exp.productInfo.name} - ${this.formatRating(exp.stages?.aftertaste?.emotions?.satisfaction)}`, 20, y);
                 y += 7;
             });
 
@@ -331,13 +322,12 @@ class PDFExporter {
 
             const comparisonData = [
                 ['Attribute', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
-                ['Visual Appeal', ...experiences.map(exp => `${exp.stages.appearance.visualAppeal}/10`)],
-                ['Aroma Intensity', ...experiences.map(exp => `${exp.stages.aroma.intensity}/10`)],
-                ['Sweetness', ...experiences.map(exp => `${exp.stages.frontMouth.sweetness}/10`)],
-                ['Richness', ...experiences.map(exp => `${exp.stages.midRearMouth.richness}/10`)],
-                ['Texture Complexity', ...experiences.map(exp => `${(exp.stages.texture && exp.stages.texture.overallComplexity) || 'N/A'}/10`)],
-                ['Aftertaste', ...experiences.map(exp => `${exp.stages.aftertaste.duration}/10`)],
-                ['Satisfaction', ...experiences.map(exp => `${exp.stages.aftertaste.emotions.satisfaction}/10`)]
+                // Current field first, then the legacy name (demo data still uses it).
+                ...PDFExporter.COMPARISON_ROWS.map(([label, stageKey, keys]) => [
+                    label,
+                    ...experiences.map(exp => this.formatRating(this.firstRating(exp.stages?.[stageKey], keys)))
+                ]),
+                ['Satisfaction', ...experiences.map(exp => this.formatRating(exp.stages?.aftertaste?.emotions?.satisfaction))]
             ];
 
             doc.autoTable({
@@ -359,10 +349,10 @@ class PDFExporter {
 
             const triggerData = [
                 ['Trigger', ...experiences.map((exp, idx) => `Product ${idx + 1}`)],
-                ['Moreishness', ...experiences.map(exp => `${exp.emotionalTriggers.moreishness}/10`)],
-                ['Refreshment', ...experiences.map(exp => `${exp.emotionalTriggers.refreshment}/10`)],
-                ['The Melt', ...experiences.map(exp => `${exp.emotionalTriggers.melt}/10`)],
-                ['Crunch', ...experiences.map(exp => `${exp.emotionalTriggers.crunch}/10`)]
+                ...PDFExporter.TRIGGER_ROWS.map(([key, label]) => [
+                    key === 'crunch' ? 'Crunch' : label,
+                    ...experiences.map(exp => this.formatRating(exp.emotionalTriggers?.[key]))
+                ])
             ];
 
             doc.autoTable({
@@ -486,6 +476,68 @@ class PDFExporter {
     }
 
     /**
+     * Helper: a 0-10 rating is a finite number. null/undefined (an untouched
+     * slider, a CATA stage, a field this experience does not have) is not.
+     */
+    isRated(value) {
+        return typeof value === 'number' && Number.isFinite(value);
+    }
+
+    /**
+     * Helper: "7/10", or "Not rated" - never "undefined/10" / "null/10".
+     */
+    formatRating(value) {
+        return this.isRated(value) ? `${value}/10` : 'Not rated';
+    }
+
+    /**
+     * Helper: the first rated value among keys on a stage object.
+     */
+    firstRating(stage, keys) {
+        if (!stage) return null;
+        for (const key of keys) {
+            if (this.isRated(stage[key])) return stage[key];
+        }
+        return null;
+    }
+
+    /**
+     * Helper: a stage's intensity - the attribute the Shape of Taste chart
+     * plots for it (app.js renderShapeOfTaste), else the legacy
+     * overallIntensity field (demo data).
+     */
+    stageIntensity(stageKey, stage) {
+        const headline = PDFExporter.STAGE_INTENSITY_KEYS[stageKey];
+        return this.firstRating(stage, headline ? [headline, 'overallIntensity'] : ['overallIntensity']);
+    }
+
+    /**
+     * Helper: attribute field key -> lexicon label ('visualAppeal' ->
+     * 'Visual Appeal'); a key not in the lexicon is split into words.
+     */
+    attributeLabel(key) {
+        const w = (typeof window !== 'undefined') ? window : {};
+        const attrId = w.keyToAttrId ? w.keyToAttrId(key) : key;
+        const attr = w.getAttributeById ? w.getAttributeById(attrId) : null;
+        if (attr && attr.label) return attr.label;
+        const words = String(key).replace(/([A-Z])/g, ' $1').trim();
+        return words.charAt(0).toUpperCase() + words.slice(1);
+    }
+
+    /**
+     * Helper: the top rated numeric attributes of a stage, "Label: x/10, ...",
+     * or "Not rated" when the stage has none.
+     */
+    formatKeyAttributes(stage, limit = 3) {
+        const entries = Object.entries(stage || {})
+            .filter(([k, v]) => k !== 'emotions' && k !== 'overallIntensity' && this.isRated(v))
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, limit);
+        if (entries.length === 0) return 'Not rated';
+        return entries.map(([k, v]) => `${this.attributeLabel(k)}: ${this.formatRating(v)}`).join(', ');
+    }
+
+    /**
      * Helper: Get rating level description
      */
     getRatingLevel(value) {
@@ -508,6 +560,43 @@ class PDFExporter {
         ] : [102, 126, 234];
     }
 }
+
+// The six sensory stages of the report, in Journey-of-Taste order.
+PDFExporter.SENSORY_STAGE_ROWS = [
+    ['appearance', 'Appearance'],
+    ['aroma', 'Aroma'],
+    ['frontMouth', 'Front of Mouth'],
+    ['midRearMouth', 'Mid/Rear Mouth'],
+    ['texture', 'Texture'],
+    ['aftertaste', 'Aftertaste']
+];
+
+// Per-stage intensity field, the same one the Shape of Taste chart plots.
+PDFExporter.STAGE_INTENSITY_KEYS = {
+    appearance: 'visualAppeal',
+    aroma: 'smellStrength',
+    frontMouth: 'overallInitialImpact',
+    midRearMouth: 'overallMidPalateIntensity',
+    texture: 'overallTexturalComplexity',
+    aftertaste: 'finishLength'
+};
+
+PDFExporter.TRIGGER_ROWS = [
+    ['moreishness', 'Moreishness'],
+    ['refreshment', 'Refreshment'],
+    ['melt', 'The Melt'],
+    ['crunch', 'Texture/Crunch']
+];
+
+// Comparison rows: [label, stage, [current field, legacy field]].
+PDFExporter.COMPARISON_ROWS = [
+    ['Visual Appeal', 'appearance', ['visualAppeal']],
+    ['Aroma Intensity', 'aroma', ['smellStrength', 'intensity']],
+    ['Sweetness', 'frontMouth', ['sweetness']],
+    ['Richness', 'midRearMouth', ['richnessFullness', 'richness']],
+    ['Texture Complexity', 'texture', ['overallTexturalComplexity', 'overallComplexity']],
+    ['Aftertaste', 'aftertaste', ['finishLength', 'duration']]
+];
 
 // Export
 if (typeof window !== 'undefined') {
