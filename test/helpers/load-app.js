@@ -53,7 +53,7 @@ function loadApp({ localStorageData = null } = {}) {
     document,
     localStorage,
     console,
-    window: { TouchedFields: require('../../touched-fields.js') },
+    window: { TouchedFields: require('../../touched-fields.js'), DisplayFormat: require('../../display-format.js') },
     escapeHtml: require('../../dom-utils.js').escapeHtml,
     RenderUtils: require('../../render-utils.js'),
   };

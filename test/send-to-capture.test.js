@@ -483,7 +483,7 @@ function loadAppWith(windowObj) {
         },
         localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
         console,
-        window: { TouchedFields: require('../touched-fields.js'), ...windowObj },
+        window: { TouchedFields: require('../touched-fields.js'), DisplayFormat: require('../display-format.js'), ...windowObj },
         escapeHtml: require('../dom-utils.js').escapeHtml,
         RenderUtils: RU,
     };

@@ -1055,17 +1055,20 @@ function generateQuickInsights() {
 
     const insights = [];
 
-    // Highest rated product
-    const highest = validExperiences.reduce((max, e) => {
-        const eSat = e?.stages?.aftertaste?.emotions?.satisfaction || 0;
-        const maxSat = max?.stages?.aftertaste?.emotions?.satisfaction || 0;
-        return eSat > maxSat ? e : max;
-    });
-    const highestSat = highest?.stages?.aftertaste?.emotions?.satisfaction || 0;
-    insights.push({
-        title: 'Top Rated',
-        text: `${highest?.productInfo?.name || 'Unknown'} (${highestSat}/10)`
-    });
+    // Highest rated product. An unrated (null) satisfaction is left out -
+    // never shown as "0/10" or "null/10" (display-format.js).
+    const fmt = window.DisplayFormat;
+    const satOf = e => e?.stages?.aftertaste?.emotions?.satisfaction;
+    const ratedSat = validExperiences.filter(e => fmt.isRated(satOf(e)));
+    if (ratedSat.length > 0) {
+        const highest = ratedSat.reduce((max, e) => (satOf(e) > satOf(max) ? e : max));
+        insights.push({
+            title: 'Top Rated',
+            text: `${highest?.productInfo?.name || 'Unknown'} (${fmt.formatRating(satOf(highest))})`
+        });
+    } else {
+        insights.push({ title: 'Top Rated', text: 'No satisfaction ratings yet' });
+    }
 
     // Most common need state
     const needStateCounts = {};
@@ -1431,39 +1434,34 @@ function renderTriggersChart() {
 }
 
 function renderTriggerInsights() {
-    const avgTriggers = {
-        moreishness: 0,
-        refreshment: 0,
-        melt: 0,
-        crunch: 0
-    };
-
-    experiences.forEach(e => {
-        avgTriggers.moreishness += e?.emotionalTriggers?.moreishness || 0;
-        avgTriggers.refreshment += e?.emotionalTriggers?.refreshment || 0;
-        avgTriggers.melt += e?.emotionalTriggers?.melt || 0;
-        avgTriggers.crunch += e?.emotionalTriggers?.crunch || 0;
+    // Averages over the RATED triggers only: an untouched (null) trigger is
+    // not a 0, and a trigger nobody rated reads "Not rated".
+    const fmt = window.DisplayFormat;
+    const avgTriggers = {};
+    ['moreishness', 'refreshment', 'melt', 'crunch'].forEach(key => {
+        avgTriggers[key] = fmt.averageRating(experiences.map(e => e?.emotionalTriggers?.[key]));
     });
+    const avgText = key => (avgTriggers[key] === null ? 'Not rated' : `${avgTriggers[key].toFixed(1)}/10`);
 
-    const count = experiences.length || 1;
-    Object.keys(avgTriggers).forEach(key => {
-        avgTriggers[key] /= count;
-    });
-
-    const topTrigger = Object.keys(avgTriggers).reduce((a, b) =>
-        avgTriggers[a] > avgTriggers[b] ? a : b);
+    const ratedKeys = Object.keys(avgTriggers).filter(key => avgTriggers[key] !== null);
+    const topTrigger = ratedKeys.length > 0
+        ? ratedKeys.reduce((a, b) => avgTriggers[a] > avgTriggers[b] ? a : b)
+        : null;
+    const dominantText = topTrigger
+        ? `${topTrigger.charAt(0).toUpperCase() + topTrigger.slice(1)} scores highest across your products (${avgText(topTrigger)})`
+        : 'No emotional triggers rated yet';
 
     const html = `
         <div class="insight-item">
             <strong>Dominant Trigger</strong>
-            <p>${topTrigger.charAt(0).toUpperCase() + topTrigger.slice(1)} scores highest across your products (${avgTriggers[topTrigger].toFixed(1)}/10)</p>
+            <p>${dominantText}</p>
         </div>
         <div class="insight-item">
             <strong>Trigger Profile</strong>
-            <p>Moreishness: ${avgTriggers.moreishness.toFixed(1)}/10<br>
-            Refreshment: ${avgTriggers.refreshment.toFixed(1)}/10<br>
-            The Melt: ${avgTriggers.melt.toFixed(1)}/10<br>
-            Texture/Crunch: ${avgTriggers.crunch.toFixed(1)}/10</p>
+            <p>Moreishness: ${avgText('moreishness')}<br>
+            Refreshment: ${avgText('refreshment')}<br>
+            The Melt: ${avgText('melt')}<br>
+            Texture/Crunch: ${avgText('crunch')}</p>
         </div>
     `;
 
@@ -2035,30 +2033,37 @@ function generateProfessionalInsights() {
         description: `Your product portfolio primarily serves <strong>${escapeHtml(dominantNeed)}</strong> occasions (${((needStateCounts[dominantNeed] / experiences.length) * 100).toFixed(0)}% of products).`
     });
 
-    // Emotional Trigger Analysis
-    const avgTriggers = {
-        moreishness: experiences.reduce((sum, e) => sum + e.emotionalTriggers.moreishness, 0) / experiences.length,
-        refreshment: experiences.reduce((sum, e) => sum + e.emotionalTriggers.refreshment, 0) / experiences.length,
-        melt: experiences.reduce((sum, e) => sum + e.emotionalTriggers.melt, 0) / experiences.length,
-        crunch: experiences.reduce((sum, e) => sum + e.emotionalTriggers.crunch, 0) / experiences.length
+    // Averages and maxima below use RATED values only (display-format.js):
+    // a null/missing value is left out, and an insight with nothing rated is
+    // skipped rather than printed as "null/10" or "NaN/10".
+    const fmt = window.DisplayFormat;
+    const pickHighest = (obj) => {
+        const keys = Object.keys(obj).filter(key => obj[key] !== null);
+        return keys.length > 0 ? keys.reduce((a, b) => obj[a] > obj[b] ? a : b) : null;
     };
-    const topTrigger = Object.keys(avgTriggers).reduce((a, b) =>
-        avgTriggers[a] > avgTriggers[b] ? a : b);
-    insights.push({
-        title: 'Emotional Driver',
-        description: `<strong>${topTrigger.charAt(0).toUpperCase() + topTrigger.slice(1)}</strong> is your strongest emotional trigger (avg: ${avgTriggers[topTrigger].toFixed(1)}/10).`
-    });
 
-    // Journey Pattern
-    const avgJourney = {
-        appearance: experiences.reduce((sum, e) => sum + e.stages.appearance.overallIntensity, 0) / experiences.length,
-        aroma: experiences.reduce((sum, e) => sum + e.stages.aroma.overallIntensity, 0) / experiences.length,
-        front: experiences.reduce((sum, e) => sum + e.stages.frontMouth.overallIntensity, 0) / experiences.length,
-        mid: experiences.reduce((sum, e) => sum + e.stages.midRearMouth.overallIntensity, 0) / experiences.length,
-        after: experiences.reduce((sum, e) => sum + e.stages.aftertaste.overallIntensity, 0) / experiences.length
-    };
-    const peakStage = Object.keys(avgJourney).reduce((a, b) =>
-        avgJourney[a] > avgJourney[b] ? a : b);
+    // Emotional Trigger Analysis
+    const avgTriggers = {};
+    ['moreishness', 'refreshment', 'melt', 'crunch'].forEach(key => {
+        avgTriggers[key] = fmt.averageRating(experiences.map(e => e?.emotionalTriggers?.[key]));
+    });
+    const topTrigger = pickHighest(avgTriggers);
+    if (topTrigger) {
+        insights.push({
+            title: 'Emotional Driver',
+            description: `<strong>${topTrigger.charAt(0).toUpperCase() + topTrigger.slice(1)}</strong> is your strongest emotional trigger (avg: ${avgTriggers[topTrigger].toFixed(1)}/10).`
+        });
+    }
+
+    // Journey Pattern: overallIntensity (legacy/demo, Quick Entry), else the
+    // field the Shape of Taste chart plots for the stage.
+    const stageKeys = { appearance: 'appearance', aroma: 'aroma', front: 'frontMouth', mid: 'midRearMouth', after: 'aftertaste' };
+    const avgJourney = {};
+    Object.entries(stageKeys).forEach(([key, stageKey]) => {
+        avgJourney[key] = fmt.averageRating(experiences.map(e =>
+            fmt.firstRating(e?.stages?.[stageKey], ['overallIntensity', fmt.STAGE_INTENSITY_KEYS[stageKey]])));
+    });
+    const peakStage = pickHighest(avgJourney);
     const stageNames = {
         appearance: 'Appearance',
         aroma: 'Aroma',
@@ -2066,18 +2071,23 @@ function generateProfessionalInsights() {
         mid: 'Mid/Rear Mouth',
         after: 'Aftertaste'
     };
-    insights.push({
-        title: 'Journey Peak',
-        description: `Products typically peak in intensity at <strong>${stageNames[peakStage]}</strong> stage (avg: ${avgJourney[peakStage].toFixed(1)}/10).`
-    });
+    if (peakStage) {
+        insights.push({
+            title: 'Journey Peak',
+            description: `Products typically peak in intensity at <strong>${stageNames[peakStage]}</strong> stage (avg: ${avgJourney[peakStage].toFixed(1)}/10).`
+        });
+    }
 
     // Top Performer
-    const topProduct = experiences.reduce((max, e) =>
-        e.stages.aftertaste.emotions.satisfaction > max.stages.aftertaste.emotions.satisfaction ? e : max);
-    insights.push({
-        title: 'Top Performer',
-        description: `<strong>${escapeHtml(topProduct.productInfo.name)}</strong> by ${escapeHtml(topProduct.productInfo.brand)} achieves the highest satisfaction (${topProduct.stages.aftertaste.emotions.satisfaction}/10).`
-    });
+    const satOf = e => e?.stages?.aftertaste?.emotions?.satisfaction;
+    const ratedSat = experiences.filter(e => fmt.isRated(satOf(e)));
+    if (ratedSat.length > 0) {
+        const topProduct = ratedSat.reduce((max, e) => satOf(e) > satOf(max) ? e : max);
+        insights.push({
+            title: 'Top Performer',
+            description: `<strong>${escapeHtml(topProduct.productInfo.name)}</strong> by ${escapeHtml(topProduct.productInfo.brand)} achieves the highest satisfaction (${fmt.formatRating(satOf(topProduct))}).`
+        });
+    }
 
     return insights;
 }
@@ -2574,6 +2584,9 @@ function renderEmotionalDriversInsights(exp) {
     Object.values(exp.stages).forEach(stage => {
         if (stage.emotions) {
             Object.entries(stage.emotions).forEach(([emotion, value]) => {
+                // null = not rated (untouched slider or a CATA stage): left out,
+                // never averaged as 0 or shown as "Peak: 0/10".
+                if (!window.DisplayFormat.isRated(value)) return;
                 if (!allEmotions[emotion]) allEmotions[emotion] = [];
                 allEmotions[emotion].push(value);
             });
@@ -2607,7 +2620,7 @@ function renderEmotionalDriversInsights(exp) {
         `;
     });
 
-    container.innerHTML = html;
+    container.innerHTML = html || '<p class="empty-state">No emotions rated for this product</p>';
 }
 
 function renderCorrelationInsights(exp) {

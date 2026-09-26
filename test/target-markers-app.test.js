@@ -153,7 +153,7 @@ function loadApp() {
             warn: (...args) => consoleCalls.warn.push(args),
             info: (...args) => consoleCalls.info.push(args),
         },
-        window: { TouchedFields: require('../touched-fields.js'), TargetPrefill },
+        window: { TouchedFields: require('../touched-fields.js'), TargetPrefill, DisplayFormat: require('../display-format.js') },
         TouchedFields: require('../touched-fields.js'),
         escapeHtml: require('../dom-utils.js').escapeHtml,
         RenderUtils: require('../render-utils.js'),

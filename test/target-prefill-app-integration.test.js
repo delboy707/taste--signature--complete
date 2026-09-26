@@ -64,7 +64,7 @@ function loadAppForPrefillTests() {
         document,
         localStorage,
         console: { ...console, log() {}, warn() {}, error() {} },
-        window: { TouchedFields: require('../touched-fields.js'), TargetPrefill: require('../target-prefill.js') },
+        window: { TouchedFields: require('../touched-fields.js'), TargetPrefill: require('../target-prefill.js'), DisplayFormat: require('../display-format.js') },
         escapeHtml: require('../dom-utils.js').escapeHtml,
         RenderUtils: require('../render-utils.js'),
         alert() {},
