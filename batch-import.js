@@ -349,6 +349,9 @@ function createExperienceFromRow(row, columnMapping) {
     if (!productInfo.name) return null;
     if (!productInfo.brand) productInfo.brand = 'Unknown';
     if (!productInfo.category) productInfo.category = 'food';
+    // The app's readers (History, PDF, AI prompt, re-test form) use
+    // productInfo.type; category is kept for Send to Capture and old readers.
+    if (!productInfo.type) productInfo.type = productInfo.category;
 
     // Create experience object
     const experience = {
@@ -1401,11 +1404,15 @@ function buildQEPProductFromRow(row, colMap, csvRowNum, warnings) {
     return (v === undefined || v === null) ? fallback : String(v).trim();
   };
 
+  // The app's readers (History, PDF, AI prompt, re-test form) use
+  // productInfo.type; category is kept for Send to Capture and old readers.
+  var category = get("Category", "food") || "food";
   var product = {
     productInfo: {
       name: get("Product_Name", ""),
       brand: get("Brand", "Unknown") || "Unknown",
-      category: get("Category", "food") || "food",
+      type: category,
+      category: category,
       variant: get("Variant", ""),
       panelSize: get("Panel_Size", ""),
       testDate: get("Test_Date", "")
