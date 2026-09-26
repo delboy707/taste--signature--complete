@@ -10,6 +10,15 @@
  * saved and rendered as an empty reply. Join every text block instead, and
  * throw a clear error when there is none - never return an empty answer.
  */
+/**
+ * Shared rating / category formatting (display-format.js): window.DisplayFormat
+ * in the browser (loaded before this file), require() in Node tests.
+ */
+function claudeApiDisplayFormat() {
+    if (typeof window !== 'undefined' && window.DisplayFormat) return window.DisplayFormat;
+    return require('./display-format.js');
+}
+
 function extractResponseText(data) {
     const blocks = data && Array.isArray(data.content) ? data.content : [];
     const text = blocks
@@ -586,9 +595,15 @@ Analyze competitive position:
      * Format product data for Claude
      */
     formatProductData(experience) {
+        const fmt = claudeApiDisplayFormat();
+        const stages = experience.stages || {};
+        // Current lexicon field first, then the legacy one (demo data); a
+        // null/missing value is "Not rated", a rated 0 is "0/10".
+        const rating = (stageKey, keys) => fmt.formatRating(fmt.firstRating(stages[stageKey], keys));
+        const triggers = experience.emotionalTriggers || {};
         const emotions = [];
-        Object.entries(experience.stages).forEach(([stageName, stage]) => {
-            if (stage.emotions) {
+        Object.entries(stages).forEach(([stageName, stage]) => {
+            if (stage && stage.emotions) {
                 Object.entries(stage.emotions).forEach(([emotion, value]) => {
                     // null = not rated (untouched slider or a CATA stage): never "null/10"
                     if (typeof value !== 'number') return;
@@ -609,8 +624,8 @@ Analyze competitive position:
 
         // Build texture summary from sub-category aggregations if texture stage exists
         let textureSummary = 'N/A';
-        if (experience.stages.texture) {
-            const tex = experience.stages.texture;
+        if (stages.texture) {
+            const tex = stages.texture;
             const textureEntries = Object.entries(tex).filter(([k, v]) => k !== 'emotions' && typeof v === 'number');
             if (textureEntries.length > 0) {
                 const topTextureAttrs = textureEntries
@@ -628,40 +643,64 @@ Analyze competitive position:
 **Occasion**: ${experience.productInfo.occasion || 'Not specified'}
 
 **Sensory Profile**:
-- Appearance: Visual Appeal ${experience.stages.appearance.visualAppeal}/10
-- Aroma: Intensity ${experience.stages.aroma.intensity}/10
-- Taste: Sweet ${experience.stages.frontMouth.sweetness}/10, Sour ${experience.stages.frontMouth.sourness}/10
-- Mouthfeel: Richness ${experience.stages.midRearMouth.richness}/10, Creaminess ${experience.stages.midRearMouth.creaminess}/10
+- Appearance: Visual Appeal ${rating('appearance', ['visualAppeal'])}
+- Aroma: Intensity ${rating('aroma', ['smellStrength', 'intensity'])}
+- Taste: Sweet ${rating('frontMouth', ['sweetness'])}, Sour ${rating('frontMouth', ['sournessTartness', 'sourness'])}
+- Mouthfeel: Richness ${rating('midRearMouth', ['richnessFullness', 'richness'])}, Creaminess ${rating('midRearMouth', ['creaminess'])}
 - Texture: ${textureSummary}
-- Aftertaste: Duration ${experience.stages.aftertaste.duration}/10, Pleasantness ${experience.stages.aftertaste.pleasantness}/10
+- Aftertaste: Duration ${rating('aftertaste', ['finishLength', 'duration'])}, Pleasantness ${rating('aftertaste', ['pleasantness'])}
 
 **Top Emotions**: ${topEmotions || 'None rated'}
 ${cataText ? `\n${cataText}\n` : ''}
 **Emotional Triggers**:
-- Moreishness: ${experience.emotionalTriggers.moreishness}/10
-- Refreshment: ${experience.emotionalTriggers.refreshment}/10
-- The Melt: ${experience.emotionalTriggers.melt}/10
-- Texture/Crunch: ${experience.emotionalTriggers.crunch}/10`;
+- Moreishness: ${fmt.formatRating(triggers.moreishness)}
+- Refreshment: ${fmt.formatRating(triggers.refreshment)}
+- The Melt: ${fmt.formatRating(triggers.melt)}
+- Texture/Crunch: ${fmt.formatRating(triggers.crunch)}`;
     }
 
     /**
      * Format portfolio data for Claude
      */
     formatPortfolioData(experiences) {
+        const fmt = claudeApiDisplayFormat();
+        // Products are listed by satisfaction (as before), from a sorted COPY:
+        // the caller's array (often the app's global experiences) is not reordered.
+        const bySatisfaction = this.sortBySatisfaction(experiences);
         const summary = `**Portfolio Size**: ${experiences.length} products
 
 **Need State Distribution**:
 ${this.getNeedStateDistribution(experiences)}
 
 **Top Products by Satisfaction**:
-${this.getTopProducts(experiences, 5)}
+${this.getTopProducts(bySatisfaction, 5)}
 
 **Emotional Diversity**: ${this.calculateDiversity(experiences)}
 
 **Products**:
-${experiences.map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} (${exp.productInfo.brand}) - ${exp.needState}, Satisfaction: ${exp.stages.aftertaste.emotions.satisfaction}/10`).join('\n')}`;
+${bySatisfaction.map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} (${exp.productInfo.brand}) - ${exp.needState}, Satisfaction: ${fmt.formatRating(this.satisfactionOf(exp))}`).join('\n')}`;
 
         return summary;
+    }
+
+    /** Aftertaste satisfaction, or undefined when the stage/emotions are missing. */
+    satisfactionOf(exp) {
+        return exp && exp.stages && exp.stages.aftertaste && exp.stages.aftertaste.emotions
+            ? exp.stages.aftertaste.emotions.satisfaction : undefined;
+    }
+
+    /** A copy, highest satisfaction first; unrated products last, in their original order. */
+    sortBySatisfaction(experiences) {
+        const fmt = claudeApiDisplayFormat();
+        return experiences.slice().sort((a, b) => {
+            const sa = this.satisfactionOf(a);
+            const sb = this.satisfactionOf(b);
+            const ra = fmt.isRated(sa);
+            const rb = fmt.isRated(sb);
+            if (ra && rb) return sb - sa;
+            if (ra !== rb) return ra ? -1 : 1;
+            return 0;
+        });
     }
 
     getNeedStateDistribution(experiences) {
@@ -675,11 +714,12 @@ ${experiences.map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} (${exp.prod
     }
 
     getTopProducts(experiences, limit) {
-        return experiences
-            .sort((a, b) => b.stages.aftertaste.emotions.satisfaction - a.stages.aftertaste.emotions.satisfaction)
+        const fmt = claudeApiDisplayFormat();
+        const lines = this.sortBySatisfaction(experiences)
+            .filter(exp => fmt.isRated(this.satisfactionOf(exp)))
             .slice(0, limit)
-            .map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} - ${exp.stages.aftertaste.emotions.satisfaction}/10`)
-            .join('\n');
+            .map((exp, idx) => `${idx + 1}. ${exp.productInfo.name} - ${fmt.formatRating(this.satisfactionOf(exp))}`);
+        return lines.length > 0 ? lines.join('\n') : 'None rated';
     }
 
     calculateDiversity(experiences) {
