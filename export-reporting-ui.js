@@ -323,20 +323,50 @@ function generateBenchmarkReportFromUI() {
  * Show product chart export options
  */
 function showProductChartExport(productId) {
-    const experience = experiences.find(e => e.id === productId);
-    if (!experience) return;
+    const experience = findExperienceForExport(productId);
+    if (!experience) {
+        if (typeof showExportNotification === 'function') {
+            showExportNotification('Product not found - chart not exported', 'error');
+        }
+        return;
+    }
 
-    // First navigate to the product detail to render charts
-    showView('detail');
-    currentExperience = experience;
-    renderExperienceDetail(experience);
+    // Open the Shape of Taste view (its nav handler fills the product select),
+    // then draw this product's charts the same way the select's onchange does
+    // (app.js updateShapeOfTasteView).
+    const navItem = document.querySelector('.nav-item[data-view="shape-of-taste"]');
+    if (navItem) {
+        navItem.click();
+    } else if (typeof updateShapeOfTasteView === 'function') {
+        updateShapeOfTasteView();
+    }
+    const select = document.getElementById('shape-product-select');
+    if (select) select.value = String(experience.id);
+    renderShapeOfTaste(experience);
+    renderEmotionalJourney(experience);
 
-    // Wait for charts to render, then show export dialog
+    // Give the chart a moment to lay out, then confirm and export
     setTimeout(() => {
-        if (confirm(`Export Shape of Taste chart for "${experience.productInfo.name}"?`)) {
-            exportShapeOfTasteChart(productId);
+        const name = experience.productInfo?.name ?? 'this product';
+        if (confirm(`Export Shape of Taste chart for "${name}"?`)) {
+            exportShapeOfTasteChart(experience.id);
         }
     }, 500);
+}
+
+/**
+ * Find an experience by id. Ids are floats (Date.now() + Math.random()) or
+ * demo strings ('demo-001'); a float id that arrives as a string is compared
+ * with parseFloat - never parseInt, which truncates the decimal.
+ */
+function findExperienceForExport(productId) {
+    const list = (typeof experiences !== 'undefined' && Array.isArray(experiences)) ? experiences : [];
+    const asNumber = typeof productId === 'string' ? parseFloat(productId) : productId;
+    return list.find(e => e && (
+        e.id === productId ||
+        (typeof e.id === 'number' && e.id === asNumber) ||
+        String(e.id) === String(productId)
+    )) || null;
 }
 
 /**
@@ -599,7 +629,7 @@ function showProductExportMenu(productId) {
             exportProductToExcel(productId);
             break;
         case '3':
-            exportShapeOfTasteChart(productId);
+            showProductChartExport(productId);
             break;
     }
 }

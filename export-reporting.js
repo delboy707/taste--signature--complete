@@ -855,8 +855,21 @@ function exportPortfolioChart() {
  * Export shape of taste chart
  */
 function exportShapeOfTasteChart(productId) {
-    // This assumes the chart is currently displayed
-    return exportChartAsImage('sensoryChart', `shape_of_taste_${productId}.png`);
+    // The Shape of Taste view draws on #shape-chart (app.js renderShapeOfTaste);
+    // showProductChartExport renders the product there first.
+    const canvas = document.getElementById('shape-chart');
+    if (!canvas || (canvas.style && canvas.style.display === 'none')) {
+        // A qualitative-target-only product shows a text overlay, not a chart.
+        if (typeof showExportNotification === 'function') {
+            showExportNotification('No Shape of Taste chart to export for this product (no measured sensory values)', 'error');
+        }
+        return false;
+    }
+    // Jump any running animation to its final frame so the PNG is the whole chart.
+    if (typeof charts !== 'undefined' && charts && charts.shape && typeof charts.shape.update === 'function') {
+        charts.shape.update('none');
+    }
+    return exportChartAsImage('shape-chart', `shape_of_taste_${productId}.png`);
 }
 
 // ===== HELPER FUNCTIONS =====
