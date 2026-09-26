@@ -7,11 +7,13 @@
 // and a gap status computed SEPARATELY for Signature vs target and for
 // consumers vs target (on target / under / over, with a tolerance).
 //
-// Data sources (all existing; nothing new server side):
+// Data sources (reads use existing objects only; Amend writes through
+// qep-capture 0043, see AMEND below):
 //   - versions: tss_shared.project_versions of the linked project (RLS);
 //   - targets: tss_shared.targets + tss_shared.version_stage_notes of the
 //     chosen TARGET version, labels from public.qep_attribute (the same
-//     schema-qualified reads targets-loaded.js does, plus range_min/max);
+//     schema-qualified reads targets-loaded.js does, plus range_min/max,
+//     direction, importance and notes, which Amend carries over);
 //   - Signature's own score: the experience's slider values (null = not
 //     rated), matched to master codes through the SAME reverse crosswalk as
 //     the markers and the Consumer results panel
@@ -19,22 +21,29 @@
 //   - consumers: public.get_version_results(p_version_id) (qep-capture
 //     0041) of the chosen RESULTS version (called like consumer-results.js).
 //
-// Gap rules (documented in the view; defaults in DEFAULT_RULES):
-//   - numeric target t (range_min..range_max, usually min = max):
-//     on target when min - tol <= value <= max + tol, else under / over,
-//     with the signed gap to the nearest bound. tol defaults to 1.0 on the
-//     0-10 scale (config TARGET_VS_MEASURED_TOLERANCE), overridable in the
-//     view and remembered per browser (localStorage, try/catch).
-//   - legacy word-only targets (Brief Lock writes intensity 'high' with no
+// Gap rules (documented in the view; defaults in DEFAULT_RULES, Derek's
+// 2D decisions 2026-09-26):
+//   - scores (Signature sliders and consumer means, 0-10) against a numeric
+//     target (range_min..range_max, usually min = max): on target when
+//     min - tol <= value <= max + tol, else under / over with the signed gap
+//     to the nearest bound. tol defaults to 1.0 (config
+//     TARGET_VS_MEASURED_TOLERANCE), overridable in the view and remembered
+//     per browser (localStorage, try/catch). Edges are inclusive.
+//   - word-only score targets (Brief Lock writes intensity 'high' with no
 //     range): 'high' = value >= 7 is on target, below is under (never over);
 //     'low' = value <= 3 is on target, above is over (never under). Any
 //     other word: "No numeric target".
-//   - emotions, consumer side (CATA - a share of consumers, never a 0-10
-//     value): a target >= 7 (or 'high') expects at least 50% of consumers
-//     to select it (configurable in the view) - below is under; a target
-//     <= 3 (or 'low') expects at most 20% - above is over; a target of 4-6
-//     is "Not compared" (a tick-box share cannot say "moderate").
-//     Signature's own emotion sliders are 0-10, so they use the numeric rule.
+//   - consumer emotions (CATA - a share of consumers, shown as "% selected",
+//     never as a 0-10 value): a numeric target t expects t x 10 % selected
+//     (a range min..max expects min x 10 .. max x 10 %); on target within
+//     +/- 10 percentage points of that (config
+//     TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP, overridable in the view),
+//     else under / over. A word-only target expects its marker value x 10
+//     (target-prefill.js TARGET_INTENSITY_SCALE: high 8 -> 80%, low 2 ->
+//     20%) and is one-sided: 'high' is on target at 70% or more (never
+//     over), 'low' at 30% or less (never under). The expected % is shown in
+//     the target column.
+//     Signature's own emotion sliders are 0-10, so they use the score rule.
 //
 // Version choice: targets default to experience.sourceVersionId (the Brief
 // version the experience was measured against - the markers the evaluator
@@ -43,27 +52,31 @@
 // has responses, else the latest with a study, else none. Both are
 // switchable; drafts are never shown.
 //
-// AMEND: in the view the user edits target values, removes or adds targets
-// and presses "Create next version". That calls the EXISTING
-// tss_shared.create_version_from_signature(payload) (qep-capture 0038)
-// ONCE, with an experience-shaped payload built ONLY from the amended
-// target set (never the experience's own slider values):
-//   { id: experience.id, productInfo {name, brand, type}, tssProjectId,
-//     sourceVersionId: <target version>, stages.<stage>.<camelKey>,
-//     stages.<stage>.emotions.<key>, emotionalTriggers.<key> }
-// 0038 then creates the NEXT locked version on the SAME project (targets
-// stored as range_min = range_max = value, role 'primary', attributed to
-// the experience via source_signature_experience_id), or returns the latest
-// version unchanged when it is this experience's with an identical
-// fingerprint (no duplicate). No Firestore experience is ever created or
-// copied; the experience's link fields change only through
+// AMEND: in the view the user edits target values (a point target's value
+// sets range_min = range_max; a range target has min and max inputs; a
+// word-only target keeps its word unless a number replaces it), removes or
+// adds targets, edits a stage's "Brief says" notes and presses "Create next
+// version". That calls tss_shared.create_version_from_targets (qep-capture
+// migration 0043) ONCE with
+//   { p_project_id, p_base_version_id: <target version shown>,
+//     p_targets: [{ variable_key, role, range_min, range_max, intensity,
+//                   direction, importance, notes }],
+//     p_stage_notes: [{ stage_key, notes }],
+//     p_source_experience_id: String(experience.id) }
+// built from the base version's FULL tss_shared.targets set (every row,
+// including codes with no Signature slider, secondary roles, ranges,
+// word-only intensities, direction/importance/notes) and ALL its
+// version_stage_notes, with the user's edits applied - never from the
+// experience's own slider values. Nothing is dropped or converted, so
+// there is nothing to confirm. 0043 creates the NEXT locked version on the
+// SAME project (source_meta.kind = 'amend'), or returns the latest one
+// unchanged (reused_existing_version) when it is an amend of the same base
+// by the same experience with the same targets + notes. Until 0043 is
+// applied the RPC does not exist: PGRST202 / "Could not find the function"
+// -> "Amend is not available on this QEP database yet" and nothing is
+// created. No Firestore experience is ever created or copied; the
+// experience's link fields change only through
 // SendToCapture.applyCaptureLink (which never overwrites an existing link).
-// What the payload cannot carry is listed before creating and needs an
-// explicit tick: targets with no Signature slider (or a crosswalk row for
-// another stage), emotion targets of 0 (0038 treats 0 as "not felt"),
-// stage notes ("Brief says" text), roles (all become primary), word-only
-// targets (stored as the marker value, high = 8 / low = 2) and ranges
-// (stored as their midpoint).
 //
 // Gated by qep-capture-config.js's ENABLE_TARGET_VS_MEASURED (default false).
 // Pure logic is DOM-free and unit-tested in test/target-vs-measured.test.js;
@@ -90,12 +103,13 @@
     tolerance: 1.0,
     legacyHighMin: 7,
     legacyLowMax: 3,
-    emotionHighTarget: 7,
-    emotionLowTarget: 3,
-    emotionHighMinSelected: 0.5,
-    emotionLowMaxSelected: 0.2,
+    emotionTolerancePp: 10,
   });
   const MAX_TOLERANCE = 5;
+  const MAX_EMOTION_PP = 100;
+  const EPS_PP = 1e-6;
+  // Word-only targets are read at their marker value (same scale as the markers).
+  const WORD_VALUES = (targetPrefill && targetPrefill.TARGET_INTENSITY_SCALE) || { low: 2, medium: 5, high: 8 };
 
   const STAGE_ORDER = ['appearance', 'aroma', 'frontMouth', 'midRearMouth', 'texture', 'aftertaste', 'overall'];
   const STAGE_LABELS = {
@@ -111,7 +125,6 @@
     no_data: 'No data',
     no_target: 'No target',
     no_numeric_target: 'No numeric target',
-    not_compared: 'Not compared',
   };
 
   function _config(config) {
@@ -168,8 +181,10 @@
     if (_inRange(cfgTol, 0, MAX_TOLERANCE)) rules.tolerance = cfgTol;
     const tol = _num(p.tolerance);
     if (_inRange(tol, 0, MAX_TOLERANCE)) rules.tolerance = tol;
-    const pct = _num(p.emotionHighMinSelectedPct);
-    if (_inRange(pct, 0, 100)) rules.emotionHighMinSelected = pct / 100;
+    const cfgPp = _num(c.TARGET_VS_MEASURED_EMOTION_TOLERANCE_PP);
+    if (_inRange(cfgPp, 0, MAX_EMOTION_PP)) rules.emotionTolerancePp = cfgPp;
+    const pp = _num(p.emotionTolerancePp);
+    if (_inRange(pp, 0, MAX_EMOTION_PP)) rules.emotionTolerancePp = pp;
     return rules;
   }
 
@@ -256,38 +271,51 @@
     return classifyNumeric(value, spec, r.tolerance);
   }
 
-  /** The level a target asks of a CATA emotion: 'high' | 'low' | 'mid' | null. */
-  function _emotionLevel(spec, rules) {
+  /**
+   * The % selected a target expects of a CATA emotion:
+   *   numeric t (min..max)  -> { min: min x 10, max: max x 10, oneSided: null }
+   *   word-only 'high'/'low' -> marker value x 10 (80 / 20), one-sided
+   *                             ('at_least' / 'at_most');
+   *   anything else          -> null.
+   */
+  function expectedSelected(spec) {
     if (!spec || spec.type === 'none') return null;
-    if (spec.type === 'legacy') return spec.intensity === 'high' || spec.intensity === 'low' ? spec.intensity : null;
-    const t = (spec.min + spec.max) / 2;
-    if (t >= rules.emotionHighTarget - EPS) return 'high';
-    if (t <= rules.emotionLowTarget + EPS) return 'low';
-    return 'mid';
+    if (spec.type === 'legacy') {
+      if (spec.intensity !== 'high' && spec.intensity !== 'low') return null;
+      const v = _num(WORD_VALUES[spec.intensity]);
+      if (v === null) return null;
+      const pct = _round(v * 10, 1);
+      return { min: pct, max: pct, oneSided: spec.intensity === 'high' ? 'at_least' : 'at_most' };
+    }
+    return { min: _round(spec.min * 10, 1), max: _round(spec.max * 10, 1), oneSided: null };
   }
 
-  /** Consumer CATA share (0..1) against a target. Never converted to 0-10. */
+  function _pctText(exp) {
+    return exp.min === exp.max ? `${exp.min}%` : `${exp.min}-${exp.max}%`;
+  }
+
+  /** Consumer CATA share (0..1) against a target, +/- emotionTolerancePp. Never converted to 0-10. */
   function classifyCata(proportion, n, spec, rules) {
     const r = rules || DEFAULT_RULES;
     if (!spec) return { status: 'no_target' };
-    const level = _emotionLevel(spec, r);
-    if (level === null) return { status: 'no_numeric_target' };
+    const exp = expectedSelected(spec);
+    if (!exp) return { status: 'no_numeric_target' };
     const p = _num(proportion);
     if (p === null || !_num(n)) return { status: 'no_data' };
-    const pct = Math.round(p * 100);
-    if (level === 'high') {
-      const min = Math.round(r.emotionHighMinSelected * 100);
-      return p >= r.emotionHighMinSelected - EPS
-        ? { status: 'on_target', detail: `${pct}% selected, expected at least ${min}%` }
-        : { status: 'under', detail: `${pct}% selected, expected at least ${min}%` };
-    }
-    if (level === 'low') {
-      const max = Math.round(r.emotionLowMaxSelected * 100);
-      return p <= r.emotionLowMaxSelected + EPS
-        ? { status: 'on_target', detail: `${pct}% selected, expected at most ${max}%` }
-        : { status: 'over', detail: `${pct}% selected, expected at most ${max}%` };
-    }
-    return { status: 'not_compared', detail: 'A mid-scale emotion target cannot be judged from a tick-box share.' };
+    const pp = _num(r.emotionTolerancePp) === null ? DEFAULT_RULES.emotionTolerancePp : Number(r.emotionTolerancePp);
+    const pct = p * 100;
+    const shown = Math.round(pct);
+    const lo = exp.oneSided === 'at_most' ? -Infinity : exp.min - pp;
+    const hi = exp.oneSided === 'at_least' ? Infinity : exp.max + pp;
+    const nearest = Math.min(Math.max(pct, exp.min), exp.max);
+    const deltaPp = _round(pct - nearest, 1);
+    let detail;
+    if (exp.oneSided === 'at_least') detail = `${shown}% selected, expected at least ${_round(lo, 1)}% (high = ${exp.min}% +/- ${pp}pp)`;
+    else if (exp.oneSided === 'at_most') detail = `${shown}% selected, expected at most ${_round(hi, 1)}% (low = ${exp.max}% +/- ${pp}pp)`;
+    else detail = `${shown}% selected, expected ${_pctText(exp)} +/- ${pp}pp`;
+    if (pct < lo - EPS_PP) return { status: 'under', deltaPp, detail };
+    if (pct > hi + EPS_PP) return { status: 'over', deltaPp, detail };
+    return { status: 'on_target', deltaPp, detail };
   }
 
   // ---- crosswalk indexes ----
@@ -361,6 +389,9 @@
         intensity: t.intensity || null,
         rangeMin: _num(t.range_min),
         rangeMax: _num(t.range_max),
+        direction: t.direction === undefined ? null : t.direction,
+        importance: t.importance === undefined ? null : t.importance,
+        notes: t.notes === undefined ? null : t.notes,
         spec: targetSpec(t),
       });
     }
@@ -610,7 +641,7 @@
     try {
       [targetsRes, notesRes] = await Promise.all([
         client.schema('tss_shared').from('targets')
-          .select('variable_key, role, intensity, range_min, range_max').eq('version_id', versionId),
+          .select('variable_key, role, intensity, range_min, range_max, direction, importance, notes').eq('version_id', versionId),
         client.schema('tss_shared').from('version_stage_notes').select('stage_key, notes').eq('version_id', versionId),
       ]);
     } catch (err) {
@@ -632,13 +663,17 @@
       for (const a of (attrRes && attrRes.data) || []) if (a && a.id) attrsById[a.id] = a;
     }
     const notes = {};
+    const stageNotes = [];
     for (const n of (notesRes && notesRes.data) || []) {
-      const s = n && CR.normalizeStageId(n.stage_key);
+      if (!n || !n.stage_key || n.notes === null || n.notes === undefined) continue;
+      // Raw rows (qep_stage keys, exact text) are what Amend carries over.
+      stageNotes.push({ stage_key: String(n.stage_key), notes: String(n.notes) });
+      const s = CR.normalizeStageId(n.stage_key);
       if (s && n.notes) notes[s] = String(n.notes);
     }
     const labels = {};
     for (const id of Object.keys(attrsById)) labels[id] = String(attrsById[id].label || id);
-    return { targets: shapeTargetRows(rows, attrsById), notes, labels };
+    return { targets: shapeTargetRows(rows, attrsById), notes, stageNotes, labels };
   }
 
   /**
@@ -689,7 +724,7 @@
       indexes = null;
     }
     if (!indexes) {
-      warning = 'Signature values could not be matched (attribute crosswalk unavailable), so Signature scores are not shown and Amend is off.';
+      warning = 'Signature values could not be matched (attribute crosswalk unavailable), so Signature scores are not shown.';
     }
 
     const resultsById = {};
@@ -735,9 +770,11 @@
       resultsById,
       targets: loaded.targets,
       notes: loaded.notes,
+      stageNotes: loaded.stageNotes,
       labels: loaded.labels,
       indexes,
-      amendAvailable: !!indexes,
+      // The 0043 payload carries master codes, so Amend does not need the crosswalk.
+      amendAvailable: true,
     };
     if (warning) model.warning = warning;
     return model;
@@ -755,7 +792,7 @@
     } catch (err) {
       return { ...model, loadError: (err && err.userMessage) || mapLoadError(err) };
     }
-    return { ...model, targetVersionId: id, targetChoice: 'selected', targets: loaded.targets, notes: loaded.notes, labels: { ...model.labels, ...loaded.labels }, loadError: null };
+    return { ...model, targetVersionId: id, targetChoice: 'selected', targets: loaded.targets, notes: loaded.notes, stageNotes: loaded.stageNotes, labels: { ...model.labels, ...loaded.labels }, loadError: null };
   }
 
   function switchResultsVersion(model, versionId) {
@@ -766,38 +803,176 @@
 
   // ---- Amend: draft (pure) ----
 
-  function _draftValueFor(t) {
-    const spec = t.spec || targetSpec(t);
-    if (spec.type === 'numeric') {
-      if (spec.min === spec.max) return { value: spec.min, origin: 'carried' };
-      return { value: _round((spec.min + spec.max) / 2, 1), origin: 'range' };
-    }
-    if (spec.type === 'legacy') {
-      const scale = (targetPrefill && targetPrefill.TARGET_INTENSITY_SCALE) || { low: 2, medium: 5, high: 8 };
-      const v = Object.prototype.hasOwnProperty.call(scale, spec.intensity) ? scale[spec.intensity] : null;
-      return { value: v, origin: 'legacy' };
-    }
-    return { value: null, origin: 'no_value' };
+  // Signature stage id -> qep_stage.stage_key (version_stage_notes.stage_key).
+  const STAGE_KEY_OF = {
+    appearance: 'ap', aroma: 'ar', frontMouth: 'fm', midRearMouth: 'mr', texture: 'tx', aftertaste: 'af', overall: 'overall',
+  };
+  const QEP_STAGE_ORDER = ['ap', 'ar', 'fm', 'mr', 'tx', 'af', 'overall'];
+
+  function stageKeyOf(stageId) {
+    if (!stageId) return null;
+    if (STAGE_KEY_OF[stageId]) return STAGE_KEY_OF[stageId];
+    const norm = CR.normalizeStageId(stageId);
+    return norm ? STAGE_KEY_OF[norm] || null : null;
   }
 
-  /** Editable copy of a version's targets. `base` is kept for change detection. */
-  function createDraft(targets) {
+  function _isEmpty(v) {
+    return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
+  }
+
+  function _parseValue(v) {
+    if (_isEmpty(v)) return { ok: false, empty: true };
+    const n = typeof v === 'number' ? v : Number(String(v).trim());
+    if (!Number.isFinite(n) || n < 0 || n > 10) return { ok: false };
+    return { ok: true, value: n };
+  }
+
+  /**
+   * Shape of a target in the editor, fixed when the draft is made:
+   *   'word'  - word-only (intensity, no range): a number can replace the word;
+   *   'point' - range_min = range_max: one value;
+   *   'range' - anything else with a number (min < max, or one side only).
+   */
+  function _shapeOf(t) {
+    const min = _num(t.rangeMin);
+    const max = _num(t.rangeMax);
+    if (min === null && max === null) return t.intensity ? 'word' : 'point';
+    return min !== null && max !== null && min === max ? 'point' : 'range';
+  }
+
+  function _entryFromTarget(t) {
+    const shape = _shapeOf(t);
+    const min = _num(t.rangeMin);
+    const max = _num(t.rangeMax);
+    return {
+      code: t.code,
+      kind: t.kind,
+      stageId: t.stageId,
+      label: t.label,
+      role: t.role || 'primary',
+      shape,
+      min: shape === 'word' ? null : min,
+      max: shape === 'word' ? null : max,
+      intensity: t.intensity ? String(t.intensity) : null,
+      word: shape === 'word' ? String(t.intensity) : null,
+      direction: t.direction === undefined ? null : t.direction,
+      importance: t.importance === undefined ? null : t.importance,
+      notes: t.notes === undefined ? null : t.notes,
+      removed: false,
+      added: false,
+    };
+  }
+
+  /**
+   * One entry -> { element } (the p_targets element 0043 stores as given) or
+   * { error: 'invalid' | 'empty' | 'order' }.
+   */
+  function _elementOf(e) {
+    let min = null;
+    let max = null;
+    let intensity = e.intensity || null;
+    if (e.shape === 'word') {
+      const v = _parseValue(e.min);
+      if (v.empty) {
+        intensity = e.word || null;
+      } else if (!v.ok) {
+        return { error: 'invalid' };
+      } else {
+        // A number replaces the word.
+        min = v.value;
+        max = v.value;
+        intensity = null;
+      }
+    } else if (e.shape === 'point') {
+      const v = _parseValue(e.min);
+      if (v.empty) return { error: 'empty' };
+      if (!v.ok) return { error: 'invalid' };
+      min = v.value;
+      max = v.value;
+    } else {
+      const a = _parseValue(e.min);
+      const b = _parseValue(e.max);
+      if ((!a.ok && !a.empty) || (!b.ok && !b.empty)) return { error: 'invalid' };
+      min = a.ok ? a.value : null;
+      max = b.ok ? b.value : null;
+      if (min === null && max === null && !intensity) return { error: 'empty' };
+      if (min !== null && max !== null && min > max) return { error: 'order' };
+    }
+    return {
+      element: {
+        variable_key: e.code,
+        role: e.role === 'secondary' ? 'secondary' : 'primary',
+        range_min: min,
+        range_max: max,
+        intensity,
+        direction: e.direction === undefined ? null : e.direction,
+        importance: e.importance === undefined ? null : e.importance,
+        notes: e.notes === undefined ? null : e.notes,
+      },
+    };
+  }
+
+  /**
+   * Editable copy of a version's FULL target set and stage notes. `base`
+   * keeps each unedited p_targets element and `baseNotes` the notes, for
+   * change detection.
+   */
+  function createDraft(targets, stageNoteRows) {
     const entries = {};
     const base = {};
+    const order = [];
     for (const t of Array.isArray(targets) ? targets : []) {
       if (!t || !t.code || entries[t.code]) continue;
-      const { value, origin } = _draftValueFor(t);
-      const meta = { code: t.code, kind: t.kind, stageId: t.stageId, label: t.label, role: t.role || 'primary', spec: t.spec || targetSpec(t) };
-      base[t.code] = { ...meta, value, origin };
-      entries[t.code] = { ...meta, value, origin, removed: false, added: false };
+      const e = _entryFromTarget(t);
+      entries[t.code] = e;
+      const el = _elementOf(e);
+      base[t.code] = { ...e, element: el.element || null };
+      order.push(t.code);
     }
-    return { entries, base };
+    const notes = {};
+    const noteKeyByStage = {};
+    for (const n of Array.isArray(stageNoteRows) ? stageNoteRows : []) {
+      if (!n || !n.stage_key || n.notes === null || n.notes === undefined) continue;
+      const key = String(n.stage_key);
+      if (Object.prototype.hasOwnProperty.call(notes, key)) continue;
+      notes[key] = String(n.notes);
+      const sid = CR.normalizeStageId(key);
+      if (sid) noteKeyByStage[sid] = key;
+    }
+    return { entries, base, order, notes, baseNotes: { ...notes }, noteKeyByStage };
   }
 
+  /** A point's value (min = max), or a word-only target's number (empty = back to the word). */
   function setDraftValue(draft, code, value) {
     const e = draft && draft.entries[code];
     if (!e) return false;
-    e.value = value;
+    if (e.shape === 'range') return setDraftRange(draft, code, 'min', value) && setDraftRange(draft, code, 'max', value);
+    e.min = value;
+    e.max = value;
+    return true;
+  }
+
+  function setDraftRange(draft, code, which, value) {
+    const e = draft && draft.entries[code];
+    if (!e || (which !== 'min' && which !== 'max')) return false;
+    if (e.shape !== 'range') return setDraftValue(draft, code, value);
+    e[which] = value;
+    return true;
+  }
+
+  /** Switch a word-only target between 'high' and 'low'. */
+  function setDraftIntensity(draft, code, word) {
+    const e = draft && draft.entries[code];
+    if (!e || e.shape !== 'word' || (word !== 'high' && word !== 'low')) return false;
+    e.word = word;
+    return true;
+  }
+
+  /** A stage's "Brief says" notes (qep_stage key); blank = no notes for that stage. */
+  function setDraftNotes(draft, stageKey, text) {
+    if (!draft || !stageKey) return false;
+    const key = stageKeyOf(stageKey) || String(stageKey);
+    draft.notes[key] = text === null || text === undefined ? '' : String(text);
     return true;
   }
 
@@ -806,6 +981,7 @@
     if (!e) return false;
     if (e.added && !draft.base[code]) {
       delete draft.entries[code];
+      draft.order = draft.order.filter((c) => c !== code);
       return true;
     }
     e.removed = true;
@@ -818,22 +994,28 @@
     const existing = draft.entries[code];
     if (existing) {
       existing.removed = false;
-      if (value !== undefined) existing.value = value;
+      if (value !== undefined) setDraftValue(draft, code, value);
       return true;
     }
     const kind = meta.kind || _inferKind(code);
     draft.entries[code] = {
       code, kind, stageId: meta.stageId || (kind === 'trigger' ? 'overall' : 'unknown'), label: meta.label || code,
-      role: 'primary', spec: null, value: value === undefined ? null : value, origin: 'added', removed: false, added: true,
+      role: 'primary', shape: 'point', min: value === undefined ? null : value, max: value === undefined ? null : value,
+      intensity: null, word: null, direction: null, importance: null, notes: null, removed: false, added: true,
     };
+    draft.order.push(code);
     return true;
   }
 
-  function _parseValue(v) {
-    if (v === null || v === undefined || v === '') return { ok: false, empty: true };
-    const n = typeof v === 'number' ? v : Number(String(v).trim());
-    if (!Number.isFinite(n) || n < 0 || n > 10) return { ok: false };
-    return { ok: true, value: _round(n, 1) };
+  function _noteText(v) {
+    return v === null || v === undefined || String(v).trim() === '' ? null : String(v);
+  }
+
+  function _stageNotesPayload(notes) {
+    const keys = Object.keys(notes || {}).filter((k) => _noteText(notes[k]) !== null);
+    const rank = (k) => (QEP_STAGE_ORDER.includes(k) ? QEP_STAGE_ORDER.indexOf(k) : QEP_STAGE_ORDER.length);
+    keys.sort((a, b) => (rank(a) - rank(b)) || (a < b ? -1 : a > b ? 1 : 0));
+    return keys.map((k) => ({ stage_key: k, notes: notes[k] }));
   }
 
   function _specText(spec) {
@@ -844,146 +1026,86 @@
   }
 
   /**
-   * Pure: the create_version_from_signature payload for the amended set,
-   * plus what is carried, what cannot be, warnings and blocking problems.
-   * Never reads the experience's slider values; never mutates anything.
+   * Pure: the create_version_from_targets (0043) parameters for the amended
+   * set - every base target (edits applied, removals absent, additions
+   * appended) and every stage note - plus change counts and a blocking
+   * problem, if any. Never reads the experience's slider values; never
+   * mutates anything.
    */
-  function buildAmendPlan({ draft, experience, projectId, baseVersion, notes, indexes } = {}) {
-    const carried = [];
-    const dropped = [];
+  function buildAmendPlan({ draft, experience, projectId, baseVersion } = {}) {
+    const changes = { edited: 0, added: 0, removed: 0, notes: 0 };
+    const targets = [];
     const invalid = [];
-    const warnings = [];
-    const changes = { edited: 0, added: 0, removed: 0 };
-    const stages = {};
-    const triggers = {};
-    const slots = new Set();
-    const legacyConverted = [];
-    const rangeCollapsed = [];
-    let secondary = 0;
-
-    const entries = draft && draft.entries ? Object.values(draft.entries) : [];
-    for (const e of entries) {
-      const b = draft.base[e.code];
+    const empty = [];
+    const order = [];
+    const d = draft || { entries: {}, base: {}, order: [], notes: {}, baseNotes: {} };
+    const codes = Array.isArray(d.order) ? d.order : Object.keys(d.entries || {});
+    for (const code of codes) {
+      const e = d.entries[code];
+      if (!e) continue;
+      const b = d.base[code];
       if (e.removed) {
         if (b) changes.removed++;
         continue;
       }
-      const parsed = _parseValue(e.value);
+      const r = _elementOf(e);
+      if (r.error === 'invalid') { invalid.push(e.label); continue; }
+      if (r.error === 'empty') { empty.push(e.label); continue; }
+      if (r.error === 'order') { order.push(e.label); continue; }
       if (!b) changes.added++;
-      else {
-        const bv = _parseValue(b.value);
-        if (parsed.ok !== bv.ok || (parsed.ok && parsed.value !== bv.value)) changes.edited++;
-      }
-      if (!parsed.ok) {
-        if (parsed.empty) dropped.push({ code: e.code, label: e.label, reason: 'No numeric value - enter a number from 0 to 10, or remove it.' });
-        else invalid.push({ code: e.code, label: e.label });
-        continue;
-      }
-      const value = parsed.value;
-      const match = _reverseMatch(indexes, e.kind, e.code);
-      if (!match) {
-        dropped.push({ code: e.code, label: e.label, reason: 'No Signature slider for this code, so create_version_from_signature cannot store it.' });
-        continue;
-      }
-      if (e.kind !== 'trigger' && match.stage !== e.stageId) {
-        dropped.push({ code: e.code, label: e.label, reason: `The crosswalk maps this code to another stage (${match.stage}); values are never moved across stages.` });
-        continue;
-      }
-      if (e.kind === 'emotion' && value === 0) {
-        dropped.push({ code: e.code, label: e.label, reason: 'An emotion target of 0 is not stored (0 means "not felt").' });
-        continue;
-      }
-      const key = e.kind === 'sensory' ? _camel(match.key) : String(match.key);
-      if (e.kind === 'sensory' && _kebabLike0038(key) !== match.key) {
-        dropped.push({ code: e.code, label: e.label, reason: 'This slider key does not survive the camelCase round trip, so the RPC would not recognise it.' });
-        continue;
-      }
-      const slot = `${e.kind === 'trigger' ? 'trigger' : e.kind === 'emotion' ? 'emotion' : 'sensory'}|${e.kind === 'trigger' ? 'overall' : match.stage}|${key}`;
-      if (slots.has(slot)) {
-        dropped.push({ code: e.code, label: e.label, reason: 'Another target already uses the same Signature slider.' });
-        continue;
-      }
-      slots.add(slot);
-      if (e.kind === 'trigger') {
-        triggers[key] = value;
-      } else {
-        const st = stages[match.stage] || (stages[match.stage] = {});
-        if (e.kind === 'emotion') (st.emotions || (st.emotions = {}))[key] = value;
-        else st[key] = value;
-      }
-      carried.push({ code: e.code, label: e.label, kind: e.kind, stageId: e.stageId, value });
-      if (b && b.role === 'secondary') secondary++;
-      // Conversions are only reported while the value is still the converted one (an edit replaces it).
-      const unedited = b && parsed.value === _parseValue(b.value).value;
-      if (unedited && b.origin === 'legacy' && b.spec && b.spec.type === 'legacy') legacyConverted.push(`${e.label} (${b.spec.intensity} -> ${value})`);
-      if (unedited && b.origin === 'range' && b.spec && b.spec.type === 'numeric') {
-        rangeCollapsed.push(`${e.label}: range ${_specText(b.spec)} -> ${value}`);
-      }
+      else if (JSON.stringify(r.element) !== JSON.stringify(b.element)) changes.edited++;
+      targets.push(r.element);
     }
-
-    const noteStages = Object.keys(notes || {}).filter((s) => notes[s] && String(notes[s]).trim());
-    if (noteStages.length) {
-      warnings.push(`Stage notes ("Brief says" text) for ${noteStages.map((s) => STAGE_LABELS[s] || s).join(', ')} are not copied: the new version stores targets only.`);
+    const stageNotes = _stageNotesPayload(d.notes);
+    const allKeys = new Set(Object.keys(d.notes || {}).concat(Object.keys(d.baseNotes || {})));
+    for (const k of allKeys) {
+      if (_noteText((d.notes || {})[k]) !== _noteText((d.baseNotes || {})[k])) changes.notes++;
     }
-    if (secondary) warnings.push(`${secondary} secondary target(s) become primary (every target in the new version is stored as primary).`);
-    if (legacyConverted.length) {
-      warnings.push(`${legacyConverted.length} word-only target(s) will be stored as numbers (high = 8, low = 2, as the markers show them): ${legacyConverted.join(', ')}.`);
-    }
-    if (rangeCollapsed.length) warnings.push(`Ranges are stored as one value: ${rangeCollapsed.join('; ')}.`);
 
     let blocking = null;
-    if (invalid.length) blocking = `Every target must be a number 0-10 (check: ${invalid.map((x) => x.label).join(', ')}).`;
-    else if (!carried.length) blocking = 'Keep or add at least one target that Signature can store before creating a version.';
+    if (invalid.length) blocking = `Every target must be a number 0-10 (check: ${invalid.join(', ')}).`;
+    else if (order.length) blocking = `A range's min must not be above its max (check: ${order.join(', ')}).`;
+    else if (empty.length) blocking = `Enter a number for ${empty.join(', ')}, or remove it.`;
+    else if (!targets.length) blocking = 'Keep or add at least one target before creating a version.';
     else if (!projectId) blocking = 'This experience is not linked to a project.';
+    else if (!baseVersion || !baseVersion.id) blocking = 'No locked version is selected to amend.';
     else if (!experience || experience.id === undefined || experience.id === null || experience.id === '') blocking = 'This experience has no id.';
 
-    let payload = null;
-    if (!blocking) {
-      const info = (experience && experience.productInfo) || {};
-      const productInfo = {};
-      for (const k of ['name', 'brand', 'type', 'productType', 'category']) {
-        if (info[k] !== undefined && info[k] !== null && info[k] !== '') productInfo[k] = info[k];
-      }
-      payload = {
-        id: experience.id,
-        productInfo,
-        tssProjectId: String(projectId),
-        sourceVersionId: baseVersion && baseVersion.id ? String(baseVersion.id) : null,
-        stages,
-        emotionalTriggers: triggers,
-      };
-      if (!payload.sourceVersionId) delete payload.sourceVersionId;
-    }
-
+    const payload = blocking ? null : {
+      p_project_id: String(projectId),
+      p_base_version_id: String(baseVersion.id),
+      p_targets: targets,
+      p_stage_notes: stageNotes,
+      p_source_experience_id: String(experience.id),
+    };
     return {
       payload,
-      carried,
-      dropped,
-      warnings,
       changes,
       blocking,
-      needsConfirm: dropped.length > 0 || warnings.length > 0,
-      changeCount: changes.edited + changes.added + changes.removed,
+      targetsCount: targets.length,
+      notesCount: stageNotes.length,
+      changeCount: changes.edited + changes.added + changes.removed + changes.notes,
     };
   }
 
   // ---- Amend: RPC ----
 
+  const AMEND_NOT_AVAILABLE_MESSAGE = 'Amend is not available on this QEP database yet (qep-capture migration 0043 is not applied). Nothing was created.';
   const AMEND_DEMO_MESSAGE = 'Amend is not available in demo mode. Sign in to your QEP account to create a new version.';
 
   const AMEND_ERROR_MAP = [
     [/demo mode/i, AMEND_DEMO_MESSAGE],
+    [/could not find the function|PGRST202/i, AMEND_NOT_AVAILABLE_MESSAGE],
     [/not signed in|no clerk session|not authenticated/i, 'Sign in to your QEP account to create a new version.'],
-    [/is not a project in your organisation/i,
+    [/not a project in your organisation/i,
       'This experience\'s project is not in your organisation (or no longer exists), so no version was created.'],
-    [/profile was deleted/i,
-      'This experience was deleted from the shared QEP database, so no version can be created from it.'],
-    [/is not a version of project|requires experience\.tssProjectId|must be a UUID string|is not a valid UUID/i,
-      'The version this amend is based on does not belong to the linked project. Reload and try again.'],
-    [/out of range 0-10/i, 'Every target must be a number from 0 to 10.'],
-    [/no measured values|nothing measured/i, 'The new version needs at least one target that Signature can store.'],
-    [/unknown signature stage/i, 'Capture did not recognise a stage in the amended targets. Please contact QEP support.'],
-    [/could not find the function|PGRST202/i, 'Amend is not available on this QEP database yet. Contact QEP support.'],
+    [/is not a locked version of this project/i,
+      'The version these targets came from is no longer a locked version of this project. Reload and try again.'],
+    [/range_min|range_max|out of range|0-10|0 and 10/i,
+      'Every target must be a number from 0 to 10, and a range\'s min must not be above its max.'],
+    [/duplicate/i, 'The same attribute appears twice in the amended targets. Reload and try again.'],
+    [/qep_attribute|unknown variable_key|variable_key/i, 'Capture did not recognise one of the attribute codes. Please contact QEP support.'],
+    [/stage_key|qep_stage/i, 'Capture did not recognise a stage in the stage notes. Please contact QEP support.'],
     [/permission denied/i, 'The QEP database refused this request (permission denied). Try signing in again.'],
     [/supabase-js not loaded|qep-capture-config\.js not loaded|getQepCaptureClient is not available/i,
       'The connection to QEP is not configured on this page. Reload and try again.'],
@@ -992,6 +1114,7 @@
 
   function mapAmendError(err) {
     if (err && typeof err === 'object' && err.code === 'QEP_DEMO_MODE') return AMEND_DEMO_MESSAGE;
+    if (err && typeof err === 'object' && err.code === 'PGRST202') return AMEND_NOT_AVAILABLE_MESSAGE;
     const msg = _messageOf(err);
     for (const [re, friendly] of AMEND_ERROR_MAP) if (re.test(msg)) return friendly;
     return msg ? `Could not create the next version: ${msg}` : 'Could not create the next version. Please try again.';
@@ -1009,10 +1132,10 @@
   }
 
   /**
-   * One create_version_from_signature call for an amend plan. Resolves to
-   * { status: 'ok', version, reused, linkChanged, warnings } or
-   * { status: 'error' | 'disabled', message }. Never creates a study and never
-   * creates or copies an experience; link fields change only via
+   * One create_version_from_targets (0043) call for an amend plan. Resolves
+   * to { status: 'ok', version, reused, linkChanged, warnings } or
+   * { status: 'error' | 'disabled', message }. Never creates a study and
+   * never creates or copies an experience; link fields change only via
    * SendToCapture.applyCaptureLink (then one save).
    */
   async function runAmend(experience, plan, deps = {}) {
@@ -1025,7 +1148,7 @@
       return { status: 'error', message: (plan && plan.blocking) || 'Nothing to create.' };
     }
     const projectId = String(experience.tssProjectId);
-    if (plan.payload.tssProjectId !== projectId || plan.payload.id !== experience.id) {
+    if (plan.payload.p_project_id !== projectId || plan.payload.p_source_experience_id !== String(experience.id)) {
       return { status: 'error', message: 'This amend was prepared for a different experience or project. Reload the view and try again.' };
     }
     const getClient = deps.getClient || _defaultGetClient;
@@ -1039,7 +1162,7 @@
     }
     let res;
     try {
-      res = await client.schema('tss_shared').rpc('create_version_from_signature', { payload: plan.payload });
+      res = await client.schema('tss_shared').rpc('create_version_from_targets', plan.payload);
     } catch (err) {
       return { status: 'error', message: mapAmendError(err) };
     }
@@ -1051,12 +1174,11 @@
     }
 
     const warnings = [];
-    if (Array.isArray(version.unmapped_keys) && version.unmapped_keys.length) {
-      warnings.push(`Capture could not store: ${version.unmapped_keys.join(', ')}.`);
-    }
-    const tc = _num(version.targets_count);
-    if (tc !== null && tc !== plan.carried.length && version.reused_existing_version !== true) {
-      warnings.push(`Capture stored ${tc} target(s); ${plan.carried.length} were sent.`);
+    if (version.reused_existing_version !== true) {
+      const tc = _num(version.targets_count);
+      if (tc !== null && tc !== plan.targetsCount) warnings.push(`Capture stored ${tc} target(s); ${plan.targetsCount} were sent.`);
+      const nc = _num(version.stage_notes_count);
+      if (nc !== null && nc !== plan.notesCount) warnings.push(`Capture stored ${nc} stage note(s); ${plan.notesCount} were sent.`);
     }
 
     let linkChanged = false;
@@ -1078,8 +1200,8 @@
     const v = (result && result.version) || {};
     const n = v.version_number === undefined || v.version_number === null ? '?' : v.version_number;
     let s = result && result.reused
-      ? `No change: version ${n} already has exactly these targets, so it was reused (no duplicate created).`
-      : `Created version ${n}${_num(v.targets_count) !== null ? ` with ${v.targets_count} target(s)` : ''}. The view now shows it.`;
+      ? `No change: version ${n} already has exactly these targets and notes, so it was reused (no duplicate created).`
+      : `Created version ${n}${_num(v.targets_count) !== null ? ` with ${v.targets_count} target(s)` : ''}${_num(v.stage_notes_count) !== null ? ` and ${v.stage_notes_count} stage note(s)` : ''}. The view now shows it.`;
     if (result && Array.isArray(result.warnings) && result.warnings.length) s += ` ${result.warnings.join(' ')}`;
     return s;
   }
@@ -1122,11 +1244,18 @@
     return `<span class="tvm-status tvm-${esc(g.status)}" style="${style}" title="${esc(title)}">${esc(label)}</span>${detail ? ` <span class="tvm-detail" style="font-size:0.75rem;">${esc(detail)}</span>` : ''}`;
   }
 
-  function _targetText(spec) {
+  function _targetText(spec, kind, rules) {
     if (!spec) return 'No target';
+    if (spec.type === 'none') return 'No numeric target';
+    const r = rules || DEFAULT_RULES;
+    if (kind === 'emotion') {
+      const exp = expectedSelected(spec);
+      if (exp && exp.oneSided === 'at_least') return `${spec.intensity} (expects ${exp.min}% selected, at least ${_round(exp.min - r.emotionTolerancePp, 1)}%)`;
+      if (exp && exp.oneSided === 'at_most') return `${spec.intensity} (expects ${exp.max}% selected, at most ${_round(exp.max + r.emotionTolerancePp, 1)}%)`;
+      if (exp) return `${_specText(spec)} (expects ${_pctText(exp)} selected)`;
+    }
     if (spec.type === 'numeric') return _specText(spec);
-    if (spec.type === 'legacy') return `${spec.intensity} (no number)`;
-    return 'No numeric target';
+    return `${spec.intensity} (no number)`;
   }
 
   function _signatureText(sig) {
@@ -1153,19 +1282,33 @@
     return s;
   }
 
+  function _inputVal(v) {
+    return v === null || v === undefined ? '' : esc(v);
+  }
+
   function _amendCell(row, view) {
     const draft = view.draft;
     if (!row.code) return '<td></td>';
     const e = draft.entries[row.code];
     const code = esc(row.code);
+    const small = 'padding:2px 8px;font-size:0.75rem;';
     if (e && !e.removed) {
-      const val = e.value === null || e.value === undefined ? '' : esc(e.value);
-      return `<td><input type="number" min="0" max="10" step="0.5" value="${val}" data-tvm-action="set-value" data-code="${code}" aria-label="${esc(`New target for ${row.label}`)}" style="width:4.5em;"> <button type="button" class="btn btn-secondary" data-tvm-action="remove" data-code="${code}" style="padding:2px 8px;font-size:0.75rem;">Remove</button>${e.added ? ' <span style="font-size:0.75rem;">(new)</span>' : ''}</td>`;
+      const label = esc(row.label);
+      let inputs;
+      if (e.shape === 'range') {
+        inputs = `<input type="number" min="0" max="10" step="0.5" value="${_inputVal(e.min)}" data-tvm-action="set-min" data-code="${code}" aria-label="New minimum for ${label}" style="width:4em;">-<input type="number" min="0" max="10" step="0.5" value="${_inputVal(e.max)}" data-tvm-action="set-max" data-code="${code}" aria-label="New maximum for ${label}" style="width:4em;">`;
+      } else if (e.shape === 'word') {
+        const w = e.word === 'low' ? 'low' : 'high';
+        inputs = `<select data-tvm-action="set-intensity" data-code="${code}" aria-label="Word target for ${label}"><option value="high"${w === 'high' ? ' selected' : ''}>high</option><option value="low"${w === 'low' ? ' selected' : ''}>low</option></select> <input type="number" min="0" max="10" step="0.5" value="${_inputVal(e.min)}" placeholder="or a number" data-tvm-action="set-value" data-code="${code}" aria-label="Number instead of the word for ${label}" style="width:5.5em;">`;
+      } else {
+        inputs = `<input type="number" min="0" max="10" step="0.5" value="${_inputVal(e.min)}" data-tvm-action="set-value" data-code="${code}" aria-label="New target for ${label}" style="width:4.5em;">`;
+      }
+      return `<td>${inputs} <button type="button" class="btn btn-secondary" data-tvm-action="remove" data-code="${code}" style="${small}">Remove</button>${e.added ? ' <span style="font-size:0.75rem;">(new)</span>' : ''}</td>`;
     }
     if (e && e.removed) {
-      return `<td><span style="font-size:0.8rem;">Removed</span> <button type="button" class="btn btn-secondary" data-tvm-action="add" data-code="${code}" style="padding:2px 8px;font-size:0.75rem;">Undo</button></td>`;
+      return `<td><span style="font-size:0.8rem;">Removed</span> <button type="button" class="btn btn-secondary" data-tvm-action="add" data-code="${code}" style="${small}">Undo</button></td>`;
     }
-    return `<td><button type="button" class="btn btn-secondary" data-tvm-action="add" data-code="${code}" style="padding:2px 8px;font-size:0.75rem;">Add target</button></td>`;
+    return `<td><button type="button" class="btn btn-secondary" data-tvm-action="add" data-code="${code}" style="${small}">Add target</button></td>`;
   }
 
   function _stageTable(stage, view, hasResults) {
@@ -1179,7 +1322,7 @@
       const title = row.code ? row.code : 'No master code';
       return `<tr>
           <td title="${esc(title)}">${esc(row.label)}<span style="font-size:0.75rem;">${esc(kindNote)}</span>${row.role === 'secondary' ? ' <span style="font-size:0.75rem;">(secondary)</span>' : ''}</td>
-          <td>${esc(_targetText(row.target))}</td>
+          <td>${esc(_targetText(row.target, row.kind, view.rules))}</td>
           <td>${esc(_signatureText(row.signature))}</td>
           <td>${esc(_consumerText(row, hasResults))}</td>
           <td>${_gapHtml(row.sigGap)}</td>
@@ -1193,20 +1336,20 @@
   function _controlsHtml(model, rules, hideSignatureOnly) {
     const tOpts = model.versions.map((v) => `<option value="${esc(v.id)}"${v.id === model.targetVersionId ? ' selected' : ''}>${esc(_versionLabel(v))}</option>`).join('');
     const rOpts = ['<option value="">None</option>'].concat(model.versions.map((v) => `<option value="${esc(v.id)}"${v.id === model.resultsVersionId ? ' selected' : ''}>${esc(_versionLabel(v))}</option>`)).join('');
-    const pct = Math.round(rules.emotionHighMinSelected * 100);
     return `<div class="tvm-controls" style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:0.85rem;margin:0 0 8px;">
         <label>Targets from <select data-tvm-action="target-version">${tOpts}</select></label>
         <label>Consumers from <select data-tvm-action="results-version">${rOpts}</select></label>
         <label>Tolerance +/- <input type="number" min="0" max="${MAX_TOLERANCE}" step="0.5" value="${esc(rules.tolerance)}" data-tvm-action="tolerance" style="width:4.5em;"> (0-10 scale)</label>
-        <label>Emotion target 7+ expects at least <input type="number" min="0" max="100" step="5" value="${esc(pct)}" data-tvm-action="emotion-pct" style="width:4.5em;">% selected</label>
+        <label>Emotion % selected +/- <input type="number" min="0" max="${MAX_EMOTION_PP}" step="5" value="${esc(rules.emotionTolerancePp)}" data-tvm-action="emotion-pp" style="width:4.5em;"> percentage points</label>
         <label><input type="checkbox" data-tvm-action="hide-signature-only"${hideSignatureOnly ? ' checked' : ''}> Hide rows with only a Signature score</label>
       </div>`;
   }
 
   function _rulesHtml(rules) {
-    const pct = Math.round(rules.emotionHighMinSelected * 100);
-    const low = Math.round(rules.emotionLowMaxSelected * 100);
-    return `<p class="tvm-rules" style="font-size:0.78rem;margin:0 0 10px;">On target = within +/- ${esc(rules.tolerance)} of the target (or its range). Word-only targets: "high" = ${esc(rules.legacyHighMin)} or more, "low" = ${esc(rules.legacyLowMax)} or less. Consumer emotions are tick-box shares, never 0-10: a target of ${esc(rules.emotionHighTarget)}+ expects at least ${esc(pct)}% selected, ${esc(rules.emotionLowTarget)} or less expects at most ${esc(low)}%, 4-6 is not compared.</p>`;
+    const pp = rules.emotionTolerancePp;
+    const hi = _num(WORD_VALUES.high);
+    const lo = _num(WORD_VALUES.low);
+    return `<p class="tvm-rules" style="font-size:0.78rem;margin:0 0 10px;">Scores (Signature and consumer means, 0-10): on target = within +/- ${esc(rules.tolerance)} of the target (or its range). Word-only score targets: "high" = ${esc(rules.legacyHighMin)} or more, "low" = ${esc(rules.legacyLowMax)} or less. Consumer emotions are shown as % selected, never 0-10: a target of t expects t x 10 % selected (8 expects 80%), on target within +/- ${esc(pp)} percentage points; a word-only "high" expects ${esc(hi * 10)}% (on target at ${esc(_round(hi * 10 - pp, 1))}% or more), "low" expects ${esc(lo * 10)}% (on target at ${esc(_round(lo * 10 + pp, 1))}% or less).</p>`;
   }
 
   function _choiceNote(model) {
@@ -1226,27 +1369,18 @@
   function _amendFooter(model, view) {
     if (!model.amendAvailable) return '';
     if (!view.editing || !view.draft) {
-      return `<div class="tvm-amend" style="margin-top:8px;"><button type="button" class="btn btn-secondary" data-tvm-action="toggle-amend">Amend targets</button> <span style="font-size:0.8rem;">Creates the next version of this project; never a new experience.</span></div>`;
+      return `<div class="tvm-amend" style="margin-top:8px;"><button type="button" class="btn btn-secondary" data-tvm-action="toggle-amend">Amend targets</button> <span style="font-size:0.8rem;">Creates the next version of this project with every target and stage note of the version shown, plus your changes; never a new experience.</span></div>`;
     }
     const plan = view.plan || {};
     const tv = model.versions.find((v) => v.id === model.targetVersionId);
     let html = '<div class="tvm-amend" style="margin-top:8px;border-top:1px solid #e5e7eb;padding-top:8px;">';
-    const c = plan.changes || { edited: 0, added: 0, removed: 0 };
-    html += `<p style="margin:0 0 6px;font-size:0.85rem;">Based on v${esc(tv ? tv.versionNumber : '?')}: ${esc(c.edited)} edited, ${esc(c.added)} added, ${esc(c.removed)} removed. The new version will hold ${esc((plan.carried || []).length)} target(s).</p>`;
-    if ((plan.dropped || []).length) {
-      html += `<div class="tvm-dropped" role="alert" style="color:#92400e;font-size:0.82rem;"><strong>These ${esc(plan.dropped.length)} target(s) will not be in the new version:</strong><ul style="margin:2px 0 6px 18px;padding:0;">${plan.dropped.map((d) => `<li>${esc(d.label)} - ${esc(d.reason)}</li>`).join('')}</ul></div>`;
-    }
-    if ((plan.warnings || []).length) {
-      html += `<ul class="tvm-warnings" style="color:#92400e;font-size:0.82rem;margin:2px 0 6px 18px;padding:0;">${plan.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>`;
-    }
+    const c = plan.changes || { edited: 0, added: 0, removed: 0, notes: 0 };
+    html += `<p style="margin:0 0 6px;font-size:0.85rem;">Based on v${esc(tv ? tv.versionNumber : '?')}: ${esc(c.edited)} edited, ${esc(c.added)} added, ${esc(c.removed)} removed, ${esc(c.notes)} stage note(s) changed. The new version will hold ${esc(plan.targetsCount || 0)} target(s) and ${esc(plan.notesCount || 0)} stage note(s), with roles, ranges, words, direction, importance and notes carried as they are.</p>`;
     if (plan.blocking) html += `<p class="tvm-blocking" role="alert" style="color:#b91c1c;font-size:0.85rem;">${esc(plan.blocking)}</p>`;
-    if (plan.needsConfirm) {
-      html += `<label style="font-size:0.82rem;display:block;margin:4px 0;"><input type="checkbox" data-tvm-action="confirm-drops"${view.confirmed ? ' checked' : ''}> I understand the points above.</label>`;
-    }
     const noChange = !plan.changeCount;
-    const disabled = !!(plan.blocking || noChange || (plan.needsConfirm && !view.confirmed) || view.busy);
+    const disabled = !!(plan.blocking || noChange || view.busy);
     html += `<button type="button" class="btn btn-primary" data-tvm-action="create-version"${disabled ? ' disabled' : ''}>${view.busy ? 'Creating version...' : 'Create next version'}</button> <button type="button" class="btn btn-secondary" data-tvm-action="toggle-amend">Cancel</button>`;
-    if (noChange && !plan.blocking) html += ' <span style="font-size:0.8rem;">Change, add or remove a target first.</span>';
+    if (noChange && !plan.blocking) html += ' <span style="font-size:0.8rem;">Change, add or remove a target (or edit a stage note) first.</span>';
     return html + '</div>';
   }
 
@@ -1283,7 +1417,14 @@
       hiddenCount += s.rows.length - rows.length;
       if (!rows.length && !s.notes) continue;
       html += `<h4 style="margin:12px 0 2px;">${esc(s.label)}</h4>`;
-      if (s.notes) html += `<p class="tvm-brief-says" style="font-size:0.8rem;margin:0 0 4px;"><strong>Brief says:</strong> ${esc(s.notes)}</p>`;
+      const noteKey = view.editing && view.draft && s.stageId !== 'unknown'
+        ? ((view.draft.noteKeyByStage || {})[s.stageId] || stageKeyOf(s.stageId)) : null;
+      if (noteKey) {
+        const text = Object.prototype.hasOwnProperty.call(view.draft.notes, noteKey) ? view.draft.notes[noteKey] : '';
+        html += `<label style="display:block;font-size:0.8rem;margin:0 0 4px;"><strong>Brief says</strong> (carried to the new version; blank = none)<textarea rows="2" data-tvm-action="set-notes" data-stage="${esc(noteKey)}" style="display:block;width:100%;font-size:0.8rem;">${esc(text)}</textarea></label>`;
+      } else if (s.notes) {
+        html += `<p class="tvm-brief-says" style="font-size:0.8rem;margin:0 0 4px;"><strong>Brief says:</strong> ${esc(s.notes)}</p>`;
+      }
       if (rows.length) html += _stageTable({ ...s, rows }, view, hasResults);
     }
     if (hiddenCount) html += `<p class="tvm-hidden-note" style="font-size:0.8rem;">${esc(hiddenCount)} row(s) with only a Signature score hidden.</p>`;
@@ -1343,7 +1484,6 @@
       editing: false,
       draft: null,
       plan: null,
-      confirmed: false,
       busy: false,
       message: null,
     };
@@ -1357,15 +1497,13 @@
         experience,
         projectId: m.projectId,
         baseVersion: { id: m.targetVersionId },
-        notes: m.notes,
-        indexes: m.indexes,
       });
     }
     function render() {
       if (!overlay.parentNode) return;
       body.innerHTML = buildTargetVsMeasuredHtml(state.model, {
         experience, rules: rules(), editing: state.editing, draft: state.draft, plan: state.plan,
-        confirmed: state.confirmed, busy: state.busy, message: state.message,
+        busy: state.busy, message: state.message,
         hideSignatureOnly: state.prefs.hideSignatureOnly === true,
       });
     }
@@ -1376,7 +1514,7 @@
       p.targetVersionByExperience = map;
       savePrefs(storage, p);
     }
-    function stopEditing() { state.editing = false; state.draft = null; state.plan = null; state.confirmed = false; }
+    function stopEditing() { state.editing = false; state.draft = null; state.plan = null; }
 
     async function load(opts) {
       state.model = { state: 'loading' };
@@ -1404,11 +1542,11 @@
       const t = e.target;
       const action = t && t.getAttribute && t.getAttribute('data-tvm-action');
       if (!action) return;
-      if (action === 'tolerance' || action === 'emotion-pct') {
+      if (action === 'tolerance' || action === 'emotion-pp') {
         const p = loadPrefs(storage);
         if (action === 'tolerance') p.tolerance = _num(t.value);
-        else p.emotionHighMinSelectedPct = _num(t.value);
-        state.prefs = { ...state.prefs, tolerance: p.tolerance, emotionHighMinSelectedPct: p.emotionHighMinSelectedPct };
+        else p.emotionTolerancePp = _num(t.value);
+        state.prefs = { ...state.prefs, tolerance: p.tolerance, emotionTolerancePp: p.emotionTolerancePp };
         savePrefs(storage, p);
         render();
       } else if (action === 'target-version') {
@@ -1420,9 +1558,13 @@
       } else if (action === 'results-version') {
         state.model = switchResultsVersion(state.model, t.value);
         render();
-      } else if (action === 'set-value') {
-        setDraftValue(state.draft, t.getAttribute('data-code'), t.value);
-        state.confirmed = false;
+      } else if (action === 'set-value' || action === 'set-min' || action === 'set-max' || action === 'set-intensity' || action === 'set-notes') {
+        const code = t.getAttribute('data-code');
+        if (action === 'set-value') setDraftValue(state.draft, code, t.value);
+        else if (action === 'set-min') setDraftRange(state.draft, code, 'min', t.value);
+        else if (action === 'set-max') setDraftRange(state.draft, code, 'max', t.value);
+        else if (action === 'set-intensity') setDraftIntensity(state.draft, code, t.value);
+        else setDraftNotes(state.draft, t.getAttribute('data-stage'), t.value);
         replan();
         render();
       } else if (action === 'hide-signature-only') {
@@ -1430,9 +1572,6 @@
         p.hideSignatureOnly = !!t.checked;
         state.prefs = { ...state.prefs, hideSignatureOnly: p.hideSignatureOnly };
         savePrefs(storage, p);
-        render();
-      } else if (action === 'confirm-drops') {
-        state.confirmed = !!t.checked;
         render();
       }
     }
@@ -1444,11 +1583,10 @@
       const code = t.getAttribute('data-code');
       if (action === 'toggle-amend') {
         if (state.editing) stopEditing();
-        else { state.editing = true; state.draft = createDraft(state.model.targets); state.confirmed = false; state.message = null; replan(); }
+        else { state.editing = true; state.draft = createDraft(state.model.targets, state.model.stageNotes); state.message = null; replan(); }
         render();
       } else if (action === 'remove') {
         removeDraftTarget(state.draft, code);
-        state.confirmed = false;
         replan();
         render();
       } else if (action === 'add') {
@@ -1457,7 +1595,6 @@
           const d = _defaultAddValue(code);
           if (d) addDraftTarget(state.draft, d.meta, d.value);
         }
-        state.confirmed = false;
         replan();
         render();
       } else if (action === 'create-version') {
@@ -1504,6 +1641,7 @@
     PREFS_KEY,
     DEMO_MODE_MESSAGE,
     AMEND_DEMO_MESSAGE,
+    AMEND_NOT_AVAILABLE_MESSAGE,
     STAGE_ORDER,
     isTargetVsMeasuredEnabled,
     hasCaptureLink,
@@ -1515,6 +1653,7 @@
     classifyNumeric,
     classifyValue,
     classifyCata,
+    expectedSelected,
     buildIndexes,
     shapeTargetRows,
     signatureEntries,
@@ -1528,8 +1667,12 @@
     loadTargetVsMeasured,
     switchTargetVersion,
     switchResultsVersion,
+    stageKeyOf,
     createDraft,
     setDraftValue,
+    setDraftRange,
+    setDraftIntensity,
+    setDraftNotes,
     removeDraftTarget,
     addDraftTarget,
     buildAmendPlan,
